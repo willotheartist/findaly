@@ -1,7 +1,7 @@
 // app/admin/submissions/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { PricingModel, SubmissionStatus } from "@prisma/client";
+import { SubmissionStatus } from "@prisma/client";
 
 function slugify(s: string) {
   return (s || "")
