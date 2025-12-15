@@ -22,7 +22,7 @@ async function ensureUniqueToolSlug(base: string) {
   }
 }
 
-type SubmissionRow = Prisma.SubmissionGetPayload<{
+type SubmissionRow = any<{
   include: { tool: { select: { slug: true; name: true; status: true } } };
 }>;
 
