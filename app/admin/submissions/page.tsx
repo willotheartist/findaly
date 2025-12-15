@@ -1,6 +1,7 @@
+// app/admin/submissions/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { Prisma, PricingModel, SubmissionStatus } from "@prisma/client";
+import { PricingModel, SubmissionStatus } from "@prisma/client";
 
 function slugify(s: string) {
   return (s || "")
@@ -22,10 +23,19 @@ async function ensureUniqueToolSlug(base: string) {
   }
 }
 
-type SubmissionRow = Awaited<ReturnType<typeof prisma.submission.findMany>>[number];
+/**
+ * Wrap the query so TypeScript can infer the "include" shape.
+ * This avoids importing Prisma types entirely.
+ */
+async function getSubmissions() {
+  return prisma.submission.findMany({
+    include: { tool: { select: { slug: true, name: true, status: true } } },
+    orderBy: [{ createdAt: "desc" }],
+    take: 200,
+  });
+}
 
-name: true; status: true } } };
-}>;
+type SubmissionRow = Awaited<ReturnType<typeof getSubmissions>>[number];
 
 function statusPill(status: SubmissionStatus) {
   const base =
@@ -99,7 +109,9 @@ export default async function AdminSubmissionsPage() {
         keyFeatures: [],
         integrations: [],
 
-        status: "DRAFT",
+        // If your Tool.status is an enum, this still works at runtime.
+        // If TS complains in your editor, keep the "as any".
+        status: "DRAFT" as any,
         isFeatured: false,
 
         primaryCategoryId: cat.id,
@@ -112,11 +124,7 @@ export default async function AdminSubmissionsPage() {
     });
   }
 
-  const submissions: SubmissionRow[] = await prisma.submission.findMany({
-    include: { tool: { select: { slug: true, name: true, status: true } } },
-    orderBy: [{ createdAt: "desc" }],
-    take: 200,
-  });
+  const submissions = await getSubmissions();
 
   const newCount = submissions.filter((s) => s.status === SubmissionStatus.NEW).length;
   const reviewedCount = submissions.filter((s) => s.status === SubmissionStatus.REVIEWED).length;
@@ -138,7 +146,11 @@ export default async function AdminSubmissionsPage() {
             <h1 className="text-3xl font-semibold">Submissions</h1>
             <p className="mt-2 text-sm text-(--color-text-muted)">
               Review → Approve creates a Tool <span className="font-medium">draft</span>. Publish it
-              from <Link className="underline underline-offset-2" href="/admin/tools">Admin → Tools</Link>.
+              from{" "}
+              <Link className="underline underline-offset-2" href="/admin/tools">
+                Admin → Tools
+              </Link>
+              .
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -168,7 +180,7 @@ export default async function AdminSubmissionsPage() {
             <div className="col-span-2">Actions</div>
           </div>
 
-          {submissions.map((s) => {
+          {submissions.map((s: SubmissionRow) => {
             const hasTool = Boolean(s.tool);
             const isApproved = s.status === SubmissionStatus.APPROVED;
             const canApprove = !hasTool;
@@ -192,7 +204,7 @@ export default async function AdminSubmissionsPage() {
                         >
                           {s.tool.name}
                         </Link>
-                        <span className="opacity-70">({s.tool.status})</span>
+                        <span className="opacity-70">({String(s.tool.status)})</span>
                         <span className="font-mono opacity-70">/{s.tool.slug}</span>
                         <Link
                           className="pill underline underline-offset-2"
@@ -251,11 +263,7 @@ export default async function AdminSubmissionsPage() {
                         ].join(" ")}
                         type="submit"
                         disabled={!canApprove}
-                        title={
-                          canApprove
-                            ? "Approve & create a draft tool"
-                            : "Already linked to a tool"
-                        }
+                        title={canApprove ? "Approve & create a draft tool" : "Already linked to a tool"}
                       >
                         Approve → draft
                       </button>
@@ -281,7 +289,9 @@ export default async function AdminSubmissionsPage() {
 
                 <div className="mt-3 text-xs text-(--color-text-muted)">
                   Created: {new Date(s.createdAt).toLocaleString()}
-                  {isApproved && hasTool ? <span className="opacity-70"> · Next: publish the draft</span> : null}
+                  {isApproved && hasTool ? (
+                    <span className="opacity-70"> · Next: publish the draft</span>
+                  ) : null}
                 </div>
               </div>
             );
