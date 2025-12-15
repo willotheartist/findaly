@@ -22,8 +22,9 @@ async function ensureUniqueToolSlug(base: string) {
   }
 }
 
-type SubmissionRow = any<{
-  include: { tool: { select: { slug: true; name: true; status: true } } };
+type SubmissionRow = Awaited<ReturnType<typeof prisma.submission.findMany>>[number];
+
+name: true; status: true } } };
 }>;
 
 function statusPill(status: SubmissionStatus) {
