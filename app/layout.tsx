@@ -1,16 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter_Tight } from "next/font/google";
-
-const interTight = Inter_Tight({
-  subsets: ["latin"],
-  variable: "--font-inter-tight",
-});
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "Findaly – Find what matters in your city",
-  description:
-    "Discover trusted clinics, coaches, restaurants and local places in one clean, modern directory.",
+  title: "findaly",
+  description: "Decision-first software discovery.",
 };
 
 export default function RootLayout({
@@ -20,7 +14,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={interTight.variable + " bg-[#eceae3]"}>
+      <body className="min-h-screen bg-(--color-bg) text-(--color-text-main)">
+        <Header />
         {children}
       </body>
     </html>

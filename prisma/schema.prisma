@@ -4,53 +4,152 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-model City {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  name      String
-  country   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+enum PricingModel {
+  FREE
+  FREEMIUM
+  PAID
+  ENTERPRISE
+}
 
-  listings  Listing[]
+enum PricingPeriod {
+  MONTH
+  YEAR
+  ONE_TIME
+  UNKNOWN
+}
+
+enum SubmissionStatus {
+  NEW
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+enum ToolStatus {
+  ACTIVE
+  DISCONTINUED
+  DRAFT
+}
+
+model Tool {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+  slug String @unique
+
+  shortDescription String
+  longDescription  String?
+
+  websiteUrl String?
+  logoUrl    String?
+
+  pricingModel  PricingModel
+  startingPrice String?
+  pricingNotes  String?
+
+  startingPriceCents  Int?
+  startingPricePeriod PricingPeriod @default(UNKNOWN)
+
+  targetAudience String[] @default([])
+  keyFeatures    String[] @default([])
+  integrations   String[] @default([])
+
+  status     ToolStatus @default(ACTIVE)
+  isFeatured Boolean    @default(false)
+
+  primaryCategoryId String
+  primaryCategory   Category @relation(fields: [primaryCategoryId], references: [id])
+
+  secondaryCategories Category[] @relation("SecondaryCategories")
+  useCases            UseCase[]  @relation("ToolUseCases")
+
+  alternativesFrom ToolAlternative[] @relation("ToolAlt")
+  alternativesTo   ToolAlternative[] @relation("AltTool")
+
+  // Submission inbox links (optional)
+  submissions Submission[]
+
+  @@index([primaryCategoryId])
+  @@index([primaryCategoryId, status])
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  name      String
-  group     String    // "beauty", "fitness", "eats", "places"
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  listings  Listing[]
+  name        String
+  slug        String  @unique
+  description String?
+
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  tools     Tool[]
+  secondary Tool[] @relation("SecondaryCategories")
+
+  @@index([slug])
+  @@index([parentId])
 }
 
-model Listing {
-  id          String    @id @default(cuid())
-  slug        String    @unique
+model UseCase {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   name        String
+  slug        String  @unique
   description String?
-  address     String?
-  website     String?
-  phone       String?
-  email       String?
-  latitude    Float?
-  longitude   Float?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
 
-  cityId     String
-  city       City      @relation(fields: [cityId], references: [id])
+  tools Tool[] @relation("ToolUseCases")
 
-  categoryId String
-  category   Category  @relation(fields: [categoryId], references: [id])
+  @@index([slug])
+}
 
-  // monetisation flags
-  isFeatured   Boolean @default(false)
-  isBoosted    Boolean @default(false)
-  plan         String? // "free", "boost", "featured", "top-city"
+model ToolAlternative {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  toolId        String
+  alternativeId String
+
+  score Int     @default(0)
+  note  String?
+
+  tool        Tool @relation("ToolAlt", fields: [toolId], references: [id])
+  alternative Tool @relation("AltTool", fields: [alternativeId], references: [id])
+
+  @@unique([toolId, alternativeId])
+  @@index([toolId])
+  @@index([alternativeId])
+}
+
+model Submission {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  status SubmissionStatus @default(NEW)
+
+  name       String
+  websiteUrl String?
+  category   String?
+  notes      String?
+  email      String?
+
+  // lightweight anti-spam / ops
+  ip        String?
+  userAgent String?
+
+  // once you convert a submission into a tool, optionally link it
+  toolId String?
+  tool   Tool?   @relation(fields: [toolId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([toolId])
 }
