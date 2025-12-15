@@ -101,7 +101,7 @@ export default async function AdminSubmissionsPage() {
         websiteUrl: sub.websiteUrl ?? null,
         logoUrl: null,
 
-        pricingModel: PricingModel.FREEMIUM,
+        pricingModel: "FREEMIUM" as any,
         startingPrice: null,
         pricingNotes: null,
 
