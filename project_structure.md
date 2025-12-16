@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 15/12/2025, 16:39:26*
+*Generated on: 16/12/2025, 00:35:12*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 71 |
-| 📁 Total Folders | 41 |
+| 📄 Total Files | 80 |
+| 📁 Total Folders | 46 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,38 +24,40 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 32 files (45.1%)
-- 🔷 **.ts** (TypeScript files): 17 files (23.9%)
-- 🎨 **.svg** (SVG images): 5 files (7.0%)
-- 📄 **.sql** (Other files): 4 files (5.6%)
-- 📖 **.md** (Markdown files): 2 files (2.8%)
-- 📄 **.mjs** (Other files): 2 files (2.8%)
-- ⚙️ **.json** (JSON files): 2 files (2.8%)
-- 🚫 **.gitignore** (Git ignore): 1 files (1.4%)
-- 🖼️ **.ico** (Icon files): 1 files (1.4%)
-- 🎨 **.css** (Stylesheets): 1 files (1.4%)
-- ⚙️ **.yaml** (YAML files): 1 files (1.4%)
-- ⚙️ **.toml** (TOML files): 1 files (1.4%)
-- 📄 **.prisma** (Other files): 1 files (1.4%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (1.4%)
+- ⚛️ **.tsx** (React TypeScript files): 33 files (41.3%)
+- 🔷 **.ts** (TypeScript files): 20 files (25.0%)
+- 📄 **.sql** (Other files): 5 files (6.3%)
+- 🎨 **.svg** (SVG images): 5 files (6.3%)
+- ⚙️ **.json** (JSON files): 4 files (5.0%)
+- 📖 **.md** (Markdown files): 2 files (2.5%)
+- 📄 **.mjs** (Other files): 2 files (2.5%)
+- 🚫 **.gitignore** (Git ignore): 1 files (1.3%)
+- 📄 **.txt** (Text files): 1 files (1.3%)
+- 🖼️ **.ico** (Icon files): 1 files (1.3%)
+- 🎨 **.css** (Stylesheets): 1 files (1.3%)
+- ⚙️ **.yaml** (YAML files): 1 files (1.3%)
+- ⚙️ **.toml** (TOML files): 1 files (1.3%)
+- 📄 **.prisma** (Other files): 1 files (1.3%)
+- 📄 **.patch** (Other files): 1 files (1.3%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (1.3%)
 
 ### By Category
 
-- **React**: 32 files (45.1%)
-- **TypeScript**: 17 files (23.9%)
-- **Other**: 8 files (11.3%)
-- **Assets**: 6 files (8.5%)
-- **Config**: 4 files (5.6%)
-- **Docs**: 2 files (2.8%)
-- **DevOps**: 1 files (1.4%)
-- **Styles**: 1 files (1.4%)
+- **React**: 33 files (41.3%)
+- **TypeScript**: 20 files (25.0%)
+- **Other**: 10 files (12.5%)
+- **Config**: 6 files (7.5%)
+- **Assets**: 6 files (7.5%)
+- **Docs**: 3 files (3.8%)
+- **DevOps**: 1 files (1.3%)
+- **Styles**: 1 files (1.3%)
 
 ### 📁 Largest Directories
 
-- **root**: 71 files
-- **app**: 29 files
-- **components**: 10 files
-- **prisma**: 7 files
+- **root**: 80 files
+- **app**: 32 files
+- **components**: 11 files
+- **prisma**: 9 files
 - **app/admin**: 6 files
 
 ## 🌳 Directory Structure
@@ -63,6 +65,9 @@
 ```
 findaly/
 ├── 🟡 🚫 **.gitignore**
+├── 📂 .vercel/
+│   ├── ⚙️ project.json
+│   └── 📄 README.txt
 ├── 🚀 app/
 │   ├── 📂 about/
 │   │   └── ⚛️ page.tsx
@@ -83,8 +88,12 @@ findaly/
 │   │   │   └── ⚛️ page.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 🔌 api/
-│   │   ├── 📂 submissions/
+│   │   ├── 📂 categories/
 │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 submissions/
+│   │   │   ├── 🔷 route.ts
+│   │   │   └── 📂 suggest/
+│   │   │   │   └── 🔷 route.ts
 │   │   └── 📂 submit/
 │   │   │   └── 🔷 route.ts
 │   ├── 📂 best/
@@ -114,6 +123,8 @@ findaly/
 │   │   ├── 📂 category/
 │   │   │   └── 📂 [category]/
 │   │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 duplicate/
+│   │   │   └── 🔷 route.ts
 │   │   └── ⚛️ page.tsx
 │   └── 📂 use-cases/
 │   │   ├── 📂 [slug]/
@@ -123,6 +134,7 @@ findaly/
 │   ├── ⚛️ AlternativesPageClient.tsx
 │   ├── ⚛️ AlternativesSearch.tsx
 │   ├── ⚛️ ClaimListingPanel.tsx
+│   ├── ⚛️ Footer.tsx
 │   ├── ⚛️ Header.tsx
 │   ├── ⚛️ HeaderDropdownClient.tsx
 │   ├── ⚛️ ToolCard.tsx
@@ -159,9 +171,12 @@ findaly/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20251215160137_tool_status_enum/
 │   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20251215234043_newmigration/
+│   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
-│   └── 🔷 seed.ts
+│   ├── 🔷 seed.ts
+│   └── ⚙️ tools.seed.json
 ├── 🔷 prisma.config.ts
 ├── 📖 project_structure.md
 ├── 🌐 public/
@@ -171,6 +186,7 @@ findaly/
 │   ├── 🎨 vercel.svg
 │   └── 🎨 window.svg
 ├── 🔴 📖 **README.md**
+├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
 ├── 🟡 🔷 **tsconfig.json**
 └── 📄 tsconfig.tsbuildinfo
@@ -180,13 +196,14 @@ findaly/
 
 ### File Types
 - 🚫 DevOps: Git ignore
+- 📄 Docs: Text files
+- ⚙️ Config: JSON files
 - 📖 Docs: Markdown files
 - ⚛️ React: React TypeScript files
 - 🔷 TypeScript: TypeScript files
 - 🖼️ Assets: Icon files
 - 🎨 Styles: Stylesheets
 - 📄 Other: Other files
-- ⚙️ Config: JSON files
 - ⚙️ Config: YAML files
 - ⚙️ Config: TOML files
 - 🎨 Assets: SVG images

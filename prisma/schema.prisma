@@ -33,6 +33,12 @@ enum ToolStatus {
   DRAFT
 }
 
+enum DataConfidence {
+  SEEDED
+  ENRICHED
+  VERIFIED
+}
+
 model Tool {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -41,40 +47,71 @@ model Tool {
   name String
   slug String @unique
 
+  // Copy
+  tagline          String?
   shortDescription String
   longDescription  String?
 
+  // URLs / assets
   websiteUrl String?
+  pricingUrl String?
   logoUrl    String?
 
+  // Pricing (baseline)
   pricingModel  PricingModel
   startingPrice String?
   pricingNotes  String?
 
+  // Pricing (structured)
   startingPriceCents  Int?
   startingPricePeriod PricingPeriod @default(UNKNOWN)
+  hasFreePlan         Boolean?
+  hasFreeTrial        Boolean?
+  trialDays           Int?
 
+  // Structured “decision layer”
+  bestFor       String[] @default([])
+  notFor        String[] @default([])
+  pros          String[] @default([])
+  cons          String[] @default([])
+  switchReasons String[] @default([])
+
+  // Existing arrays (keep)
   targetAudience String[] @default([])
   keyFeatures    String[] @default([])
   integrations   String[] @default([])
 
-  status     ToolStatus @default(ACTIVE)
-  isFeatured Boolean    @default(false)
+  // Comparisons (normalized flags)
+  // Example: {"has_api": true, "sso": false, "mobile_app": true}
+  featureFlags Json @default("{}")
 
+  // “Replaces / replaced by” intent
+  replacementFor String[] @default([])
+
+  // Trust / freshness
+  status         ToolStatus     @default(ACTIVE)
+  isFeatured     Boolean        @default(false)
+  lastVerifiedAt DateTime?
+  dataConfidence DataConfidence @default(SEEDED)
+
+  // Category relations
   primaryCategoryId String
   primaryCategory   Category @relation(fields: [primaryCategoryId], references: [id])
 
   secondaryCategories Category[] @relation("SecondaryCategories")
   useCases            UseCase[]  @relation("ToolUseCases")
 
+  // Explicit alternatives graph (optional; you can still compute alternatives)
   alternativesFrom ToolAlternative[] @relation("ToolAlt")
   alternativesTo   ToolAlternative[] @relation("AltTool")
 
-  // Submission inbox links (optional)
+  // Submissions inbox links (optional)
   submissions Submission[]
 
   @@index([primaryCategoryId])
   @@index([primaryCategoryId, status])
+  @@index([dataConfidence, status])
+  @@index([lastVerifiedAt])
 }
 
 model Category {

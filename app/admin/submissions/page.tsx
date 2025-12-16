@@ -1,7 +1,7 @@
 // app/admin/submissions/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { SubmissionStatus } from "@prisma/client";
+import { SubmissionStatus, PricingModel, ToolStatus } from "@prisma/client";
 
 function slugify(s: string) {
   return (s || "")
@@ -96,12 +96,12 @@ export default async function AdminSubmissionsPage() {
       data: {
         name: sub.name,
         slug: toolSlug,
-        shortDescription: (sub.notes ?? "").trim() || `Overview coming soon.`,
+        shortDescription: (sub.notes ?? "").trim() || "Overview coming soon.",
         longDescription: null,
         websiteUrl: sub.websiteUrl ?? null,
         logoUrl: null,
 
-        pricingModel: "FREEMIUM" as any,
+        pricingModel: PricingModel.FREEMIUM,
         startingPrice: null,
         pricingNotes: null,
 
@@ -109,9 +109,7 @@ export default async function AdminSubmissionsPage() {
         keyFeatures: [],
         integrations: [],
 
-        // If your Tool.status is an enum, this still works at runtime.
-        // If TS complains in your editor, keep the "as any".
-        status: "DRAFT" as any,
+        status: ToolStatus.DRAFT,
         isFeatured: false,
 
         primaryCategoryId: cat.id,
@@ -263,7 +261,9 @@ export default async function AdminSubmissionsPage() {
                         ].join(" ")}
                         type="submit"
                         disabled={!canApprove}
-                        title={canApprove ? "Approve & create a draft tool" : "Already linked to a tool"}
+                        title={
+                          canApprove ? "Approve & create a draft tool" : "Already linked to a tool"
+                        }
                       >
                         Approve → draft
                       </button>

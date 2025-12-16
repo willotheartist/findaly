@@ -79,7 +79,7 @@ export function ClaimListingPanel({
           required
           type="text"
           placeholder="Your name"
-          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-[var(--text)] outline-none"
+          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-(--text) outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -87,20 +87,20 @@ export function ClaimListingPanel({
           required
           type="email"
           placeholder="Work email"
-          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-[var(--text)] outline-none"
+          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-(--text) outline-none"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
           type="url"
           placeholder="Business website"
-          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-[var(--text)] outline-none"
+          className="w-full rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-(--text) outline-none"
           value={website}
           onChange={(e) => setWebsite(e.target.value)}
         />
         <textarea
           placeholder="Anything we should know?"
-          className="w-full min-h-[70px] rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-[var(--text)] outline-none"
+          className="w-full min-h-[70px] rounded-lg bg-(--color-surface) px-3 py-2 text-sm text-(--text) outline-none"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
@@ -108,7 +108,7 @@ export function ClaimListingPanel({
         <button
           type="submit"
           disabled={status === "loading"}
-          className="mt-1 w-full rounded-xl bg-(--color-surface) px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-1 w-full rounded-xl bg-(--color-surface) px-4 py-2 text-sm font-medium text-(--text) transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
         >
           {status === "loading" ? "Submitting..." : "Claim this listing"}
         </button>
