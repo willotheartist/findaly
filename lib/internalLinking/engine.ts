@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getAlternatives } from "@/lib/decision/alternatives";
+import { INTERNAL_LINKING, uniqByHref, clamp, titleFromSlug } from "@/lib/internalLinking/rules";
 
 export type LinkItem = {
   href: string;
@@ -10,29 +11,6 @@ export type LinkItem = {
 };
 
 type RankedToolLite = { slug: string; name: string; _score?: number };
-type UseCaseLite = { slug: string };
-
-function uniqByHref(items: LinkItem[]) {
-  const seen = new Set<string>();
-  return items.filter((x) => {
-    if (seen.has(x.href)) return false;
-    seen.add(x.href);
-    return true;
-  });
-}
-
-function clamp<T>(arr: T[], n: number) {
-  return arr.slice(0, n);
-}
-
-function titleFromUseCaseSlug(slug: string) {
-  // "docs-knowledge-base" -> "Docs Knowledge Base"
-  return slug
-    .split("-")
-    .filter(Boolean)
-    .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 /**
  * RULES: Tool page must link to:
@@ -70,12 +48,14 @@ async function _toolLinks(slug: string) {
   const pack = await getAlternatives(tool.slug);
   const ranked = pack?.alternatives ?? [];
 
-  const altToolLinks: LinkItem[] = ranked.slice(0, 5).map((t: { slug: string; name: string; _score?: number }) => ({
-    href: `/tools/${t.slug}`,
-    label: t.name,
-    kind: "tool",
-    score: t._score ?? undefined,
-  }));
+  const altToolLinks: LinkItem[] = ranked
+    .slice(0, INTERNAL_LINKING.tool.altTools)
+    .map((t: { slug: string; name: string; _score?: number }) => ({
+      href: `/tools/${t.slug}`,
+      label: t.name,
+      kind: "tool",
+      score: t._score ?? undefined,
+    }));
 
   const alternatives: LinkItem[] = [
     {
@@ -87,23 +67,25 @@ async function _toolLinks(slug: string) {
     ...altToolLinks,
   ];
 
-  const comparisons: LinkItem[] = ranked.slice(0, 3).map((t: { slug: string; name: string }) => ({
-    href: `/compare/${tool.slug}-vs-${t.slug}`,
-    label: `${tool.name} vs ${t.name}`,
-    kind: "compare",
-    score: 8,
-  }));
+  const comparisons: LinkItem[] = ranked
+    .slice(0, INTERNAL_LINKING.tool.comparisons)
+    .map((t: { slug: string; name: string }) => ({
+      href: `/compare/${tool.slug}-vs-${t.slug}`,
+      label: `${tool.name} vs ${t.name}`,
+      kind: "compare",
+      score: 8,
+    }));
 
   // Best pages: /best/[slug] exists in your app structure
   // Convention: `${categorySlug}-tools-for-${useCaseSlug}`
   const best: LinkItem[] = clamp(
     (tool.useCases ?? []).map((u) => ({
       href: `/best/${tool.primaryCategory.slug}-tools-for-${u.slug}`,
-      label: `Best ${tool.primaryCategory.name} tools for ${titleFromUseCaseSlug(u.slug)}`,
+      label: `Best ${tool.primaryCategory.name} tools for ${titleFromSlug(u.slug)}`,
       kind: "best" as const,
       score: 6,
     })),
-    4
+    INTERNAL_LINKING.tool.best
   );
 
   return {
@@ -143,19 +125,23 @@ async function _alternativesLinks(slug: string) {
     },
   ];
 
-  const topAlternatives: LinkItem[] = (alternatives ?? []).slice(0, 8).map((t: RankedToolLite) => ({
-    href: `/tools/${t.slug}`,
-    label: t.name,
-    kind: "tool",
-    score: t._score ?? undefined,
-  }));
+  const topAlternatives: LinkItem[] = (alternatives ?? [])
+    .slice(0, INTERNAL_LINKING.alternatives.topAlternatives)
+    .map((t: RankedToolLite) => ({
+      href: `/tools/${t.slug}`,
+      label: t.name,
+      kind: "tool",
+      score: t._score ?? undefined,
+    }));
 
-  const comparisons: LinkItem[] = (alternatives ?? []).slice(0, 5).map((t: RankedToolLite) => ({
-    href: `/compare/${tool.slug}-vs-${t.slug}`,
-    label: `${tool.name} vs ${t.name}`,
-    kind: "compare",
-    score: 7,
-  }));
+  const comparisons: LinkItem[] = (alternatives ?? [])
+    .slice(0, INTERNAL_LINKING.alternatives.comparisons)
+    .map((t: RankedToolLite) => ({
+      href: `/compare/${tool.slug}-vs-${t.slug}`,
+      label: `${tool.name} vs ${t.name}`,
+      kind: "compare",
+      score: 7,
+    }));
 
   return {
     primary: uniqByHref(primary),
@@ -168,15 +154,14 @@ async function _alternativesLinks(slug: string) {
 export const getToolInternalLinks = unstable_cache(
   async (slug: string) => _toolLinks(slug),
   ["tool-internal-links"],
-  { revalidate: 60 * 60 * 12 } // 12h
+  { revalidate: INTERNAL_LINKING.cacheSeconds }
 );
 
 export const getAlternativesInternalLinks = unstable_cache(
   async (slug: string) => _alternativesLinks(slug),
   ["alternatives-internal-links"],
-  { revalidate: 60 * 60 * 12 } // 12h
+  { revalidate: INTERNAL_LINKING.cacheSeconds }
 );
-
 
 /**
  * RULES: Compare page must link to:
@@ -199,8 +184,14 @@ async function _compareLinks(pair: string) {
   }
 
   const [a, b] = await Promise.all([
-    prisma.tool.findUnique({ where: { slug: parsed.left }, include: { primaryCategory: true, useCases: true } }),
-    prisma.tool.findUnique({ where: { slug: parsed.right }, include: { primaryCategory: true, useCases: true } }),
+    prisma.tool.findUnique({
+      where: { slug: parsed.left },
+      include: { primaryCategory: true, useCases: true },
+    }),
+    prisma.tool.findUnique({
+      where: { slug: parsed.right },
+      include: { primaryCategory: true, useCases: true },
+    }),
   ]);
 
   if (!a || !b) {
@@ -215,17 +206,29 @@ async function _compareLinks(pair: string) {
   ];
 
   const categories: LinkItem[] = uniqByHref([
-    { href: `/tools/category/${a.primaryCategory.slug}`, label: `${a.primaryCategory.name} tools`, kind: "category", score: 8 },
-    { href: `/tools/category/${b.primaryCategory.slug}`, label: `${b.primaryCategory.name} tools`, kind: "category", score: 8 },
+    {
+      href: `/tools/category/${a.primaryCategory.slug}`,
+      label: `${a.primaryCategory.name} tools`,
+      kind: "category",
+      score: 8,
+    },
+    {
+      href: `/tools/category/${b.primaryCategory.slug}`,
+      label: `${b.primaryCategory.name} tools`,
+      kind: "category",
+      score: 8,
+    },
   ]);
 
   const aUse = new Set((a.useCases ?? []).map((u: { slug: string }) => u.slug));
   const bUse = new Set((b.useCases ?? []).map((u: { slug: string }) => u.slug));
-  const common = Array.from(aUse).filter((x) => bUse.has(x)).slice(0, 4);
+  const common = Array.from(aUse)
+    .filter((x) => bUse.has(x))
+    .slice(0, INTERNAL_LINKING.tool.best);
 
   const best: LinkItem[] = common.map((ucSlug) => ({
     href: `/best/${a.primaryCategory.slug}-tools-for-${ucSlug}`,
-    label: `Best ${a.primaryCategory.name} tools for ${ucSlug.split("-").map((w: string) => w[0]?.toUpperCase()+w.slice(1)).join(" ")}`,
+    label: `Best ${a.primaryCategory.name} tools for ${titleFromSlug(ucSlug)}`,
     kind: "best",
     score: 6,
   }));
@@ -240,9 +243,8 @@ async function _compareLinks(pair: string) {
 export const getCompareInternalLinks = unstable_cache(
   async (pair: string) => _compareLinks(pair),
   ["compare-internal-links"],
-  { revalidate: 60 * 60 * 12 } // 12h
+  { revalidate: INTERNAL_LINKING.cacheSeconds }
 );
-
 
 /**
  * RULES: Category hub should link to:
@@ -254,25 +256,35 @@ export const getCompareInternalLinks = unstable_cache(
 async function _categoryLinks(categorySlug: string) {
   const slug = String(categorySlug ?? "").trim();
   if (!slug) {
-    return { best: [] as LinkItem[], useCases: [] as LinkItem[], comparisons: [] as LinkItem[], alternatives: [] as LinkItem[] };
+    return {
+      best: [] as LinkItem[],
+      useCases: [] as LinkItem[],
+      comparisons: [] as LinkItem[],
+      alternatives: [] as LinkItem[],
+    };
   }
 
   const cat = await prisma.category.findUnique({ where: { slug } });
   if (!cat) {
-    return { best: [] as LinkItem[], useCases: [] as LinkItem[], comparisons: [] as LinkItem[], alternatives: [] as LinkItem[] };
+    return {
+      best: [] as LinkItem[],
+      useCases: [] as LinkItem[],
+      comparisons: [] as LinkItem[],
+      alternatives: [] as LinkItem[],
+    };
   }
 
   const tools = await prisma.tool.findMany({
     where: { status: "ACTIVE", primaryCategoryId: cat.id },
     include: { useCases: true },
     orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
-    take: 24,
+    take: INTERNAL_LINKING.category.tools,
   });
 
   // Use-case frequency
   const counts = new Map<string, { name: string; slug: string; count: number }>();
   for (const t of tools) {
-    for (const u of (t.useCases ?? [])) {
+    for (const u of t.useCases ?? []) {
       const cur = counts.get(u.slug);
       if (!cur) counts.set(u.slug, { name: u.name, slug: u.slug, count: 1 });
       else cur.count += 1;
@@ -281,28 +293,37 @@ async function _categoryLinks(categorySlug: string) {
 
   const topUC = Array.from(counts.values())
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-    .slice(0, 10);
+    .slice(0, INTERNAL_LINKING.category.useCases);
 
-  const best: LinkItem[] = topUC.slice(0, 8).map((u) => ({
+  const best: LinkItem[] = topUC.slice(0, INTERNAL_LINKING.category.best).map((u) => ({
     href: `/best/${cat.slug}-tools-for-${u.slug}`,
     label: `${cat.name} tools for ${u.name}`,
     kind: "best",
     score: 10,
   }));
 
-  const useCases: LinkItem[] = topUC.slice(0, 10).map((u) => ({
+  const useCases: LinkItem[] = topUC.slice(0, INTERNAL_LINKING.category.useCases).map((u) => ({
     href: `/use-cases/${u.slug}`,
     label: u.name,
     kind: "use-case",
     score: 8,
   }));
 
-  // Comparisons between first 6 tools
-  const top = tools.slice(0, 6).map((t) => ({ slug: t.slug, name: t.name }));
-  const idxPairs: Array<[number, number]> = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+  // Comparisons between first N tools
+  const top = tools.slice(0, INTERNAL_LINKING.category.topToolsForPairs).map((t) => ({ slug: t.slug, name: t.name }));
+  const idxPairs: Array<[number, number]> = [
+    [0, 1],
+    [0, 2],
+    [0, 3],
+    [1, 2],
+    [1, 3],
+    [2, 3],
+  ];
+
   const comparisons: LinkItem[] = [];
   for (const [i, j] of idxPairs) {
-    const a = top[i], b = top[j];
+    const a = top[i],
+      b = top[j];
     if (!a || !b) continue;
     comparisons.push({
       href: `/compare/${a.slug}-vs-${b.slug}`,
@@ -310,11 +331,11 @@ async function _categoryLinks(categorySlug: string) {
       kind: "compare",
       score: 6,
     });
-    if (comparisons.length >= 8) break;
+    if (comparisons.length >= INTERNAL_LINKING.category.comparisons) break;
   }
 
   // Alternatives pages for top tools
-  const alternatives: LinkItem[] = tools.slice(0, 6).map((t) => ({
+  const alternatives: LinkItem[] = tools.slice(0, INTERNAL_LINKING.category.alternatives).map((t) => ({
     href: `/alternatives/${t.slug}`,
     label: `${t.name} alternatives`,
     kind: "alternatives",
@@ -332,9 +353,8 @@ async function _categoryLinks(categorySlug: string) {
 export const getCategoryInternalLinks = unstable_cache(
   async (categorySlug: string) => _categoryLinks(categorySlug),
   ["category-internal-links"],
-  { revalidate: 60 * 60 * 12 } // 12h
+  { revalidate: INTERNAL_LINKING.cacheSeconds }
 );
-
 
 /**
  * RULES: Best page should link to:
@@ -399,18 +419,19 @@ async function _bestLinks(bestSlug: string) {
     { href: `/best/${cat.slug}-tools-for-${uc.slug}`, label: `Best ${cat.name} tools for ${uc.name}`, kind: "best", score: 8 },
   ];
 
-  const toolLinks: LinkItem[] = tools.slice(0, 8).map((t) => ({
+  const toolLinks: LinkItem[] = tools.slice(0, INTERNAL_LINKING.best.tools).map((t) => ({
     href: `/tools/${t.slug}`,
     label: t.name,
     kind: "tool",
     score: 7,
   }));
 
-  // Adjacent comparisons (top 6)
-  const top = tools.slice(0, 6);
+  // Adjacent comparisons (top N)
+  const top = tools.slice(0, INTERNAL_LINKING.best.comparisons);
   const comparisons: LinkItem[] = [];
   for (let i = 0; i < top.length - 1; i++) {
-    const a = top[i], b = top[i + 1];
+    const a = top[i],
+      b = top[i + 1];
     if (!a || !b) continue;
     comparisons.push({
       href: `/compare/${a.slug}-vs-${b.slug}`,
@@ -418,10 +439,10 @@ async function _bestLinks(bestSlug: string) {
       kind: "compare",
       score: 6,
     });
-    if (comparisons.length >= 6) break;
+    if (comparisons.length >= INTERNAL_LINKING.best.comparisons) break;
   }
 
-  const alternatives: LinkItem[] = tools.slice(0, 6).map((t) => ({
+  const alternatives: LinkItem[] = tools.slice(0, INTERNAL_LINKING.best.alternatives).map((t) => ({
     href: `/alternatives/${t.slug}`,
     label: `${t.name} alternatives`,
     kind: "alternatives",
@@ -439,5 +460,5 @@ async function _bestLinks(bestSlug: string) {
 export const getBestInternalLinks = unstable_cache(
   async (bestSlug: string) => _bestLinks(bestSlug),
   ["best-internal-links"],
-  { revalidate: 60 * 60 * 12 } // 12h
+  { revalidate: INTERNAL_LINKING.cacheSeconds }
 );

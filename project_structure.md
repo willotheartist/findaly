@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 16/12/2025, 00:35:12*
+*Generated on: 16/12/2025, 22:22:27*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 80 |
-| 📁 Total Folders | 46 |
+| 📄 Total Files | 89 |
+| 📁 Total Folders | 53 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,41 +24,41 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 33 files (41.3%)
-- 🔷 **.ts** (TypeScript files): 20 files (25.0%)
-- 📄 **.sql** (Other files): 5 files (6.3%)
-- 🎨 **.svg** (SVG images): 5 files (6.3%)
-- ⚙️ **.json** (JSON files): 4 files (5.0%)
-- 📖 **.md** (Markdown files): 2 files (2.5%)
-- 📄 **.mjs** (Other files): 2 files (2.5%)
-- 🚫 **.gitignore** (Git ignore): 1 files (1.3%)
-- 📄 **.txt** (Text files): 1 files (1.3%)
-- 🖼️ **.ico** (Icon files): 1 files (1.3%)
-- 🎨 **.css** (Stylesheets): 1 files (1.3%)
-- ⚙️ **.yaml** (YAML files): 1 files (1.3%)
-- ⚙️ **.toml** (TOML files): 1 files (1.3%)
-- 📄 **.prisma** (Other files): 1 files (1.3%)
-- 📄 **.patch** (Other files): 1 files (1.3%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (1.3%)
+- ⚛️ **.tsx** (React TypeScript files): 33 files (37.1%)
+- 🔷 **.ts** (TypeScript files): 27 files (30.3%)
+- 📄 **.sql** (Other files): 7 files (7.9%)
+- 🎨 **.svg** (SVG images): 5 files (5.6%)
+- ⚙️ **.json** (JSON files): 4 files (4.5%)
+- 📖 **.md** (Markdown files): 2 files (2.2%)
+- 📄 **.mjs** (Other files): 2 files (2.2%)
+- 🚫 **.gitignore** (Git ignore): 1 files (1.1%)
+- 📄 **.txt** (Text files): 1 files (1.1%)
+- 🖼️ **.ico** (Icon files): 1 files (1.1%)
+- 🎨 **.css** (Stylesheets): 1 files (1.1%)
+- ⚙️ **.yaml** (YAML files): 1 files (1.1%)
+- ⚙️ **.toml** (TOML files): 1 files (1.1%)
+- 📄 **.prisma** (Other files): 1 files (1.1%)
+- 📄 **.patch** (Other files): 1 files (1.1%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (1.1%)
 
 ### By Category
 
-- **React**: 33 files (41.3%)
-- **TypeScript**: 20 files (25.0%)
-- **Other**: 10 files (12.5%)
-- **Config**: 6 files (7.5%)
-- **Assets**: 6 files (7.5%)
-- **Docs**: 3 files (3.8%)
-- **DevOps**: 1 files (1.3%)
-- **Styles**: 1 files (1.3%)
+- **React**: 33 files (37.1%)
+- **TypeScript**: 27 files (30.3%)
+- **Other**: 12 files (13.5%)
+- **Config**: 6 files (6.7%)
+- **Assets**: 6 files (6.7%)
+- **Docs**: 3 files (3.4%)
+- **DevOps**: 1 files (1.1%)
+- **Styles**: 1 files (1.1%)
 
 ### 📁 Largest Directories
 
-- **root**: 80 files
-- **app**: 32 files
+- **root**: 89 files
+- **app**: 33 files
 - **components**: 11 files
-- **prisma**: 9 files
-- **app/admin**: 6 files
+- **prisma**: 11 files
+- **prisma/migrations**: 8 files
 
 ## 🌳 Directory Structure
 
@@ -89,6 +89,8 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔌 api/
 │   │   ├── 📂 categories/
+│   │   │   └── 🔷 route.ts
+│   │   ├── 📂 logo/
 │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 submissions/
 │   │   │   ├── 🔷 route.ts
@@ -173,6 +175,10 @@ findaly/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20251215234043_newmigration/
 │   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20251216134457_add_findaly_sources_and_scores/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20251216143735_consensus/
+│   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
 │   ├── 🔷 seed.ts
@@ -186,6 +192,16 @@ findaly/
 │   ├── 🎨 vercel.svg
 │   └── 🎨 window.svg
 ├── 🔴 📖 **README.md**
+├── 📂 scripts/
+│   ├── 🔷 enrich.ts
+│   └── 📂 findaly/
+│   │   ├── 📂 enrich/
+│   │   │   ├── 🔷 discover.ts
+│   │   │   ├── 🔷 extract.ts
+│   │   │   └── 🔷 http.ts
+│   │   └── 📂 rating/
+│   │   │   ├── 🔷 checklists.ts
+│   │   │   └── 🔷 score.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
 ├── 🟡 🔷 **tsconfig.json**

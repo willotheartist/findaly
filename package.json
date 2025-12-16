@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "enrich": "tsx scripts/enrich.ts",
+    "enrich:dry": "tsx scripts/enrich.ts --dry"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
@@ -17,7 +19,8 @@
     "pg": "^8.16.3",
     "posthog-js": "^1.306.2",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
     "@prisma/config": "^7.1.0",

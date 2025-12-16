@@ -1,4 +1,3 @@
-// lib/decision/alternatives.ts
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 
@@ -102,14 +101,14 @@ const candidateSelect = Prisma.validator<Prisma.ToolSelect>()({
   isFeatured: true,
 
   pricingModel: true,
-  startingPrice: true, // ✅ FIX: alternatives page reads this
+  startingPrice: true,
   shortDescription: true,
 
   // scoring signals
   targetAudience: true,
   keyFeatures: true,
   integrations: true,
-  useCases: { select: { slug: true } },
+  useCases: { select: { slug: true, id: true } },
 
   primaryCategoryId: true,
 });
@@ -126,6 +125,8 @@ export async function getAlternatives(
         Candidate & {
           _score: number;
           _signals: { useCaseOverlap: number; integrationsOverlap: number };
+          _curated?: boolean;
+          _curatedNote?: string | null;
         }
       >;
     }
@@ -137,15 +138,67 @@ export async function getAlternatives(
 
   if (!tool) return null;
 
+  // Pull explicit / curated alternatives (ToolAlternative table)
+  // These are "ground truth" overrides that should strongly influence ordering.
+  const explicit = await prisma.toolAlternative.findMany({
+    where: { toolId: tool.id },
+    orderBy: [{ score: "desc" }, { createdAt: "desc" }],
+    take: 24,
+    select: {
+      alternativeId: true,
+      score: true,
+      note: true,
+      alternative: { select: candidateSelect },
+    },
+  });
+
+  const explicitCandidates = explicit
+    .map((x) => x.alternative)
+    .filter((t) => t.status === "ACTIVE");
+
+  const explicitMeta = new Map<string, { score: number; note?: string | null }>();
+  for (const x of explicit) {
+    explicitMeta.set(x.alternativeId, { score: x.score ?? 0, note: x.note ?? null });
+  }
+
   // Fetch candidates: same primary category, active, not itself
-  const candidates = await prisma.tool.findMany({
+  let candidates = await prisma.tool.findMany({
     where: {
       id: { not: tool.id },
       status: "ACTIVE",
       primaryCategoryId: tool.primaryCategoryId,
     },
     select: candidateSelect,
+    take: 120,
   });
+
+  // Fallback: if category is small, broaden the pool so the page isn't thin.
+  // Keep it relevant by matching on shared use-cases (when possible).
+  if (candidates.length < 8) {
+    const toolUseCaseIds = tool.useCases.map((u) => u.id);
+
+    const or: Prisma.ToolWhereInput[] = [{ primaryCategoryId: tool.primaryCategoryId }];
+    if (toolUseCaseIds.length) {
+      or.push({ useCases: { some: { id: { in: toolUseCaseIds } } } });
+    }
+
+    candidates = await prisma.tool.findMany({
+      where: {
+        id: { not: tool.id },
+        status: "ACTIVE",
+        OR: or,
+      },
+      select: candidateSelect,
+      take: 200,
+    });
+  }
+
+  // Merge explicit candidates on top of discovered pool (de-dupe by id)
+  const byId = new Map<string, Candidate>();
+  for (const c of [...explicitCandidates, ...candidates]) {
+    byId.set(c.id, c);
+  }
+  candidates = Array.from(byId.values());
 
   const toolUseCaseSlugs = tool.useCases.map((u) => u.slug);
 
@@ -157,17 +210,28 @@ export async function getAlternatives(
     const featuresScore = jaccard(tool.keyFeatures ?? [], alt.keyFeatures ?? []); // 0..1
     const integrationsOverlap = overlapCount(tool.integrations ?? [], alt.integrations ?? []);
 
-    // Weighted score (tweak later)
+    // Weighted score
     let score =
       useCaseScore * 50 +
       audienceScore * 20 +
       featuresScore * 25 +
-      Math.min(integrationsOverlap, 5) * 1; // small bonus
+      Math.min(integrationsOverlap, 5) * 1;
 
     if (alt.isFeatured) score += 2;
 
+    // Curated alternatives should win ties and float upward
+    const curated = explicitMeta.get(alt.id);
+    if (curated) {
+      // Treat ToolAlternative.score as a strong nudge, but clamp it
+      score += Math.max(-10, Math.min(curated.score, 30));
+      // Base boost for being explicitly linked
+      score += 8;
+    }
+
     return {
       ...alt,
+      _curated: Boolean(curated),
+      _curatedNote: curated?.note ?? null,
       _score: Math.round(score * 10) / 10,
       _signals: {
         useCaseOverlap: overlapCount(toolUseCaseSlugs, altUseCaseSlugs),

@@ -9,30 +9,43 @@ type Props = {
   className?: string;
 };
 
-function getDomain(url?: string | null) {
+function normalizeUrl(url?: string | null) {
   if (!url) return null;
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    return new URL(url).toString();
+  } catch {
+    try {
+      return new URL(`https://${url}`).toString();
+    } catch {
+      return null;
+    }
+  }
+}
+
+function domainFromWebsite(url?: string | null) {
+  const u = normalizeUrl(url);
+  if (!u) return null;
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
   } catch {
     return null;
   }
 }
 
-function clearbitFromWebsite(url?: string | null) {
-  const domain = getDomain(url);
-  if (!domain) return null;
-  return `https://logo.clearbit.com/${domain}`;
+function googleFavicon(domain: string, size = 128) {
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=${size}`;
 }
 
-export default function ToolLogo({
-  name,
-  logoUrl,
-  websiteUrl,
-  className = "",
-}: Props) {
+export default function ToolLogo({ name, logoUrl, websiteUrl, className = "" }: Props) {
+  const domain = domainFromWebsite(websiteUrl);
+  const src = (logoUrl && logoUrl.trim()) || (domain ? googleFavicon(domain, 128) : null);
+
   const [broken, setBroken] = React.useState(false);
 
-  const src = logoUrl || clearbitFromWebsite(websiteUrl);
+  // ✅ reset error state whenever src changes (filter/sort safe)
+  React.useEffect(() => {
+    setBroken(false);
+  }, [src]);
 
   return (
     <div

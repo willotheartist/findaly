@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import ToolsExplorer from "@/components/ToolsExplorer";
 import { ArrowUpRight, Boxes, Search, Zap, Star } from "lucide-react";
 
@@ -17,6 +17,10 @@ type ToolLite = {
   startingPrice: string | null;
   keyFeatures: string[];
   isFeatured: boolean;
+
+  // ✅ These are required by the ToolLite used inside ToolsExplorer
+  websiteUrl: string;
+  logoUrl: string | null;
 };
 
 type CategoryLite = { name: string; slug: string };
@@ -42,15 +46,7 @@ function MiniLogo({ name }: { name: string }) {
   );
 }
 
-function Stat({
-  left,
-  label,
-  right,
-}: {
-  left: React.ReactNode;
-  label: string;
-  right: React.ReactNode;
-}) {
+function Stat({ left, label, right }: { left: ReactNode; label: string; right: ReactNode }) {
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-3">
       <div className="text-sm font-semibold text-white/85">{left}</div>
@@ -60,15 +56,7 @@ function Stat({
   );
 }
 
-function BarPair({
-  label,
-  left,
-  right,
-}: {
-  label: string;
-  left: number; // 0-5
-  right: number; // 0-5
-}) {
+function BarPair({ label, left, right }: { label: string; left: number; right: number }) {
   const max = 5;
   const leftPct = Math.max(0, Math.min(100, (left / max) * 100));
   const rightPct = Math.max(0, Math.min(100, (right / max) * 100));
@@ -305,11 +293,7 @@ export default function ToolsPageClient({
                             }
                           />
                           <div className="h-px bg-white/10" />
-                          <Stat
-                            label="Price"
-                            left={<span>${stats.priceA}/month</span>}
-                            right={<span>${stats.priceB}/month</span>}
-                          />
+                          <Stat label="Price" left={<span>${stats.priceA}/month</span>} right={<span>${stats.priceB}/month</span>} />
                         </div>
 
                         {/* bars */}

@@ -47,66 +47,59 @@ model Tool {
   name String
   slug String @unique
 
-  // Copy
   tagline          String?
   shortDescription String
   longDescription  String?
 
-  // URLs / assets
   websiteUrl String?
   pricingUrl String?
   logoUrl    String?
 
-  // Pricing (baseline)
   pricingModel  PricingModel
   startingPrice String?
   pricingNotes  String?
 
-  // Pricing (structured)
   startingPriceCents  Int?
   startingPricePeriod PricingPeriod @default(UNKNOWN)
   hasFreePlan         Boolean?
   hasFreeTrial        Boolean?
   trialDays           Int?
 
-  // Structured “decision layer”
   bestFor       String[] @default([])
   notFor        String[] @default([])
   pros          String[] @default([])
   cons          String[] @default([])
   switchReasons String[] @default([])
 
-  // Existing arrays (keep)
   targetAudience String[] @default([])
   keyFeatures    String[] @default([])
   integrations   String[] @default([])
 
-  // Comparisons (normalized flags)
-  // Example: {"has_api": true, "sso": false, "mobile_app": true}
   featureFlags Json @default("{}")
-
-  // “Replaces / replaced by” intent
   replacementFor String[] @default([])
 
-  // Trust / freshness
   status         ToolStatus     @default(ACTIVE)
   isFeatured     Boolean        @default(false)
   lastVerifiedAt DateTime?
   dataConfidence DataConfidence @default(SEEDED)
 
-  // Category relations
+  findalyScore     Float?
+  findalyScoreMeta Json?
+
   primaryCategoryId String
   primaryCategory   Category @relation(fields: [primaryCategoryId], references: [id])
 
   secondaryCategories Category[] @relation("SecondaryCategories")
   useCases            UseCase[]  @relation("ToolUseCases")
 
-  // Explicit alternatives graph (optional; you can still compute alternatives)
   alternativesFrom ToolAlternative[] @relation("ToolAlt")
   alternativesTo   ToolAlternative[] @relation("AltTool")
 
-  // Submissions inbox links (optional)
   submissions Submission[]
+  toolSources ToolSource[]
+
+  // ✅ this is the missing connection
+  externalClaims ExternalClaim[]
 
   @@index([primaryCategoryId])
   @@index([primaryCategoryId, status])
@@ -179,14 +172,48 @@ model Submission {
   notes      String?
   email      String?
 
-  // lightweight anti-spam / ops
   ip        String?
   userAgent String?
 
-  // once you convert a submission into a tool, optionally link it
   toolId String?
   tool   Tool?   @relation(fields: [toolId], references: [id])
 
   @@index([status, createdAt])
   @@index([toolId])
+}
+
+model ToolSource {
+  id        String   @id @default(cuid())
+  toolId    String
+  type      String
+  url       String
+  meta      Json     @default("{}")
+  fetchedAt DateTime @default(now())
+
+  tool Tool @relation(fields: [toolId], references: [id])
+
+  @@unique([toolId, type], name: "toolId_type")
+  @@index([toolId, type])
+}
+
+model ExternalClaim {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  toolId     String
+  tool       Tool     @relation(fields: [toolId], references: [id])
+
+  sourceType String
+  sourceUrl  String
+
+  topic      String
+  sentiment  Int
+  claim      String
+  strength   Float    @default(0.5)
+  evidence   Json?
+
+  @@index([toolId, topic])
+  @@index([toolId, sourceType])
+  @@index([sourceType])
 }

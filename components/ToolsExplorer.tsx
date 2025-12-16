@@ -5,11 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { LayoutGrid, List } from "lucide-react";
+import ToolLogo from "@/components/ToolLogo";
 
 type ToolLite = {
   id: string;
   name: string;
   slug: string;
+
+  // ✅ logo inputs
+  websiteUrl: string | null;
+  logoUrl: string | null;
+
   primaryCategory: string;
   primaryCategorySlug: string;
   pricingModel: string;
@@ -143,10 +149,14 @@ export default function ToolsExplorer({
               ))}
             </select>
 
-            <select value={sort} onChange={(e) => {
+            <select
+              value={sort}
+              onChange={(e) => {
                 const v = e.target.value;
                 if (v === "featured" || v === "name" || v === "category") setSort(v);
-              }} className={selectClass}>
+              }}
+              className={selectClass}
+            >
               <option value="featured">Sort: Featured</option>
               <option value="name">Sort: Name</option>
               <option value="category">Sort: Category</option>
@@ -197,14 +207,25 @@ export default function ToolsExplorer({
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm font-semibold text-white">{t.name}</div>
-                    {t.isFeatured ? <span className={badge}>Featured</span> : null}
-                    <span className={badge}>{t.pricingModel}</span>
-                    {t.startingPrice ? <span className={badge}>{t.startingPrice}</span> : null}
-                  </div>
+                  <div className="flex items-start gap-3">
+                    <ToolLogo
+                      name={t.name}
+                      logoUrl={t.logoUrl}
+                      websiteUrl={t.websiteUrl}
+                      className="h-10 w-10"
+                    />
 
-                  <div className="mt-1 text-sm text-white/60 line-clamp-2">{t.shortDescription}</div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-sm font-semibold text-white">{t.name}</div>
+                        {t.isFeatured ? <span className={badge}>Featured</span> : null}
+                        <span className={badge}>{t.pricingModel}</span>
+                        {t.startingPrice ? <span className={badge}>{t.startingPrice}</span> : null}
+                      </div>
+
+                      <div className="mt-1 text-sm text-white/60 line-clamp-2">{t.shortDescription}</div>
+                    </div>
+                  </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     <span
@@ -241,19 +262,32 @@ export default function ToolsExplorer({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-semibold tracking-tight text-white">{t.name}</h3>
-                      {t.isFeatured ? <span className={badge}>Featured</span> : null}
-                    </div>
+                    <div className="flex items-start gap-3">
+                      <ToolLogo
+                        name={t.name}
+                        logoUrl={t.logoUrl}
+                        websiteUrl={t.websiteUrl}
+                        className="h-10 w-10"
+                      />
 
-                    <p className="mt-2 text-sm leading-relaxed text-white/60 line-clamp-3">
-                      {t.shortDescription}
-                    </p>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold tracking-tight text-white">{t.name}</h3>
+                          {t.isFeatured ? <span className={badge}>Featured</span> : null}
+                        </div>
+
+                        <p className="mt-2 text-sm leading-relaxed text-white/60 line-clamp-3">
+                          {t.shortDescription}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="shrink-0 text-right">
                     <div className={badge}>{t.pricingModel}</div>
-                    {t.startingPrice ? <div className="mt-2 text-xs text-white/55">{t.startingPrice}</div> : null}
+                    {t.startingPrice ? (
+                      <div className="mt-2 text-xs text-white/55">{t.startingPrice}</div>
+                    ) : null}
                   </div>
                 </div>
 

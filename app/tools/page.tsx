@@ -6,6 +6,11 @@ type ToolLite = {
   id: string;
   name: string;
   slug: string;
+
+  // ✅ logo inputs
+  websiteUrl: string | null;
+  logoUrl: string | null;
+
   primaryCategory: string;
   primaryCategorySlug: string;
   pricingModel: string;
@@ -70,10 +75,17 @@ export default async function ToolsPage() {
     id: t.id,
     name: t.name,
     slug: t.slug,
+
+    // ✅ from prisma schema
+    websiteUrl: t.websiteUrl ?? null,
+    logoUrl: t.logoUrl ?? null,
+
     primaryCategory: t.primaryCategory?.name ?? "Tools",
     primaryCategorySlug: t.primaryCategory?.slug ?? "tools",
+
     pricingModel: String(t.pricingModel),
     shortDescription: t.shortDescription,
+
     startingPrice: t.startingPrice ?? null,
     keyFeatures: t.keyFeatures ?? [],
     isFeatured: t.isFeatured,

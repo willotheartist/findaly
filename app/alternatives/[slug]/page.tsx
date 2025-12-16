@@ -6,9 +6,27 @@ import { getAlternatives } from "@/lib/decision/alternatives";
 import { getAlternativesInternalLinks, type LinkItem } from "@/lib/internalLinking/engine";
 import { ArrowUpRight, Sparkles, Boxes } from "lucide-react";
 
+// Prebuild alternatives pages for all ACTIVE tools (better crawl + indexation).
+// Keep dynamicParams true so newly-added tools still work without needing a rebuild.
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const tools = await prisma.tool.findMany({
+    where: { status: "ACTIVE" },
+    select: { slug: true },
+  });
+  return tools.map((t) => ({ slug: t.slug }));
+}
+
 type AlternativesPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+function siteUrl() {
+  // Set NEXT_PUBLIC_SITE_URL in env (e.g. https://findaly.com)
+  // Fallback keeps JSON-LD valid in dev.
+  return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "");
+}
 
 function slugifyCategorySlug(slugOrName: string) {
   return slugOrName.trim().toLowerCase().replace(/\s+/g, "-");
@@ -205,14 +223,17 @@ export default async function AlternativesPage({ params }: AlternativesPageProps
       "@type": "ListItem",
       position: i + 1,
       name: t.name,
-      url: `/tools/${t.slug}`,
+      url: `${siteUrl()}/tools/${t.slug}`,
     })),
   };
 
   return (
     <main className="min-h-screen bg-(--bg) text-(--text)">
       {/* JSON-LD */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       <div className="pointer-events-none absolute left-0 right-0 top-0 -z-10 h-[560px] bg-[radial-gradient(1000px_380px_at_50%_0%,rgba(255,255,255,0.10),rgba(0,0,0,0))]" />
 
@@ -246,7 +267,8 @@ export default async function AlternativesPage({ params }: AlternativesPageProps
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/60 md:text-base">
-            Similar tools to {tool.name} in {categoryName}. Compare options, open a few comparisons, then shortlist.
+            Similar tools to {tool.name} in {categoryName}. Compare options, open a few comparisons,
+            then shortlist.
           </p>
 
           {/* Quick actions */}
@@ -374,7 +396,8 @@ export default async function AlternativesPage({ params }: AlternativesPageProps
               </div>
 
               <div className="mt-4 text-xs text-white/50">
-                Tip: shortlist 2–3 tools, open comparisons, then check alternatives for each finalist.
+                Tip: shortlist 2–3 tools, open comparisons, then check alternatives for each
+                finalist.
               </div>
             </SidebarBlock>
 
@@ -388,7 +411,10 @@ export default async function AlternativesPage({ params }: AlternativesPageProps
                       className="group flex items-center justify-between rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.06)] px-4 py-3 text-sm text-white/75 transition hover:border-white/20 hover:bg-white/7 hover:text-white no-underline"
                     >
                       <span className="min-w-0 truncate">{b.label}</span>
-                      <ArrowUpRight size={16} className="shrink-0 opacity-60 transition group-hover:opacity-80" />
+                      <ArrowUpRight
+                        size={16}
+                        className="shrink-0 opacity-60 transition group-hover:opacity-80"
+                      />
                     </Link>
                   ))}
 
