@@ -2,10 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 
 function siteUrl() {
-  const u =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    "http://localhost:3000";
+  const u = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "http://localhost:3000";
   return u.replace(/\/$/, "");
 }
 
@@ -37,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       slug: true,
       isFeatured: true,
       name: true,
-      primaryCategory: { select: { slug: true, id: true } },
+      primaryCategory: { select: { slug: true } },
       useCases: { select: { slug: true } },
     },
     orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
@@ -63,14 +60,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     categoryToUseCases.set(catSlug, set);
   }
 
-  const MAX_COMPARE_URLS = 4000; // hard cap across all categories
+  const MAX_COMPARE_URLS = 4000;
   let compareCount = 0;
 
   const urls: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${base}/tools`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
 
-    // pages we are adding now
+    // important index pages
+    { url: `${base}/compare`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/alternatives`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+
     { url: `${base}/use-cases`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/best`, lastModified: now, changeFrequency: "weekly", priority: 0.6 },
   ];
@@ -84,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-for (const t of tools) {
+  for (const t of tools) {
     urls.push({
       url: `${base}/tools/${t.slug}`,
       lastModified: now,
@@ -107,7 +107,7 @@ for (const t of tools) {
       priority: 0.7,
     });
 
-    const pairs = buildComparePairs(slugs).slice(0, 12); // cap per category
+    const pairs = buildComparePairs(slugs).slice(0, 12);
     for (const [a, b] of pairs) {
       if (compareCount >= MAX_COMPARE_URLS) break;
       urls.push({
@@ -130,5 +130,14 @@ for (const t of tools) {
     }
   }
 
-  return urls;
+  // ✅ Deduplicate urls (Google prefers no duplicates)
+  const seen = new Set<string>();
+  const deduped: MetadataRoute.Sitemap = [];
+  for (const entry of urls) {
+    if (seen.has(entry.url)) continue;
+    seen.add(entry.url);
+    deduped.push(entry);
+  }
+
+  return deduped;
 }
