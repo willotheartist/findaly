@@ -19,7 +19,7 @@ type ToolLite = {
   isFeatured: boolean;
 
   // ✅ These are required by the ToolLite used inside ToolsExplorer
-  websiteUrl: string;
+  websiteUrl: string | null;
   logoUrl: string | null;
 };
 
@@ -293,7 +293,11 @@ export default function ToolsPageClient({
                             }
                           />
                           <div className="h-px bg-white/10" />
-                          <Stat label="Price" left={<span>${stats.priceA}/month</span>} right={<span>${stats.priceB}/month</span>} />
+                          <Stat
+                            label="Price"
+                            left={<span>${stats.priceA}/month</span>}
+                            right={<span>${stats.priceB}/month</span>}
+                          />
                         </div>
 
                         {/* bars */}
