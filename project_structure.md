@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 16/12/2025, 22:22:27*
+*Generated on: 16/12/2025, 22:54:25*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 89 |
+| 📄 Total Files | 90 |
 | 📁 Total Folders | 53 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,11 +24,11 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 33 files (37.1%)
-- 🔷 **.ts** (TypeScript files): 27 files (30.3%)
-- 📄 **.sql** (Other files): 7 files (7.9%)
+- ⚛️ **.tsx** (React TypeScript files): 34 files (37.8%)
+- 🔷 **.ts** (TypeScript files): 27 files (30.0%)
+- 📄 **.sql** (Other files): 7 files (7.8%)
 - 🎨 **.svg** (SVG images): 5 files (5.6%)
-- ⚙️ **.json** (JSON files): 4 files (4.5%)
+- ⚙️ **.json** (JSON files): 4 files (4.4%)
 - 📖 **.md** (Markdown files): 2 files (2.2%)
 - 📄 **.mjs** (Other files): 2 files (2.2%)
 - 🚫 **.gitignore** (Git ignore): 1 files (1.1%)
@@ -43,19 +43,19 @@
 
 ### By Category
 
-- **React**: 33 files (37.1%)
-- **TypeScript**: 27 files (30.3%)
-- **Other**: 12 files (13.5%)
+- **React**: 34 files (37.8%)
+- **TypeScript**: 27 files (30.0%)
+- **Other**: 12 files (13.3%)
 - **Config**: 6 files (6.7%)
 - **Assets**: 6 files (6.7%)
-- **Docs**: 3 files (3.4%)
+- **Docs**: 3 files (3.3%)
 - **DevOps**: 1 files (1.1%)
 - **Styles**: 1 files (1.1%)
 
 ### 📁 Largest Directories
 
-- **root**: 89 files
-- **app**: 33 files
+- **root**: 90 files
+- **app**: 34 files
 - **components**: 11 files
 - **prisma**: 11 files
 - **prisma/migrations**: 8 files
@@ -103,8 +103,9 @@ findaly/
 │   │   │   └── ⚛️ page.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 compare/
-│   │   └── 📂 [pair]/
+│   │   ├── 📂 [pair]/
 │   │   │   └── ⚛️ page.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 contact/
 │   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
