@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "NEXT_DISABLE_TURBOPACK=1 prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "enrich": "tsx scripts/enrich.ts",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.1.0",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "lucide-react": "^0.561.0",
     "next": "16.0.7",

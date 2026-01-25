@@ -1,3 +1,4 @@
+// tailwind.config.ts
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -8,11 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter-tight)", "system-ui", "sans-serif"],
-      },
-      colors: {
-        "findaly-bg": "#eceae3",
-        "findaly-blue": "#a0c4ff",
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         "2xl": "1.25rem",

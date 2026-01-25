@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 16/12/2025, 22:54:25*
+*Generated on: 24/01/2026, 19:18:42*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 90 |
-| 📁 Total Folders | 53 |
+| 📄 Total Files | 110 |
+| 📁 Total Folders | 65 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,41 +24,41 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 34 files (37.8%)
-- 🔷 **.ts** (TypeScript files): 27 files (30.0%)
-- 📄 **.sql** (Other files): 7 files (7.8%)
-- 🎨 **.svg** (SVG images): 5 files (5.6%)
-- ⚙️ **.json** (JSON files): 4 files (4.4%)
-- 📖 **.md** (Markdown files): 2 files (2.2%)
-- 📄 **.mjs** (Other files): 2 files (2.2%)
-- 🚫 **.gitignore** (Git ignore): 1 files (1.1%)
-- 📄 **.txt** (Text files): 1 files (1.1%)
-- 🖼️ **.ico** (Icon files): 1 files (1.1%)
-- 🎨 **.css** (Stylesheets): 1 files (1.1%)
-- ⚙️ **.yaml** (YAML files): 1 files (1.1%)
-- ⚙️ **.toml** (TOML files): 1 files (1.1%)
-- 📄 **.prisma** (Other files): 1 files (1.1%)
-- 📄 **.patch** (Other files): 1 files (1.1%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (1.1%)
+- 🔷 **.ts** (TypeScript files): 43 files (39.1%)
+- ⚛️ **.tsx** (React TypeScript files): 42 files (38.2%)
+- 🎨 **.svg** (SVG images): 5 files (4.5%)
+- ⚙️ **.json** (JSON files): 4 files (3.6%)
+- 📄 **.sql** (Other files): 3 files (2.7%)
+- 📖 **.md** (Markdown files): 2 files (1.8%)
+- 📄 **.mjs** (Other files): 2 files (1.8%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.9%)
+- 📄 **.txt** (Text files): 1 files (0.9%)
+- 🖼️ **.ico** (Icon files): 1 files (0.9%)
+- 🎨 **.css** (Stylesheets): 1 files (0.9%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.9%)
+- ⚙️ **.toml** (TOML files): 1 files (0.9%)
+- 📄 **.prisma** (Other files): 1 files (0.9%)
+- 📄 **.patch** (Other files): 1 files (0.9%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.9%)
 
 ### By Category
 
-- **React**: 34 files (37.8%)
-- **TypeScript**: 27 files (30.0%)
-- **Other**: 12 files (13.3%)
-- **Config**: 6 files (6.7%)
-- **Assets**: 6 files (6.7%)
-- **Docs**: 3 files (3.3%)
-- **DevOps**: 1 files (1.1%)
-- **Styles**: 1 files (1.1%)
+- **TypeScript**: 43 files (39.1%)
+- **React**: 42 files (38.2%)
+- **Other**: 8 files (7.3%)
+- **Config**: 6 files (5.5%)
+- **Assets**: 6 files (5.5%)
+- **Docs**: 3 files (2.7%)
+- **DevOps**: 1 files (0.9%)
+- **Styles**: 1 files (0.9%)
 
 ### 📁 Largest Directories
 
-- **root**: 90 files
-- **app**: 34 files
-- **components**: 11 files
-- **prisma**: 11 files
-- **prisma/migrations**: 8 files
+- **root**: 110 files
+- **app**: 57 files
+- **app/add-listing**: 21 files
+- **app/add-listing/_components**: 17 files
+- **app/api**: 15 files
 
 ## 🌳 Directory Structure
 
@@ -69,92 +69,131 @@ findaly/
 │   ├── ⚙️ project.json
 │   └── 📄 README.txt
 ├── 🚀 app/
-│   ├── 📂 about/
-│   │   └── ⚛️ page.tsx
-│   ├── 📂 admin/
-│   │   ├── 📂 login/
-│   │   │   └── ⚛️ page.tsx
-│   │   ├── 📂 logout/
-│   │   │   └── 🔷 route.ts
-│   │   ├── ⚛️ page.tsx
-│   │   ├── 📂 submissions/
-│   │   │   └── ⚛️ page.tsx
-│   │   └── 📂 tools/
-│   │   │   ├── 📂 [slug]/
-│   │   │   │   └── ⚛️ page.tsx
-│   │   │   └── ⚛️ page.tsx
-│   ├── 📂 alternatives/
-│   │   ├── 📂 [slug]/
-│   │   │   └── ⚛️ page.tsx
+│   ├── 📂 add-listing/
+│   │   ├── 📂 _components/
+│   │   │   ├── 📂 fields/
+│   │   │   │   ├── ⚛️ CheckboxGroup.tsx
+│   │   │   │   ├── ⚛️ Input.tsx
+│   │   │   │   ├── ⚛️ PhotoUploader.tsx
+│   │   │   │   ├── ⚛️ Select.tsx
+│   │   │   │   └── ⚛️ TextArea.tsx
+│   │   │   ├── ⚛️ FormSection.tsx
+│   │   │   ├── ⚛️ StepIndicator.tsx
+│   │   │   ├── 📂 steps/
+│   │   │   │   ├── ⚛️ Step1TypeSelection.tsx
+│   │   │   │   ├── ⚛️ Step2Category.tsx
+│   │   │   │   ├── ⚛️ Step3Details.tsx
+│   │   │   │   ├── ⚛️ Step4Features.tsx
+│   │   │   │   ├── ⚛️ Step5Location.tsx
+│   │   │   │   ├── ⚛️ Step6Photos.tsx
+│   │   │   │   ├── ⚛️ Step7Description.tsx
+│   │   │   │   ├── ⚛️ Step8Seller.tsx
+│   │   │   │   └── ⚛️ StepReview.tsx
+│   │   │   └── ⚛️ SuccessModal.tsx
+│   │   ├── 📂 _data/
+│   │   │   └── 🔷 options.ts
+│   │   ├── 📂 _types/
+│   │   │   └── 🔷 listing.ts
+│   │   ├── ⚛️ ListingWizard.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 🔌 api/
+│   │   ├── 📂 auth/
+│   │   │   ├── 📂 login/
+│   │   │   │   └── 🔷 route.ts
+│   │   │   ├── 📂 logout/
+│   │   │   │   └── 🔷 route.ts
+│   │   │   └── 📂 signup/
+│   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 categories/
+│   │   │   └── 🔷 route.ts
+│   │   ├── 📂 listings/
+│   │   │   ├── 📂 [id]/
+│   │   │   │   └── 🔷 route.ts
 │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 logo/
 │   │   │   └── 🔷 route.ts
-│   │   ├── 📂 submissions/
+│   │   ├── 📂 messages/
+│   │   │   ├── 📂 [id]/
+│   │   │   │   └── 🔷 route.ts
+│   │   │   ├── 🔷 route.ts
+│   │   │   └── 📂 send/
+│   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 profile/
+│   │   │   └── 📂 update/
+│   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 searches/
+│   │   │   ├── 📂 [id]/
+│   │   │   │   └── 🔷 route.ts
+│   │   │   └── 🔷 route.ts
+│   │   ├── 📂 stack/
+│   │   └── 📂 submissions/
 │   │   │   ├── 🔷 route.ts
 │   │   │   └── 📂 suggest/
 │   │   │   │   └── 🔷 route.ts
-│   │   └── 📂 submit/
-│   │   │   └── 🔷 route.ts
-│   ├── 📂 best/
+│   ├── 📂 buy/
 │   │   ├── 📂 [slug]/
+│   │   │   ├── ⚛️ ListingPageClient.tsx
 │   │   │   └── ⚛️ page.tsx
-│   │   └── ⚛️ page.tsx
-│   ├── 📂 compare/
-│   │   ├── 📂 [pair]/
-│   │   │   └── ⚛️ page.tsx
-│   │   └── ⚛️ page.tsx
-│   ├── 📂 contact/
 │   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
 │   ├── 🎨 globals.css
 │   ├── ⚛️ layout.tsx
+│   ├── 📂 listings/
 │   ├── 📂 login/
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 logout/
+│   │   └── 🔷 route.ts
+│   ├── 📂 messages/
+│   │   └── ⚛️ page.tsx
+│   ├── 📂 my-listings/
+│   │   ├── 📂 [id]/
+│   │   │   └── 📂 edit/
+│   │   │   │   ├── ⚛️ EditListingClient.tsx
+│   │   │   │   └── ⚛️ page.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── ⚛️ page.tsx
+│   ├── 📂 profile/
+│   │   └── 📂 [slug]/
+│   │   │   └── ⚛️ page.tsx
 │   ├── 🔷 robots.ts
+│   ├── 📂 searches/
+│   │   └── ⚛️ page.tsx
+│   ├── 📂 settings/
+│   │   ├── 📂 _components/
+│   │   │   └── ⚛️ SettingsClient.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 signup/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔷 sitemap.ts
-│   ├── 📂 submit/
-│   │   └── ⚛️ page.tsx
-│   ├── 📂 tools/
-│   │   ├── 📂 [slug]/
-│   │   │   └── ⚛️ page.tsx
-│   │   ├── 📂 category/
-│   │   │   └── 📂 [category]/
-│   │   │   │   └── ⚛️ page.tsx
-│   │   ├── 📂 duplicate/
-│   │   │   └── 🔷 route.ts
+│   ├── 📂 upgrade/
 │   │   └── ⚛️ page.tsx
 │   └── 📂 use-cases/
-│   │   ├── 📂 [slug]/
-│   │   │   └── ⚛️ page.tsx
-│   │   └── ⚛️ page.tsx
 ├── 🧩 components/
-│   ├── ⚛️ AlternativesPageClient.tsx
-│   ├── ⚛️ AlternativesSearch.tsx
-│   ├── ⚛️ ClaimListingPanel.tsx
 │   ├── ⚛️ Footer.tsx
 │   ├── ⚛️ Header.tsx
 │   ├── ⚛️ HeaderDropdownClient.tsx
-│   ├── ⚛️ ToolCard.tsx
-│   ├── ⚛️ ToolLogo.tsx
-│   ├── ⚛️ ToolsExplorer.tsx
-│   ├── ⚛️ ToolsPageClient.tsx
-│   └── ⚛️ UseCasesExplorer.tsx
+│   ├── 📂 listing/
+│   │   └── ⚛️ SellerCard.tsx
+│   └── 📂 stack/
+│   │   ├── ⚛️ StackBuilderClient.tsx
+│   │   ├── ⚛️ StackLoading.tsx
+│   │   └── ⚛️ StackResults.tsx
 ├── 📂 data/
-│   └── 🔷 mockTools.ts
+│   ├── 🔷 mockTools.ts
+│   └── 📂 stack/
+│   │   └── 🔷 questions.ts
 ├── 🔵 🔍 **eslint.config.mjs**
 ├── 📂 generated/
 ├── 📚 lib/
 │   ├── 📂 admin/
 │   │   └── 🔷 session.ts
+│   ├── 📂 auth/
+│   │   ├── 🔷 profile.ts
+│   │   └── 🔷 session.ts
 │   ├── 🔷 db.ts
 │   ├── 📂 decision/
-│   │   └── 🔷 alternatives.ts
+│   │   ├── 🔷 alternatives.ts
+│   │   └── 🔷 coverage.ts
 │   └── 📂 internalLinking/
 │   │   ├── 🔷 engine.ts
 │   │   └── 🔷 rules.ts
@@ -166,19 +205,11 @@ findaly/
 ├── 📄 postcss.config.mjs
 ├── 📂 prisma/
 │   ├── 📂 migrations/
-│   │   ├── 📂 20251214211004_init/
+│   │   ├── 📂 20260123094902_init_marketplace/
 │   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251215004001_decision_schema/
+│   │   ├── 📂 20260123105414_add_saved_searches/
 │   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251215135757_add_submissions/
-│   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251215160137_tool_status_enum/
-│   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251215234043_newmigration/
-│   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251216134457_add_findaly_sources_and_scores/
-│   │   │   └── 📄 migration.sql
-│   │   ├── 📂 20251216143735_consensus/
+│   │   ├── 📂 20260124152715_add_listing_details/
 │   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
@@ -195,7 +226,7 @@ findaly/
 ├── 🔴 📖 **README.md**
 ├── 📂 scripts/
 │   ├── 🔷 enrich.ts
-│   └── 📂 findaly/
+│   ├── 📂 findaly/
 │   │   ├── 📂 enrich/
 │   │   │   ├── 🔷 discover.ts
 │   │   │   ├── 🔷 extract.ts
@@ -203,6 +234,7 @@ findaly/
 │   │   └── 📂 rating/
 │   │   │   ├── 🔷 checklists.ts
 │   │   │   └── 🔷 score.ts
+│   └── 🔷 mark-top-alternatives.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
 ├── 🟡 🔷 **tsconfig.json**

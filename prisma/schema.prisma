@@ -6,214 +6,314 @@ datasource db {
   provider = "postgresql"
 }
 
-enum PricingModel {
-  FREE
-  FREEMIUM
-  PAID
-  ENTERPRISE
+enum AccountType {
+  PRIVATE
+  BROKER
+  DEALER
+  SHIPYARD
+  SERVICE_PRO
+  CREW
+  EMPLOYER
 }
 
-enum PricingPeriod {
-  MONTH
-  YEAR
-  ONE_TIME
-  UNKNOWN
+enum UserRole {
+  USER
+  ADMIN
 }
 
-enum SubmissionStatus {
-  NEW
-  REVIEWED
-  APPROVED
-  REJECTED
+enum ListingKind {
+  VESSEL
+  PARTS
+  SERVICES
+  JOBS
 }
 
-enum ToolStatus {
-  ACTIVE
-  DISCONTINUED
+enum ListingIntent {
+  SALE
+  CHARTER
+}
+
+enum ListingStatus {
   DRAFT
+  LIVE
+  PAUSED
+  SOLD
 }
 
-enum DataConfidence {
-  SEEDED
-  ENRICHED
-  VERIFIED
+enum Currency {
+  EUR
+  GBP
+  USD
+  AED
+  OTHER
 }
 
-model Tool {
+enum VesselCondition {
+  NEW
+  USED
+}
+
+enum SellerType {
+  PRIVATE
+  PROFESSIONAL
+}
+
+enum PriceType {
+  FIXED
+  NEGOTIABLE
+  POA
+  AUCTION
+}
+
+enum CharterPricePeriod {
+  HOUR
+  DAY
+  WEEK
+}
+
+enum PartsCondition {
+  NEW
+  USED
+  REFURBISHED
+}
+
+model User {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name String
+  role UserRole @default(USER)
+
+  email        String      @unique
+  passwordHash String
+  accountType  AccountType @default(PRIVATE)
+
+  profiles     Profile[]
+  sessions     Session[]
+  messagesSent Message[] @relation("Sent")
+  messagesRecv Message[] @relation("Recv")
+
+  savedSearches SavedSearch[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  token     String   @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   slug String @unique
 
-  tagline          String?
-  shortDescription String
-  longDescription  String?
+  name     String
+  tagline  String?
+  location String?
+  about    String?
 
-  websiteUrl String?
-  pricingUrl String?
-  logoUrl    String?
+  website String?
+  email   String?
+  phone   String?
 
-  pricingModel  PricingModel
-  startingPrice String?
-  pricingNotes  String?
+  isVerified Boolean @default(false)
 
-  startingPriceCents  Int?
-  startingPricePeriod PricingPeriod @default(UNKNOWN)
-  hasFreePlan         Boolean?
-  hasFreeTrial        Boolean?
-  trialDays           Int?
+  listings Listing[]
 
-  bestFor       String[] @default([])
-  notFor        String[] @default([])
-  pros          String[] @default([])
-  cons          String[] @default([])
-  switchReasons String[] @default([])
-
-  targetAudience String[] @default([])
-  keyFeatures    String[] @default([])
-  integrations   String[] @default([])
-
-  featureFlags Json @default("{}")
-  replacementFor String[] @default([])
-
-  status         ToolStatus     @default(ACTIVE)
-  isFeatured     Boolean        @default(false)
-  lastVerifiedAt DateTime?
-  dataConfidence DataConfidence @default(SEEDED)
-
-  findalyScore     Float?
-  findalyScoreMeta Json?
-
-  primaryCategoryId String
-  primaryCategory   Category @relation(fields: [primaryCategoryId], references: [id])
-
-  secondaryCategories Category[] @relation("SecondaryCategories")
-  useCases            UseCase[]  @relation("ToolUseCases")
-
-  alternativesFrom ToolAlternative[] @relation("ToolAlt")
-  alternativesTo   ToolAlternative[] @relation("AltTool")
-
-  submissions Submission[]
-  toolSources ToolSource[]
-
-  // ✅ this is the missing connection
-  externalClaims ExternalClaim[]
-
-  @@index([primaryCategoryId])
-  @@index([primaryCategoryId, status])
-  @@index([dataConfidence, status])
-  @@index([lastVerifiedAt])
+  @@index([userId])
+  @@index([slug])
 }
 
-model Category {
+model Listing {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name        String
+  kind   ListingKind   @default(VESSEL)
+  intent ListingIntent @default(SALE)
+  status ListingStatus @default(DRAFT)
+
+  title       String
   slug        String  @unique
   description String?
 
-  parentId String?
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryTree")
+  // Location
+  location String?
+  country  String?
+  marina   String?
+  lying    String?
 
-  tools     Tool[]
-  secondary Tool[] @relation("SecondaryCategories")
+  // Pricing
+  currency   Currency  @default(EUR)
+  priceCents Int?
+  priceType  PriceType @default(NEGOTIABLE)
+  priceNote  String?
+  taxStatus  String?
 
-  @@index([slug])
-  @@index([parentId])
+  // Listing options
+  featured     Boolean @default(false)
+  urgent       Boolean @default(false)
+  acceptOffers Boolean @default(true)
+
+  // VESSEL SPECIFIC
+  boatCategory    String?
+  charterType     String?
+  vesselCondition VesselCondition?
+
+  brand String?
+  model String?
+  year  Int?
+
+  lengthFt     Float?
+  lengthM      Float?
+  beamFt       Float?
+  beamM        Float?
+  draftFt      Float?
+  draftM       Float?
+  displacement String?
+
+  hullMaterial String?
+  hullType     String?
+  hullColor    String?
+
+  engineMake   String?
+  engineModel  String?
+  enginePower  String?
+  engineCount  Int?
+  engineHours  Int?
+  fuelType     String?
+  fuelCapacity String?
+
+  cabins Int?
+  berths Int?
+  heads  Int?
+
+  features        Json @default("[]")
+  electronics     Json @default("[]")
+  safetyEquipment Json @default("[]")
+  customFeatures  String?
+
+  charterGuests        Int?
+  charterCrew          Int?
+  charterPricePeriod   CharterPricePeriod?
+  charterAvailableFrom DateTime?
+  charterAvailableTo   DateTime?
+  charterIncluded      Json @default("[]")
+
+  recentWorks String?
+
+  videoUrl       String?
+  virtualTourUrl String?
+
+  // SERVICES SPECIFIC
+  serviceCategory    String?
+  serviceName        String?
+  serviceDescription String?
+  serviceExperience  String?
+  serviceAreas       Json @default("[]")
+
+  // PARTS SPECIFIC
+  partsCategory      String?
+  partsCondition     PartsCondition?
+  partsCompatibility String?
+
+  // SELLER INFO
+  sellerType     SellerType @default(PRIVATE)
+  sellerName     String?
+  sellerCompany  String?
+  sellerEmail    String?
+  sellerPhone    String?
+  sellerWhatsapp Boolean    @default(false)
+  sellerLocation String?
+  sellerWebsite  String?
+
+  // Relations
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  media         ListingMedia[]
+  conversations Conversation[]
+
+  @@index([profileId])
+  @@index([kind, intent, status])
+  @@index([boatCategory])
+  @@index([country])
+  @@index([priceCents])
+  @@index([year])
+  @@index([lengthM])
 }
 
-model UseCase {
+model ListingMedia {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  name        String
-  slug        String  @unique
-  description String?
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  tools Tool[] @relation("ToolUseCases")
+  url  String
+  sort Int    @default(0)
 
-  @@index([slug])
+  @@index([listingId, sort])
 }
 
-model ToolAlternative {
+model Conversation {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  toolId        String
-  alternativeId String
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
-  score Int     @default(0)
-  note  String?
+  messages Message[]
 
-  tool        Tool @relation("ToolAlt", fields: [toolId], references: [id])
-  alternative Tool @relation("AltTool", fields: [alternativeId], references: [id])
-
-  @@unique([toolId, alternativeId])
-  @@index([toolId])
-  @@index([alternativeId])
+  @@index([listingId])
 }
 
-model Submission {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-
-  status SubmissionStatus @default(NEW)
-
-  name       String
-  websiteUrl String?
-  category   String?
-  notes      String?
-  email      String?
-
-  ip        String?
-  userAgent String?
-
-  toolId String?
-  tool   Tool?   @relation(fields: [toolId], references: [id])
-
-  @@index([status, createdAt])
-  @@index([toolId])
-}
-
-model ToolSource {
+model Message {
   id        String   @id @default(cuid())
-  toolId    String
-  type      String
-  url       String
-  meta      Json     @default("{}")
-  fetchedAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  tool Tool @relation(fields: [toolId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  @@unique([toolId, type], name: "toolId_type")
-  @@index([toolId, type])
+  senderId String
+  sender   User   @relation("Sent", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   User   @relation("Recv", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  body String
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@index([receiverId, createdAt])
 }
 
-model ExternalClaim {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model SavedSearch {
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  lastUsedAt DateTime?
 
-  toolId     String
-  tool       Tool     @relation(fields: [toolId], references: [id])
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  sourceType String
-  sourceUrl  String
+  name String
+  kind String @default("BUY")
+  query Json
+  replayUrl String
 
-  topic      String
-  sentiment  Int
-  claim      String
-  strength   Float    @default(0.5)
-  evidence   Json?
-
-  @@index([toolId, topic])
-  @@index([toolId, sourceType])
-  @@index([sourceType])
+  @@index([userId, createdAt])
+  @@index([kind])
 }
