@@ -1,3 +1,4 @@
+//·/app/add-listing/_types/listing.ts
 export type ListingType = "sale" | "charter" | "service" | "parts" | null;
 
 export type BoatCategory =

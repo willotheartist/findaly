@@ -11,7 +11,10 @@ import type {
   ServiceCategory,
 } from "@/app/add-listing/_types/listing";
 
-function mapKindIntentToListingType(kind: string, intent: string): Exclude<ListingType, null> {
+function mapKindIntentToListingType(
+  kind: string,
+  intent: string
+): Exclude<ListingType, null> {
   if (kind === "PARTS") return "parts";
   if (kind === "SERVICES") return "service";
   return intent === "CHARTER" ? "charter" : "sale";
@@ -35,12 +38,21 @@ function toDateInput(d: Date | null | undefined): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default async function EditListingPage({ params }: { params: { id: string } }) {
+type PageProps = {
+  // Next 16 can pass params as a Promise in RSC. Awaiting handles both cases.
+  params: { id: string } | Promise<{ id: string }>;
+};
+
+export default async function EditListingPage({ params }: PageProps) {
+  const { id } = await params;
+
   const profile = await getCurrentProfile();
-  if (!profile) redirect(`/login?redirect=${encodeURIComponent(`/my-listings/${params.id}/edit`)}`);
+  if (!profile) {
+    redirect(`/login?redirect=${encodeURIComponent(`/my-listings/${id}/edit`)}`);
+  }
 
   const listing = await prisma.listing.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { media: { orderBy: { sort: "asc" } } },
   });
 
@@ -58,7 +70,12 @@ export default async function EditListingPage({ params }: { params: { id: string
     brand: str(listing.brand),
     model: str(listing.model),
     year: listing.year ? String(listing.year) : "",
-    condition: listing.vesselCondition === "NEW" ? "new" : listing.vesselCondition === "USED" ? "used" : "",
+    condition:
+      listing.vesselCondition === "NEW"
+        ? "new"
+        : listing.vesselCondition === "USED"
+        ? "used"
+        : "",
 
     lengthFt: numToStr(listing.lengthFt),
     lengthM: numToStr(listing.lengthM),

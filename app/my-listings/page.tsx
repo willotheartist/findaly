@@ -1,115 +1,77 @@
 // app/my-listings/page.tsx
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentProfile } from "@/lib/auth/profile";
-
-function fmtPrice(currency: string, cents: number | null) {
-  if (!cents || cents <= 0) return "Price on request";
-  const val = (cents / 100).toLocaleString();
-  return `${currency} ${val}`;
-}
+import MyListingsClient from "./MyListingsClient";
 
 export default async function MyListingsPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login?redirect=%2Fmy-listings");
 
+  // Fetch all listings for this profile
   const listings = await prisma.listing.findMany({
     where: { profileId: profile.id },
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      currency: true,
-      priceCents: true,
-      kind: true,
-      intent: true,
-      status: true,
-      featured: true,
-      updatedAt: true,
+    include: {
+      media: {
+        orderBy: { sort: "asc" },
+        take: 1,
+      },
+      _count: {
+        select: {
+          conversations: true,
+        },
+      },
     },
   });
 
+  // Calculate stats
+  const stats = {
+    total: listings.length,
+    live: listings.filter((l) => l.status === "LIVE").length,
+    draft: listings.filter((l) => l.status === "DRAFT").length,
+    paused: listings.filter((l) => l.status === "PAUSED").length,
+    sold: listings.filter((l) => l.status === "SOLD").length,
+    featured: listings.filter((l) => l.featured).length,
+    totalInquiries: listings.reduce((sum, l) => sum + l._count.conversations, 0),
+  };
+
+  // Transform listings for client
+  const transformedListings = listings.map((listing) => ({
+    id: listing.id,
+    slug: listing.slug,
+    title: listing.title,
+    kind: listing.kind,
+    intent: listing.intent,
+    status: listing.status,
+    currency: listing.currency,
+    priceCents: listing.priceCents,
+    priceType: listing.priceType,
+    location: listing.location,
+    country: listing.country,
+    year: listing.year,
+    lengthM: listing.lengthM,
+    brand: listing.brand,
+    model: listing.model,
+    boatCategory: listing.boatCategory,
+    featured: listing.featured,
+    urgent: listing.urgent,
+    createdAt: listing.createdAt.toISOString(),
+    updatedAt: listing.updatedAt.toISOString(),
+    thumbnailUrl: listing.media[0]?.url || null,
+    inquiriesCount: listing._count.conversations,
+  }));
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">My listings</h1>
-          <p className="mt-1 text-sm text-slate-600">Edit, pause, or update your listings.</p>
-        </div>
-
-        <Link
-          href="/add-listing"
-          className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-50"
-        >
-          Add listing
-        </Link>
-      </div>
-
-      {listings.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8">
-          <p className="text-slate-700">You don’t have any listings yet.</p>
-          <Link
-            href="/add-listing"
-            className="mt-4 inline-flex items-center rounded-xl bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Create your first listing
-          </Link>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="divide-y divide-slate-200">
-            {listings.map((l) => (
-              <div
-                key={l.id}
-                className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-slate-900">{l.title}</p>
-
-                    {l.featured ? (
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
-                        Featured
-                      </span>
-                    ) : null}
-
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700">
-                      {l.status}
-                    </span>
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
-                    <span>{fmtPrice(l.currency, l.priceCents)}</span>
-                    <span className="text-slate-300">•</span>
-                    <span>
-                      {l.kind} / {l.intent}
-                    </span>
-                    <span className="text-slate-300">•</span>
-                    <span>Updated {new Date(l.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-2">
-                  <Link
-                    href={`/buy/${l.slug}`}
-                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    href={`/my-listings/${l.id}/edit`}
-                    className="inline-flex items-center rounded-xl bg-black px-3 py-2 text-sm font-medium text-white hover:opacity-90"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </main>
+    <MyListingsClient
+      listings={transformedListings}
+      stats={stats}
+      profileSlug={profile.slug}
+    />
   );
 }
+
+export const metadata = {
+  title: "My Listings | Findaly",
+  description: "Manage your boat listings on Findaly",
+};

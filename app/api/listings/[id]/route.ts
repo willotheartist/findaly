@@ -7,6 +7,7 @@ import type { Prisma } from "@prisma/client";
 import {
   CharterPricePeriod,
   Currency,
+  ListingStatus,
   PartsCondition,
   PriceType,
   SellerType,
@@ -117,6 +118,57 @@ function dateOrNull(v: unknown): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+function statusOrNull(v: unknown): ListingStatus | null {
+  const val = s(v).toUpperCase();
+  if (val === "DRAFT" || val === "LIVE" || val === "PAUSED" || val === "SOLD") {
+    return val as ListingStatus;
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET - Fetch a single listing
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  try {
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      include: {
+        media: {
+          orderBy: { sort: "asc" },
+        },
+        profile: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isVerified: true,
+          },
+        },
+      },
+    });
+
+    if (!listing) {
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(listing);
+  } catch (error) {
+    console.error("Error fetching listing:", error);
+    return NextResponse.json({ error: "Failed to fetch listing" }, { status: 500 });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH - Update a listing (full edit or simple status change)
+// ─────────────────────────────────────────────────────────────────────────────
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -137,6 +189,26 @@ export async function PATCH(
 
   const body: Incoming = await request.json().catch(() => ({}));
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Simple status-only update (from my-listings dashboard)
+  // ─────────────────────────────────────────────────────────────────────────
+  if (body.status !== undefined && Object.keys(body).length === 1) {
+    const newStatus = statusOrNull(body.status);
+    if (!newStatus) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+
+    const updated = await prisma.listing.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+
+    return NextResponse.json({ ok: true, status: updated.status });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Full edit update (from edit page)
+  // ─────────────────────────────────────────────────────────────────────────
   const { kind, intent } = mapListingTypeToKindIntent(body.listingType);
 
   const nextCurrency = currencyOrNull(body.currency) ?? listing.currency;
@@ -283,4 +355,45 @@ export async function PATCH(
   });
 
   return NextResponse.json({ ok: true, slug: updated?.slug ?? null });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE - Delete a listing
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  try {
+    const profile = await getCurrentProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      select: { profileId: true },
+    });
+
+    if (!listing) {
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+
+    if (listing.profileId !== profile.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Delete (cascade will handle media, conversations)
+    await prisma.listing.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    return NextResponse.json({ error: "Failed to delete listing" }, { status: 500 });
+  }
 }
