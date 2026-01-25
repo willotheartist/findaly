@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2, Save, Send } from "lucide-react";
 
 import StepIndicator from "./_components/StepIndicator";
@@ -24,16 +24,82 @@ import { initialFormData } from "./_types/listing";
 type SubmitResult = {
   slug?: string | null;
   listing?: { slug?: string | null };
+  error?: string;
   [key: string]: unknown;
 };
 
 type Props = {
   mode?: "create" | "edit";
   initial?: Partial<FormData>;
-  submitUrl: string; // "/api/listings" or `/api/listings/${id}`
+  submitUrl: string;
   submitMethod?: "POST" | "PATCH";
-  onSuccess?: (result: SubmitResult) => void; // called after successful submit
+  onSuccess?: (result: SubmitResult) => void;
 };
+
+function isBlobOrDataUrl(url: string) {
+  return url.startsWith("blob:") || url.startsWith("data:image/");
+}
+
+async function uploadSingleFile(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+
+  if (!res.ok || !data.url) {
+    throw new Error(data.error || "Failed to upload image");
+  }
+  return data.url;
+}
+
+/**
+ * Replace any blob/data preview URLs with real uploaded URLs (keeps ordering).
+ * Uses photoUrls + photos alignment by index (your Step6Photos maintains it).
+ */
+async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
+  const urls = Array.isArray(formData.photoUrls) ? formData.photoUrls : [];
+  const files = Array.isArray(formData.photos) ? formData.photos : [];
+
+  if (urls.length === 0) return formData;
+
+  // If there are no blob/data urls, nothing to do.
+  const hasLocal = urls.some((u) => typeof u === "string" && isBlobOrDataUrl(u));
+  if (!hasLocal) return formData;
+
+  const nextUrls: string[] = [];
+  const uploadPromises: Array<Promise<void>> = [];
+
+  for (let i = 0; i < urls.length; i++) {
+    const u = urls[i] || "";
+    if (typeof u === "string" && isBlobOrDataUrl(u)) {
+      const f = files[i];
+      if (f instanceof File) {
+        // Upload in-place, keep ordering
+        const p = uploadSingleFile(f).then((remote) => {
+          nextUrls[i] = remote;
+        });
+        uploadPromises.push(p);
+      } else {
+        // blob with no file -> drop it
+        // we'll leave it undefined and filter later
+        nextUrls[i] = "";
+      }
+    } else {
+      nextUrls[i] = u;
+    }
+  }
+
+  await Promise.all(uploadPromises);
+
+  const cleaned = nextUrls.filter((u) => typeof u === "string" && u && !isBlobOrDataUrl(u));
+
+  return {
+    ...formData,
+    photoUrls: cleaned,
+    photos: [], // ✅ once uploaded, do not keep File[] in state for submit
+  };
+}
 
 export default function ListingWizard({
   mode = "create",
@@ -100,6 +166,17 @@ export default function ListingWizard({
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
 
+  const didAutoJump = useRef(false);
+  useEffect(() => {
+    if (mode !== "edit") return;
+    if (didAutoJump.current) return;
+    if (!formData.listingType) return;
+
+    didAutoJump.current = true;
+    setCurrentStep(totalSteps);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [mode, formData.listingType, totalSteps]);
+
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 1:
@@ -143,10 +220,16 @@ export default function ListingWizard({
     setSubmitError(null);
 
     try {
+      // ✅ Upload photos first (convert blob urls -> real urls)
+      const uploaded = await uploadPhotosIfNeeded(formData);
+      if (uploaded.photoUrls !== formData.photoUrls || (uploaded.photos?.length ?? 0) !== (formData.photos?.length ?? 0)) {
+        setFormData(uploaded);
+      }
+
       const response = await fetch(submitUrl, {
         method: submitMethod,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(uploaded),
       });
 
       const data: SubmitResult = await response.json().catch(() => ({} as SubmitResult));
@@ -157,7 +240,7 @@ export default function ListingWizard({
           window.location.href = `/login?redirect=${currentPath}&message=Please log in to publish your listing`;
           return;
         }
-        throw new Error((typeof data.error === "string" ? data.error : null) || "Failed to save listing");
+        throw new Error(data.error || "Failed to save listing");
       }
 
       const slug = data.slug ?? data.listing?.slug ?? null;

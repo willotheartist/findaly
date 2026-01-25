@@ -1,6 +1,7 @@
-//·/app/buy/[slug]/page.tsx
+// app/buy/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth/session";
 import ListingPageClient from "./ListingPageClient";
 
 type PageProps = {
@@ -10,33 +11,36 @@ type PageProps = {
 export default async function BoatListingPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const listing = await prisma.listing.findUnique({
-    where: { slug },
-    include: {
-      profile: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          location: true,
-          phone: true,
-          website: true,
-          isVerified: true,
-          createdAt: true,
-          _count: {
-            select: { listings: true },
+  const [user, listing] = await Promise.all([
+    getCurrentUser(),
+    prisma.listing.findUnique({
+      where: { slug },
+      include: {
+        profile: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            location: true,
+            phone: true,
+            website: true,
+            isVerified: true,
+            createdAt: true,
+            _count: {
+              select: { listings: true },
+            },
           },
         },
+        media: {
+          orderBy: { sort: "asc" },
+        },
       },
-      media: {
-        orderBy: { sort: "asc" },
-      },
-    },
-  });
+    }),
+  ]);
 
-  if (!listing) {
-    notFound();
-  }
+  if (!listing) notFound();
+
+  const isAdmin = user?.role === "ADMIN";
 
   const transformedListing = {
     id: listing.id,
@@ -67,10 +71,10 @@ export default async function BoatListingPage({ params }: PageProps) {
 
     engineMake: listing.engineMake || undefined,
     engineModel: listing.engineModel || undefined,
-    enginePower: listing.enginePower ? parseInt(listing.enginePower) : undefined,
+    enginePower: listing.enginePower ? parseInt(listing.enginePower, 10) : undefined,
     engineHours: listing.engineHours || undefined,
     fuelType: listing.fuelType || "",
-    fuelCapacity: listing.fuelCapacity ? parseInt(listing.fuelCapacity) : undefined,
+    fuelCapacity: listing.fuelCapacity ? parseInt(listing.fuelCapacity, 10) : undefined,
 
     cabins: listing.cabins || undefined,
     berths: listing.berths || undefined,
@@ -95,7 +99,10 @@ export default async function BoatListingPage({ params }: PageProps) {
     seller: {
       id: listing.profile.id,
       name: listing.sellerName || listing.profile.name,
-      type: listing.sellerType === "PROFESSIONAL" ? ("pro" as const) : ("private" as const),
+      type:
+        listing.sellerType === "PROFESSIONAL"
+          ? ("pro" as const)
+          : ("private" as const),
       company: listing.sellerCompany || undefined,
       location: listing.sellerLocation || listing.profile.location || "",
       phone: listing.sellerPhone || listing.profile.phone || undefined,
@@ -107,5 +114,5 @@ export default async function BoatListingPage({ params }: PageProps) {
     },
   };
 
-  return <ListingPageClient listing={transformedListing} />;
+  return <ListingPageClient listing={transformedListing} isAdmin={isAdmin} />;
 }

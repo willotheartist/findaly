@@ -34,6 +34,7 @@ import {
   Star,
   BadgeCheck,
   CircleDot,
+  Pencil,
 } from "lucide-react";
 
 type BoatListing = {
@@ -215,11 +216,7 @@ function ImageGallery({ images }: { images: string[] }) {
     <>
       <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-50">
         {displayImages[currentIndex] ? (
-          <img
-            src={displayImages[currentIndex]}
-            alt="Listing photo"
-            className="h-full w-full object-cover"
-          />
+          <img src={displayImages[currentIndex]} alt="Listing photo" className="h-full w-full object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Sailboat className="h-24 w-24 text-slate-200" />
@@ -310,11 +307,7 @@ function SellerCard({ seller, listing }: { seller: BoatListing["seller"]; listin
       <div className="border-b border-slate-100 p-5">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-            {seller.type === "pro" ? (
-              <Building2 className="h-6 w-6 text-slate-600" />
-            ) : (
-              <User className="h-6 w-6 text-slate-600" />
-            )}
+            {seller.type === "pro" ? <Building2 className="h-6 w-6 text-slate-600" /> : <User className="h-6 w-6 text-slate-600" />}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -369,9 +362,7 @@ function SellerCard({ seller, listing }: { seller: BoatListing["seller"]; listin
           disabled={sending || !messageText.trim()}
           onClick={handleSend}
           className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all ${
-            sending || !messageText.trim()
-              ? "cursor-not-allowed bg-[#ff6a00]/60"
-              : "bg-[#ff6a00] hover:brightness-110"
+            sending || !messageText.trim() ? "cursor-not-allowed bg-[#ff6a00]/60" : "bg-[#ff6a00] hover:brightness-110"
           }`}
         >
           <MessageCircle className="h-4 w-4" />
@@ -404,7 +395,13 @@ function SellerCard({ seller, listing }: { seller: BoatListing["seller"]; listin
   );
 }
 
-export default function ListingPageClient({ listing }: { listing: BoatListing }) {
+export default function ListingPageClient({
+  listing,
+  isAdmin,
+}: {
+  listing: BoatListing;
+  isAdmin: boolean;
+}) {
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<"description" | "specs" | "features">("description");
 
@@ -422,7 +419,19 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
             <span className="text-slate-300">/</span>
             <span className="font-medium text-slate-900">{listing.brand}</span>
           </div>
+
           <div className="flex items-center gap-2">
+            {/* ADMIN EDIT BUTTON */}
+            {isAdmin && (
+              <Link
+                href={`/my-listings/${listing.id}/edit`}
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit</span>
+              </Link>
+            )}
+
             <button
               type="button"
               onClick={() => setIsSaved(!isSaved)}
@@ -435,6 +444,7 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
               <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
               <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
             </button>
+
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -442,6 +452,7 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
               <Share2 className="h-4 w-4" />
               <span className="hidden sm:inline">Share</span>
             </button>
+
             <button
               type="button"
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -474,9 +485,7 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-3xl font-bold text-[#ff6a00]">
-                  {formatPrice(listing.price, listing.currency)}
-                </div>
+                <div className="text-3xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
                 {listing.priceNegotiable && <div className="mt-1 text-sm text-slate-500">Price negotiable</div>}
               </div>
             </div>
@@ -663,11 +672,9 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                     <FeatureList title="Equipment & Features" items={listing.features} icon={Anchor} />
                     <FeatureList title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
                     <FeatureList title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
-                    {listing.features.length === 0 &&
-                      listing.electronics.length === 0 &&
-                      listing.safetyEquipment.length === 0 && (
-                        <p className="text-slate-500">No features listed.</p>
-                      )}
+                    {listing.features.length === 0 && listing.electronics.length === 0 && listing.safetyEquipment.length === 0 && (
+                      <p className="text-slate-500">No features listed.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -745,9 +752,7 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                 {listing.location}, {listing.country}
               </div>
               <div className="mt-4 border-t border-slate-100 pt-4">
-                <div className="text-3xl font-bold text-[#ff6a00]">
-                  {formatPrice(listing.price, listing.currency)}
-                </div>
+                <div className="text-3xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
                 {listing.priceNegotiable && <div className="mt-1 text-sm text-slate-500">Price negotiable</div>}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center text-sm">
@@ -760,6 +765,19 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                   <div className="text-slate-500">Length</div>
                 </div>
               </div>
+
+              {/* ADMIN EDIT (Desktop side card) */}
+              {isAdmin && (
+                <div className="mt-4">
+                  <Link
+                    href={`/my-listings/${listing.id}/edit`}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit listing
+                  </Link>
+                </div>
+              )}
             </div>
 
             <SellerCard seller={listing.seller} listing={listing} />
@@ -770,9 +788,7 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                   type="button"
                   onClick={() => setIsSaved(!isSaved)}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                    isSaved
-                      ? "border-rose-200 bg-rose-50 text-rose-600"
-                      : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                    isSaved ? "border-rose-200 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
@@ -785,6 +801,17 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
                   <Share2 className="h-4 w-4" />
                   Share this listing
                 </button>
+
+                {/* ADMIN EDIT (Mobile-ish utility card area) */}
+                {isAdmin && (
+                  <Link
+                    href={`/my-listings/${listing.id}/edit`}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit listing
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -818,6 +845,18 @@ export default function ListingPageClient({ listing }: { listing: BoatListing })
             <div className="text-xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
             <div className="text-sm text-slate-500">{listing.title}</div>
           </div>
+
+          {/* ADMIN EDIT (mobile bottom bar) */}
+          {isAdmin && (
+            <Link
+              href={`/my-listings/${listing.id}/edit`}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={() => {

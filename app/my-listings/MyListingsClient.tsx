@@ -7,7 +7,6 @@ import { useState, useMemo, useTransition } from "react";
 import {
   Plus,
   Search,
-  Filter,
   MoreHorizontal,
   Eye,
   Pencil,
@@ -25,18 +24,11 @@ import {
   MessageCircle,
   TrendingUp,
   Star,
-  AlertCircle,
   ChevronDown,
   ExternalLink,
   Copy,
-  Sparkles,
-  Archive,
   RotateCcw,
   Loader2,
-  Calendar,
-  DollarSign,
-  BarChart3,
-  Zap,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -231,6 +223,10 @@ function ListingCard({
   const [showMenu, setShowMenu] = useState(false);
   const KindIcon = KIND_CONFIG[listing.kind].icon;
 
+  const isDraft = listing.status === "DRAFT";
+  const editHref = `/my-listings/${listing.id}/edit`;
+  const publicHref = `/buy/${listing.slug}`;
+
   const statusActions = useMemo(() => {
     const actions: { status: ListingStatus; label: string; icon: typeof Play }[] = [];
 
@@ -257,11 +253,7 @@ function ListingCard({
       {/* Thumbnail */}
       <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-slate-100 to-slate-50 sm:h-28 sm:w-40">
         {listing.thumbnailUrl ? (
-          <img
-            src={listing.thumbnailUrl}
-            alt={listing.title}
-            className="h-full w-full object-cover"
-          />
+          <img src={listing.thumbnailUrl} alt={listing.title} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Sailboat className="h-10 w-10 text-slate-200" />
@@ -315,33 +307,48 @@ function ListingCard({
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+                <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+                  {/* Draft: "Continue" instead of "View listing" */}
+                  {isDraft ? (
+                    <Link
+                      href={editHref}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 no-underline hover:bg-slate-50"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Continue editing
+                    </Link>
+                  ) : (
+                    <Link
+                      href={publicHref}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 no-underline hover:bg-slate-50"
+                    >
+                      <Eye className="h-4 w-4" />
+                      View listing
+                    </Link>
+                  )}
+
                   <Link
-                    href={`/buy/${listing.slug}`}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 no-underline hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" />
-                    View listing
-                  </Link>
-                  <Link
-                    href={`/my-listings/${listing.id}/edit`}
+                    href={editHref}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 no-underline hover:bg-slate-50"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit
                   </Link>
+
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(
-                        `${window.location.origin}/buy/${listing.slug}`
-                      );
+                      const url = isDraft
+                        ? `${window.location.origin}${editHref}`
+                        : `${window.location.origin}${publicHref}`;
+                      navigator.clipboard.writeText(url);
                       setShowMenu(false);
                     }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Copy className="h-4 w-4" />
                     Copy link
+                    <span className="ml-auto text-xs text-slate-400">{isDraft ? "Edit" : "Public"}</span>
                   </button>
 
                   {statusActions.length > 0 && (
@@ -409,20 +416,33 @@ function ListingCard({
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              href={`/my-listings/${listing.id}/edit`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 no-underline transition-colors hover:bg-slate-200"
-            >
-              <Pencil className="h-3 w-3" />
-              Edit
-            </Link>
-            <Link
-              href={`/buy/${listing.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff6a00] px-3 py-1.5 text-xs font-medium text-white no-underline transition-colors hover:brightness-110"
-            >
-              <ExternalLink className="h-3 w-3" />
-              View
-            </Link>
+            {/* Draft primary CTA: Continue */}
+            {isDraft ? (
+              <Link
+                href={editHref}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff6a00] px-3 py-1.5 text-xs font-medium text-white no-underline transition-colors hover:brightness-110"
+              >
+                <Pencil className="h-3 w-3" />
+                Continue
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href={editHref}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 no-underline transition-colors hover:bg-slate-200"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Edit
+                </Link>
+                <Link
+                  href={publicHref}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#ff6a00] px-3 py-1.5 text-xs font-medium text-white no-underline transition-colors hover:brightness-110"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -444,9 +464,7 @@ function EmptyState() {
         <Ship className="h-8 w-8 text-slate-400" />
       </div>
       <h3 className="mt-4 text-lg font-semibold text-slate-900">No listings yet</h3>
-      <p className="mt-1 max-w-sm text-sm text-slate-500">
-        Create your first listing and start selling on Findaly.
-      </p>
+      <p className="mt-1 max-w-sm text-sm text-slate-500">Create your first listing and start selling on Findaly.</p>
       <Link
         href="/add-listing"
         className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ff6a00] px-6 py-3 text-sm font-semibold text-white no-underline transition-all hover:brightness-110"
@@ -466,11 +484,7 @@ function FilteredEmptyState({ onClear }: { onClear: () => void }) {
       </div>
       <h3 className="mt-3 text-base font-semibold text-slate-900">No matching listings</h3>
       <p className="mt-1 text-sm text-slate-500">Try adjusting your filters.</p>
-      <button
-        type="button"
-        onClick={onClear}
-        className="mt-4 text-sm font-medium text-[#ff6a00] hover:underline"
-      >
+      <button type="button" onClick={onClear} className="mt-4 text-sm font-medium text-[#ff6a00] hover:underline">
         Clear filters
       </button>
     </div>
@@ -496,7 +510,6 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
   // Filter listings
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
-      // Search
       if (search) {
         const q = search.toLowerCase();
         const matchesSearch =
@@ -507,15 +520,8 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
         if (!matchesSearch) return false;
       }
 
-      // Status
-      if (statusFilter !== "all" && listing.status !== statusFilter) {
-        return false;
-      }
-
-      // Kind
-      if (kindFilter !== "all" && listing.kind !== kindFilter) {
-        return false;
-      }
+      if (statusFilter !== "all" && listing.status !== statusFilter) return false;
+      if (kindFilter !== "all" && listing.kind !== kindFilter) return false;
 
       return true;
     });
@@ -529,7 +535,6 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
     setKindFilter("all");
   };
 
-  // Status change handler
   const handleStatusChange = async (listingId: string, newStatus: ListingStatus) => {
     setUpdatingId(listingId);
 
@@ -540,11 +545,8 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to update status");
-      }
+      if (!res.ok) throw new Error("Failed to update status");
 
-      // Refresh the page data
       startTransition(() => {
         router.refresh();
       });
@@ -556,18 +558,12 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
     }
   };
 
-  // Delete handler
   const handleDelete = async (listingId: string) => {
     setUpdatingId(listingId);
 
     try {
-      const res = await fetch(`/api/listings/${listingId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to delete listing");
-      }
+      const res = await fetch(`/api/listings/${listingId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete listing");
 
       startTransition(() => {
         router.refresh();
@@ -590,24 +586,18 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-          {/* Breadcrumb */}
           <nav className="mb-6 flex items-center gap-2 text-sm text-slate-500">
             <Link href="/" className="no-underline hover:text-slate-900">
               Home
             </Link>
-            <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+            <ChevronDown className="h-4 w-4 -rotate-90" />
             <span className="font-medium text-slate-900">My Listings</span>
           </nav>
 
-          {/* Title row */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                My Listings
-              </h1>
-              <p className="mt-1 text-sm text-slate-600">
-                Manage, edit, and track your listings.
-              </p>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">My Listings</h1>
+              <p className="mt-1 text-sm text-slate-600">Manage, edit, and track your listings.</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -628,29 +618,11 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
             </div>
           </div>
 
-          {/* Stats */}
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              icon={Ship}
-              label="Active listings"
-              value={stats.live}
-              accent
-            />
-            <StatCard
-              icon={MessageCircle}
-              label="Total inquiries"
-              value={stats.totalInquiries}
-            />
-            <StatCard
-              icon={Clock}
-              label="Drafts"
-              value={stats.draft}
-            />
-            <StatCard
-              icon={CheckCircle2}
-              label="Sold"
-              value={stats.sold}
-            />
+            <StatCard icon={Ship} label="Active listings" value={stats.live} accent />
+            <StatCard icon={MessageCircle} label="Total inquiries" value={stats.totalInquiries} />
+            <StatCard icon={Clock} label="Drafts" value={stats.draft} />
+            <StatCard icon={CheckCircle2} label="Sold" value={stats.sold} />
           </div>
         </div>
       </section>
@@ -662,9 +634,7 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
             <EmptyState />
           ) : (
             <>
-              {/* Filters bar */}
               <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:flex-row sm:items-center">
-                {/* Search */}
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -676,7 +646,6 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
                   />
                 </div>
 
-                {/* Status filter */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500">Status:</span>
                   <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
@@ -703,7 +672,6 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
                   </div>
                 </div>
 
-                {/* Kind filter */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500">Type:</span>
                   <select
@@ -720,26 +688,19 @@ export default function MyListingsClient({ listings, stats, profileSlug }: Props
                 </div>
               </div>
 
-              {/* Results count */}
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-slate-600">
-                  Showing{" "}
-                  <span className="font-semibold text-slate-900">{filteredListings.length}</span> of{" "}
+                  Showing <span className="font-semibold text-slate-900">{filteredListings.length}</span> of{" "}
                   <span className="font-semibold text-slate-900">{listings.length}</span> listings
                 </p>
 
-                {hasFilters && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="text-sm font-medium text-[#ff6a00] hover:underline"
-                  >
+                {Boolean(hasFilters) && (
+                  <button type="button" onClick={clearFilters} className="text-sm font-medium text-[#ff6a00] hover:underline">
                     Clear filters
                   </button>
                 )}
               </div>
 
-              {/* Listings */}
               {filteredListings.length > 0 ? (
                 <div className="space-y-4">
                   {filteredListings.map((listing) => (

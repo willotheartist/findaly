@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 25/01/2026, 14:43:01*
+*Generated on: 25/01/2026, 17:51:38*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 102 |
+| 📄 Total Files | 103 |
 | 📁 Total Folders | 62 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,13 +24,13 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 46 files (45.1%)
-- 🔷 **.ts** (TypeScript files): 31 files (30.4%)
+- ⚛️ **.tsx** (React TypeScript files): 47 files (45.6%)
+- 🔷 **.ts** (TypeScript files): 31 files (30.1%)
 - 🎨 **.svg** (SVG images): 5 files (4.9%)
 - ⚙️ **.json** (JSON files): 4 files (3.9%)
 - 📄 **.sql** (Other files): 3 files (2.9%)
-- 📖 **.md** (Markdown files): 2 files (2.0%)
-- 📄 **.mjs** (Other files): 2 files (2.0%)
+- 📖 **.md** (Markdown files): 2 files (1.9%)
+- 📄 **.mjs** (Other files): 2 files (1.9%)
 - 🚫 **.gitignore** (Git ignore): 1 files (1.0%)
 - 📄 **.txt** (Text files): 1 files (1.0%)
 - 🖼️ **.ico** (Icon files): 1 files (1.0%)
@@ -43,19 +43,19 @@
 
 ### By Category
 
-- **React**: 46 files (45.1%)
-- **TypeScript**: 31 files (30.4%)
+- **React**: 47 files (45.6%)
+- **TypeScript**: 31 files (30.1%)
 - **Other**: 8 files (7.8%)
-- **Config**: 6 files (5.9%)
-- **Assets**: 6 files (5.9%)
+- **Config**: 6 files (5.8%)
+- **Assets**: 6 files (5.8%)
 - **Docs**: 3 files (2.9%)
 - **DevOps**: 1 files (1.0%)
 - **Styles**: 1 files (1.0%)
 
 ### 📁 Largest Directories
 
-- **root**: 102 files
-- **app**: 56 files
+- **root**: 103 files
+- **app**: 57 files
 - **app/add-listing**: 21 files
 - **app/add-listing/_components**: 17 files
 - **app/api**: 12 files
@@ -147,6 +147,7 @@ findaly/
 │   │   │   └── 📂 edit/
 │   │   │   │   ├── ⚛️ EditListingClient.tsx
 │   │   │   │   └── ⚛️ page.tsx
+│   │   ├── ⚛️ MyListingsClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── ⚛️ page.tsx
 │   ├── 📂 profile/

@@ -39,24 +39,18 @@ function intOrNull(v: unknown): number | null {
     typeof v === "string"
       ? parseInt(v, 10)
       : typeof v === "number"
-      ? Math.trunc(v)
-      : NaN;
+        ? Math.trunc(v)
+        : NaN;
   return Number.isFinite(n) ? n : null;
 }
 
 function floatOrNull(v: unknown): number | null {
-  const n =
-    typeof v === "string"
-      ? parseFloat(v)
-      : typeof v === "number"
-      ? v
-      : NaN;
+  const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
   return Number.isFinite(n) ? n : null;
 }
 
 function priceCentsFromPriceString(v: unknown): number | null {
-  const n =
-    typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
+  const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
   if (!Number.isFinite(n)) return null;
   return Math.round(n * 100);
 }
@@ -120,10 +114,13 @@ function dateOrNull(v: unknown): Date | null {
 
 function statusOrNull(v: unknown): ListingStatus | null {
   const val = s(v).toUpperCase();
-  if (val === "DRAFT" || val === "LIVE" || val === "PAUSED" || val === "SOLD") {
+  if (val === "DRAFT" || val === "LIVE" || val === "PAUSED" || val === "SOLD")
     return val as ListingStatus;
-  }
   return null;
+}
+
+function isBlobOrDataUrl(url: string) {
+  return url.startsWith("blob:") || url.startsWith("data:image/");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,24 +137,15 @@ export async function GET(
     const listing = await prisma.listing.findUnique({
       where: { id },
       include: {
-        media: {
-          orderBy: { sort: "asc" },
-        },
+        media: { orderBy: { sort: "asc" } },
         profile: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            isVerified: true,
-          },
+          select: { id: true, name: true, slug: true, isVerified: true },
         },
       },
     });
 
-    if (!listing) {
+    if (!listing)
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-    }
-
     return NextResponse.json(listing);
   } catch (error) {
     console.error("Error fetching listing:", error);
@@ -189,14 +177,10 @@ export async function PATCH(
 
   const body: Incoming = await request.json().catch(() => ({}));
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Simple status-only update (from my-listings dashboard)
-  // ─────────────────────────────────────────────────────────────────────────
+  // Status-only update
   if (body.status !== undefined && Object.keys(body).length === 1) {
     const newStatus = statusOrNull(body.status);
-    if (!newStatus) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-    }
+    if (!newStatus) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
     const updated = await prisma.listing.update({
       where: { id },
@@ -206,13 +190,18 @@ export async function PATCH(
     return NextResponse.json({ ok: true, status: updated.status });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Full edit update (from edit page)
-  // ─────────────────────────────────────────────────────────────────────────
   const { kind, intent } = mapListingTypeToKindIntent(body.listingType);
 
   const nextCurrency = currencyOrNull(body.currency) ?? listing.currency;
   const nextPriceType = priceTypeOrNull(body.priceType) ?? listing.priceType;
+
+  const priceCandidate = (() => {
+    const raw = s(body.price);
+    if (raw) return body.price;
+    const rawCharterBase = s(body.charterBasePrice);
+    if (rawCharterBase) return body.charterBasePrice;
+    return body.price;
+  })();
 
   const data: Prisma.ListingUpdateInput = {
     kind,
@@ -229,7 +218,7 @@ export async function PATCH(
     currency: nextCurrency,
     priceType: nextPriceType,
     taxStatus: s(body.taxStatus) || null,
-    priceCents: priceCentsFromPriceString(body.price),
+    priceCents: priceCentsFromPriceString(priceCandidate),
 
     boatCategory: s(body.boatCategory) || null,
     charterType: s(body.charterType) || null,
@@ -304,8 +293,10 @@ export async function PATCH(
     recentWorks: s(body.recentWorks) || null,
   };
 
-  // --- Media sync (photoUrls is the truth) ---
-  const desiredUrls = stringArray(body.photoUrls);
+  // Media sync (photoUrls is the truth) ✅ filter out blob/data
+  const desiredUrls = stringArray(body.photoUrls).filter(
+    (url) => url && !isBlobOrDataUrl(url)
+  );
   const existingMedia = listing.media;
 
   const existingByUrl = new Map(existingMedia.map((m) => [m.url, m]));
@@ -318,10 +309,7 @@ export async function PATCH(
   const toCreate = desiredUrls.filter((url) => !existingByUrl.has(url));
 
   await prisma.$transaction(async (tx) => {
-    await tx.listing.update({
-      where: { id: listing.id },
-      data,
-    });
+    await tx.listing.update({ where: { id: listing.id }, data });
 
     if (toDeleteIds.length) {
       await tx.listingMedia.deleteMany({ where: { id: { in: toDeleteIds } } });
@@ -369,28 +357,19 @@ export async function DELETE(
 
   try {
     const profile = await getCurrentProfile();
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const listing = await prisma.listing.findUnique({
       where: { id },
       select: { profileId: true },
     });
 
-    if (!listing) {
+    if (!listing)
       return NextResponse.json({ error: "Listing not found" }, { status: 404 });
-    }
-
-    if (listing.profileId !== profile.id) {
+    if (listing.profileId !== profile.id)
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
 
-    // Delete (cascade will handle media, conversations)
-    await prisma.listing.delete({
-      where: { id },
-    });
-
+    await prisma.listing.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error deleting listing:", error);
