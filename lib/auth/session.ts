@@ -10,13 +10,6 @@ async function cookieStore() {
   return await cookies();
 }
 
-function cookieDomain() {
-  // Host-only cookies cause logout on refresh if you bounce between
-  // findaly.co and www.findaly.co. In prod, share across both.
-  if (process.env.NODE_ENV !== "production") return undefined;
-  return ".findaly.co";
-}
-
 export async function getSessionToken() {
   const c = await cookieStore();
   return c.get(COOKIE_NAME)?.value ?? null;
@@ -52,15 +45,17 @@ export async function createSession(userId: string, remember = true) {
 
   const c = await cookieStore();
   const isProd = process.env.NODE_ENV === "production";
-  const domain = cookieDomain();
 
+  // IMPORTANT:
+  // Do NOT set "domain" here. In some deployments it can cause the cookie to be rejected,
+  // which looks like "login works then immediately logs out" + redirect loops.
+  // Instead, canonicalize host in middleware (www -> apex).
   c.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: isProd,
     path: "/",
     expires: expiresAt,
-    ...(domain ? { domain } : {}),
   });
 
   return token;
@@ -74,7 +69,6 @@ export async function clearSession() {
 
   const c = await cookieStore();
   const isProd = process.env.NODE_ENV === "production";
-  const domain = cookieDomain();
 
   c.set(COOKIE_NAME, "", {
     httpOnly: true,
@@ -82,6 +76,5 @@ export async function clearSession() {
     secure: isProd,
     path: "/",
     expires: new Date(0),
-    ...(domain ? { domain } : {}),
   });
 }

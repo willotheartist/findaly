@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyAdminToken } from "@/lib/admin/session";
 
@@ -8,21 +7,12 @@ const USER_COOKIE = "findaly_session";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // -------------------------------------------------------------------------
-  // Canonical host + https (prevents "refresh logs me out" due to host mismatch)
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------
+  // Canonical host: force non-www in production
+  // (avoid cookie host mismatches without touching cookie domain)
+  // ---------------------------------------------
   if (process.env.NODE_ENV === "production") {
     const host = req.headers.get("host") || "";
-    const proto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "");
-
-    // Force https
-    if (proto === "http") {
-      const url = req.nextUrl.clone();
-      url.protocol = "https:";
-      return NextResponse.redirect(url);
-    }
-
-    // Force non-www (optional but strongly recommended)
     if (host.startsWith("www.")) {
       const url = req.nextUrl.clone();
       url.host = host.replace(/^www\./, "");
@@ -54,7 +44,6 @@ export async function middleware(req: NextRequest) {
 
   const secret = process.env.ADMIN_SECRET || "";
 
-  // Fail closed in prod. In dev, if not configured, still redirect to login.
   if (!secret) {
     const url = new URL("/admin/login", req.url);
     url.searchParams.set("next", pathname);
