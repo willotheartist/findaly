@@ -1,4 +1,3 @@
-// app/login/LoginClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -12,7 +11,7 @@ function cx(...v: Array<string | false | null | undefined>) {
 
 export default function LoginClient() {
   const sp = useSearchParams();
-  const next = sp.get("next") || "/settings";
+  const next = sp.get("next") || sp.get("redirect") || "/settings";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -3,15 +3,30 @@ import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { cookies } from "next/headers";
 
-const COOKIE_NAME = "findaly_session";
+export const COOKIE_NAME = "findaly_session";
 
-async function cookieStore() {
-  // In your setup, cookies() is typed as Promise<ReadonlyRequestCookies>
-  return await cookies();
+export function getSessionCookieOptions(expiresAt: Date) {
+  return {
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: expiresAt,
+  };
+}
+
+export function getClearSessionCookieOptions() {
+  return {
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    expires: new Date(0),
+  };
 }
 
 export async function getSessionToken() {
-  const c = await cookieStore();
+  const c = await cookies();
   return c.get(COOKIE_NAME)?.value ?? null;
 }
 
@@ -34,6 +49,12 @@ export async function getCurrentUser() {
   return session.user;
 }
 
+/**
+ * IMPORTANT:
+ * In Next.js Route Handlers, mutating cookies() inside helper functions is not reliable.
+ * So we only create the DB session here and RETURN {token, expiresAt}.
+ * The caller must set the cookie on the NextResponse.
+ */
 export async function createSession(userId: string, remember = true) {
   const token = crypto.randomBytes(32).toString("hex");
   const ttlMs = remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8; // 30d vs 8h
@@ -43,38 +64,15 @@ export async function createSession(userId: string, remember = true) {
     data: { userId, token, expiresAt },
   });
 
-  const c = await cookieStore();
-  const isProd = process.env.NODE_ENV === "production";
-
-  // IMPORTANT:
-  // Do NOT set "domain" here. In some deployments it can cause the cookie to be rejected,
-  // which looks like "login works then immediately logs out" + redirect loops.
-  // Instead, canonicalize host in middleware (www -> apex).
-  c.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProd,
-    path: "/",
-    expires: expiresAt,
-  });
-
-  return token;
+  return { token, expiresAt };
 }
 
-export async function clearSession() {
-  const token = await getSessionToken();
-  if (token) {
-    await prisma.session.delete({ where: { token } }).catch(() => {});
+/**
+ * Deletes session record for a token. Cookie clearing must be done by caller via NextResponse.
+ */
+export async function clearSession(token?: string | null) {
+  const t = token ?? (await getSessionToken());
+  if (t) {
+    await prisma.session.delete({ where: { token: t } }).catch(() => {});
   }
-
-  const c = await cookieStore();
-  const isProd = process.env.NODE_ENV === "production";
-
-  c.set(COOKIE_NAME, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProd,
-    path: "/",
-    expires: new Date(0),
-  });
 }

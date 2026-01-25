@@ -1,8 +1,11 @@
-// app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { createSession } from "@/lib/auth/session";
+import {
+  COOKIE_NAME,
+  createSession,
+  getSessionCookieOptions,
+} from "@/lib/auth/session";
 import { AccountType } from "@prisma/client";
 
 function slugify(v: string) {
@@ -31,7 +34,6 @@ async function uniqueProfileSlug(base: string) {
 function parseAccountType(v: unknown): AccountType {
   const s = String(v ?? "PRIVATE").toUpperCase();
 
-  // Map common inputs to your actual enum
   if (s === "BROKER") return AccountType.BROKER;
   if (s === "DEALER") return AccountType.DEALER;
   if (s === "SHIPYARD") return AccountType.SHIPYARD;
@@ -39,7 +41,6 @@ function parseAccountType(v: unknown): AccountType {
   if (s === "CREW") return AccountType.CREW;
   if (s === "EMPLOYER") return AccountType.EMPLOYER;
 
-  // fallback
   return AccountType.PRIVATE;
 }
 
@@ -51,12 +52,11 @@ export async function POST(req: Request) {
 
   const body = bodyUnknown as Record<string, unknown>;
 
-  const email = String(body.email ?? "")
-    .trim()
-    .toLowerCase();
+  const email = String(body.email ?? "").trim().toLowerCase();
   const password = String(body.password ?? "");
   const accountType = parseAccountType(body.accountType);
   const profileName = String(body.profileName ?? "").trim();
+  const remember = Boolean(body.remember ?? true);
 
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "EMAIL_REQUIRED" }, { status: 400 });
@@ -95,10 +95,12 @@ export async function POST(req: Request) {
     select: { id: true, profiles: { select: { slug: true } } },
   });
 
-  await createSession(user.id);
+  const { token, expiresAt } = await createSession(user.id, remember);
 
-  return NextResponse.json(
+  const res = NextResponse.json(
     { ok: true, profileSlug: user.profiles[0]?.slug ?? null },
     { status: 200 }
   );
+  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt));
+  return res;
 }
