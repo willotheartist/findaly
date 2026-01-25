@@ -40,6 +40,14 @@ function isBlobOrDataUrl(url: string) {
   return url.startsWith("blob:") || url.startsWith("data:image/");
 }
 
+function safeRevoke(url: string) {
+  if (!url) return;
+  if (!url.startsWith("blob:")) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {}
+}
+
 async function uploadSingleFile(file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
@@ -56,6 +64,10 @@ async function uploadSingleFile(file: File): Promise<string> {
 /**
  * Replace any blob/data preview URLs with real uploaded URLs (keeps ordering).
  * Uses photoUrls + photos alignment by index (your Step6Photos maintains it).
+ *
+ * IMPORTANT:
+ * We revoke blob: URLs after we successfully replace them with remote URLs,
+ * otherwise step navigation (unmount/remount) can break previews if revoked too early.
  */
 async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
   const urls = Array.isArray(formData.photoUrls) ? formData.photoUrls : [];
@@ -63,7 +75,6 @@ async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
 
   if (urls.length === 0) return formData;
 
-  // If there are no blob/data urls, nothing to do.
   const hasLocal = urls.some((u) => typeof u === "string" && isBlobOrDataUrl(u));
   if (!hasLocal) return formData;
 
@@ -75,14 +86,16 @@ async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
     if (typeof u === "string" && isBlobOrDataUrl(u)) {
       const f = files[i];
       if (f instanceof File) {
-        // Upload in-place, keep ordering
+        const originalBlobUrl = u;
+
         const p = uploadSingleFile(f).then((remote) => {
           nextUrls[i] = remote;
+          // Revoke only AFTER replacement is safely in place
+          safeRevoke(originalBlobUrl);
         });
+
         uploadPromises.push(p);
       } else {
-        // blob with no file -> drop it
-        // we'll leave it undefined and filter later
         nextUrls[i] = "";
       }
     } else {
@@ -97,7 +110,7 @@ async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
   return {
     ...formData,
     photoUrls: cleaned,
-    photos: [], // ✅ once uploaded, do not keep File[] in state for submit
+    photos: [], // once uploaded, do not keep File[] in state for submit
   };
 }
 
@@ -220,9 +233,11 @@ export default function ListingWizard({
     setSubmitError(null);
 
     try {
-      // ✅ Upload photos first (convert blob urls -> real urls)
       const uploaded = await uploadPhotosIfNeeded(formData);
-      if (uploaded.photoUrls !== formData.photoUrls || (uploaded.photos?.length ?? 0) !== (formData.photos?.length ?? 0)) {
+      if (
+        uploaded.photoUrls !== formData.photoUrls ||
+        (uploaded.photos?.length ?? 0) !== (formData.photos?.length ?? 0)
+      ) {
         setFormData(uploaded);
       }
 
@@ -263,6 +278,10 @@ export default function ListingWizard({
   };
 
   const handleCreateAnother = () => {
+    // Revoke any leftover blob URLs before reset (best-effort)
+    const urls = Array.isArray(formData.photoUrls) ? formData.photoUrls : [];
+    for (const u of urls) safeRevoke(String(u || ""));
+
     setFormData(initialFormData);
     setCurrentStep(1);
     setShowSuccessModal(false);

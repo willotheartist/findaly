@@ -10,6 +10,13 @@ async function cookieStore() {
   return await cookies();
 }
 
+function cookieDomain() {
+  // Host-only cookies cause logout on refresh if you bounce between
+  // findaly.co and www.findaly.co. In prod, share across both.
+  if (process.env.NODE_ENV !== "production") return undefined;
+  return ".findaly.co";
+}
+
 export async function getSessionToken() {
   const c = await cookieStore();
   return c.get(COOKIE_NAME)?.value ?? null;
@@ -44,12 +51,16 @@ export async function createSession(userId: string, remember = true) {
   });
 
   const c = await cookieStore();
+  const isProd = process.env.NODE_ENV === "production";
+  const domain = cookieDomain();
+
   c.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProd,
     path: "/",
     expires: expiresAt,
+    ...(domain ? { domain } : {}),
   });
 
   return token;
@@ -62,11 +73,15 @@ export async function clearSession() {
   }
 
   const c = await cookieStore();
+  const isProd = process.env.NODE_ENV === "production";
+  const domain = cookieDomain();
+
   c.set(COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProd,
     path: "/",
     expires: new Date(0),
+    ...(domain ? { domain } : {}),
   });
 }

@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 25/01/2026, 17:51:38*
+*Generated on: 26/01/2026, 01:04:59*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 103 |
-| 📁 Total Folders | 62 |
+| 📄 Total Files | 110 |
+| 📁 Total Folders | 67 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,41 +24,43 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 47 files (45.6%)
-- 🔷 **.ts** (TypeScript files): 31 files (30.1%)
-- 🎨 **.svg** (SVG images): 5 files (4.9%)
-- ⚙️ **.json** (JSON files): 4 files (3.9%)
-- 📄 **.sql** (Other files): 3 files (2.9%)
-- 📖 **.md** (Markdown files): 2 files (1.9%)
-- 📄 **.mjs** (Other files): 2 files (1.9%)
-- 🚫 **.gitignore** (Git ignore): 1 files (1.0%)
-- 📄 **.txt** (Text files): 1 files (1.0%)
-- 🖼️ **.ico** (Icon files): 1 files (1.0%)
-- 🎨 **.css** (Stylesheets): 1 files (1.0%)
-- ⚙️ **.yaml** (YAML files): 1 files (1.0%)
-- ⚙️ **.toml** (TOML files): 1 files (1.0%)
-- 📄 **.prisma** (Other files): 1 files (1.0%)
-- 📄 **.patch** (Other files): 1 files (1.0%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (1.0%)
+- ⚛️ **.tsx** (React TypeScript files): 47 files (42.7%)
+- 🔷 **.ts** (TypeScript files): 34 files (30.9%)
+- 🎨 **.svg** (SVG images): 5 files (4.5%)
+- ⚙️ **.json** (JSON files): 4 files (3.6%)
+- 📄 **.sql** (Other files): 4 files (3.6%)
+- 📖 **.md** (Markdown files): 2 files (1.8%)
+- 📄 **.mjs** (Other files): 2 files (1.8%)
+- 🖼️ **.jpg** (JPEG images): 2 files (1.8%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.9%)
+- 📄 **.txt** (Text files): 1 files (0.9%)
+- 🖼️ **.ico** (Icon files): 1 files (0.9%)
+- 🎨 **.css** (Stylesheets): 1 files (0.9%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.9%)
+- ⚙️ **.toml** (TOML files): 1 files (0.9%)
+- 📄 **.prisma** (Other files): 1 files (0.9%)
+- 🖼️ **.png** (PNG images): 1 files (0.9%)
+- 📄 **.patch** (Other files): 1 files (0.9%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.9%)
 
 ### By Category
 
-- **React**: 47 files (45.6%)
-- **TypeScript**: 31 files (30.1%)
-- **Other**: 8 files (7.8%)
-- **Config**: 6 files (5.8%)
-- **Assets**: 6 files (5.8%)
-- **Docs**: 3 files (2.9%)
-- **DevOps**: 1 files (1.0%)
-- **Styles**: 1 files (1.0%)
+- **React**: 47 files (42.7%)
+- **TypeScript**: 34 files (30.9%)
+- **Assets**: 9 files (8.2%)
+- **Other**: 9 files (8.2%)
+- **Config**: 6 files (5.5%)
+- **Docs**: 3 files (2.7%)
+- **DevOps**: 1 files (0.9%)
+- **Styles**: 1 files (0.9%)
 
 ### 📁 Largest Directories
 
-- **root**: 103 files
-- **app**: 57 files
+- **root**: 110 files
+- **app**: 60 files
 - **app/add-listing**: 21 files
 - **app/add-listing/_components**: 17 files
-- **app/api**: 12 files
+- **app/api**: 15 files
 
 ## 🌳 Directory Structure
 
@@ -117,13 +119,19 @@ findaly/
 │   │   │   └── 📂 send/
 │   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 profile/
+│   │   │   ├── 📂 media/
+│   │   │   │   └── 🔷 route.ts
 │   │   │   └── 📂 update/
 │   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 searches/
 │   │   │   ├── 📂 [id]/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   └── 🔷 route.ts
-│   │   └── 📂 stack/
+│   │   ├── 📂 stack/
+│   │   ├── 📂 upload/
+│   │   │   └── 🔷 route.ts
+│   │   └── 📂 uploads/
+│   │   │   └── 🔷 route.ts
 │   ├── 📂 buy/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
@@ -202,6 +210,8 @@ findaly/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20260124152715_add_listing_details/
 │   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260125165402_add_profile_media_urls/
+│   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
 │   └── ⚙️ tools.seed.json
@@ -213,6 +223,10 @@ findaly/
 │   │   └── 📂 inter-tight/
 │   ├── 🎨 globe.svg
 │   ├── 🎨 next.svg
+│   ├── 📂 uploads/
+│   │   ├── 🖼️ 926df4ff-3967-40ba-998c-87c0f27af596.png
+│   │   ├── 🖼️ dc7cdfa4-1c5f-4613-9d53-848b31484d02.jpg
+│   │   └── 🖼️ e13834c7-5fb1-4015-8f47-96867b62c3c2.jpg
 │   ├── 🎨 vercel.svg
 │   └── 🎨 window.svg
 ├── 🔴 📖 **README.md**
@@ -246,6 +260,8 @@ findaly/
 - ⚙️ Config: YAML files
 - ⚙️ Config: TOML files
 - 🎨 Assets: SVG images
+- 🖼️ Assets: PNG images
+- 🖼️ Assets: JPEG images
 
 ### Importance Levels
 - 🔴 Critical: Essential project files

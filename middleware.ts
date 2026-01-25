@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyAdminToken } from "@/lib/admin/session";
 
@@ -6,6 +7,28 @@ const USER_COOKIE = "findaly_session";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // -------------------------------------------------------------------------
+  // Canonical host + https (prevents "refresh logs me out" due to host mismatch)
+  // -------------------------------------------------------------------------
+  if (process.env.NODE_ENV === "production") {
+    const host = req.headers.get("host") || "";
+    const proto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "");
+
+    // Force https
+    if (proto === "http") {
+      const url = req.nextUrl.clone();
+      url.protocol = "https:";
+      return NextResponse.redirect(url);
+    }
+
+    // Force non-www (optional but strongly recommended)
+    if (host.startsWith("www.")) {
+      const url = req.nextUrl.clone();
+      url.host = host.replace(/^www\./, "");
+      return NextResponse.redirect(url);
+    }
+  }
 
   // ---------------------------
   // Guard /settings (user auth)

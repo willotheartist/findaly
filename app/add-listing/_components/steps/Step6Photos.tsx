@@ -7,6 +7,14 @@ import PhotoUploader from "../fields/PhotoUploader";
 import Input from "../fields/Input";
 import type { FormData } from "../../_types/listing";
 
+function safeRevoke(url: string) {
+  if (!url) return;
+  if (!url.startsWith("blob:")) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {}
+}
+
 export default function Step6Photos({
   formData,
   updateForm,
@@ -16,9 +24,6 @@ export default function Step6Photos({
 }) {
   const handleAddFiles = React.useCallback(
     (files: File[], previewUrls: string[]) => {
-      // Persist both:
-      // - photos (File[]) for eventual upload
-      // - photoUrls (string[]) for previews + already-uploaded URLs
       updateForm({
         photos: [...(formData.photos ?? []), ...files],
         photoUrls: [...(formData.photoUrls ?? []), ...previewUrls],
@@ -29,7 +34,16 @@ export default function Step6Photos({
 
   const handleRemove = React.useCallback(
     (index: number) => {
-      const nextUrls = (formData.photoUrls ?? []).filter((_, i) => i !== index);
+      const currentUrls = formData.photoUrls ?? [];
+      const urlToRemove = currentUrls[index] || "";
+
+      // IMPORTANT:
+      // Step components unmount when navigating wizard steps.
+      // If we revoke on unmount, previews break.
+      // So we revoke ONLY when user removes a photo (or after successful upload).
+      safeRevoke(urlToRemove);
+
+      const nextUrls = currentUrls.filter((_, i) => i !== index);
       const nextFiles = (formData.photos ?? []).filter((_, i) => i !== index);
 
       updateForm({
@@ -42,13 +56,9 @@ export default function Step6Photos({
 
   const handleReorder = React.useCallback(
     (nextUrls: string[]) => {
-      // Reorder photos[] to match the new photoUrls order.
-      // Works because we always keep photos[] and photoUrls[] aligned by index.
       const currentUrls = formData.photoUrls ?? [];
       const currentFiles = formData.photos ?? [];
 
-      // Build a mapping from old index -> new index using URL identity.
-      // Note: if duplicate URLs exist, this uses first match; avoid duplicates in practice.
       const usedOld = new Set<number>();
       const nextFiles: File[] = [];
 
@@ -65,11 +75,6 @@ export default function Step6Photos({
         if (foundOld >= 0) {
           usedOld.add(foundOld);
           nextFiles.push(currentFiles[foundOld]);
-        } else {
-          // If a URL doesn't exist in currentUrls, we can't map a File for it.
-          // Keep array alignment by pushing a "gap" only if the file existed.
-          // In real usage this shouldn't happen unless someone injects URLs externally.
-          // We'll just skip a file entry here.
         }
       }
 

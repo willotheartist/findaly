@@ -29,20 +29,8 @@ export default function PhotoUploader({
   onReorder,
 }: Props) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const createdBlobUrlsRef = React.useRef<string[]>([]);
   const dragIndexRef = React.useRef<number | null>(null);
   const [isDropActive, setIsDropActive] = React.useState(false);
-
-  React.useEffect(() => {
-    return () => {
-      for (const url of createdBlobUrlsRef.current) {
-        try {
-          URL.revokeObjectURL(url);
-        } catch {}
-      }
-      createdBlobUrlsRef.current = [];
-    };
-  }, []);
 
   const remaining = Math.max(0, max - (photoUrls?.length ?? 0));
 
@@ -57,8 +45,14 @@ export default function PhotoUploader({
     const picked = files.filter((f) => f.type.startsWith("image/")).slice(0, remaining);
     if (!picked.length) return;
 
+    // IMPORTANT:
+    // We intentionally DO NOT revoke object URLs on unmount here.
+    // Because the wizard unmounts steps when you click Next/Back,
+    // revoking would break previews stored in parent state.
+    //
+    // Cleanup is handled by the parent when photos are removed,
+    // or when we successfully upload & replace blob URLs.
     const previews = picked.map((f) => URL.createObjectURL(f));
-    createdBlobUrlsRef.current.push(...previews);
 
     onAddFiles(picked, previews);
   };
@@ -208,7 +202,6 @@ export default function PhotoUploader({
             >
               {url ? (
                 isBlobOrData(url) ? (
-                  // Blob/Data previews should use <img>
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={url}
