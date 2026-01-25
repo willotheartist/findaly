@@ -1,4 +1,4 @@
-//·/prisma/schema.prisma
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -128,6 +128,10 @@ model Profile {
   website String?
   email   String?
   phone   String?
+
+  // ✅ Media URLs (uploaded assets)
+  avatarUrl      String?
+  companyLogoUrl String?
 
   isVerified Boolean @default(false)
 

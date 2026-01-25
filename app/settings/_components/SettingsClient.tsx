@@ -1,4 +1,4 @@
-//·app/settings/_components/SettingsClient.tsx
+// app/settings/_components/SettingsClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -14,6 +14,7 @@ import {
   Save,
   Shield,
   User,
+  Image as ImageIcon,
 } from "lucide-react";
 
 function cx(...v: Array<string | false | null | undefined>) {
@@ -31,6 +32,10 @@ type ProfileDTO = {
   email: string | null;
   phone: string | null;
   isVerified: boolean;
+
+  // ✅ NEW (optional so it won’t break if settings/page.tsx hasn’t selected them yet)
+  avatarUrl?: string | null;
+  companyLogoUrl?: string | null;
 };
 
 type Props = {
@@ -56,6 +61,12 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
   const [phone, setPhone] = useState(activeProfile.phone ?? "");
   const [about, setAbout] = useState(activeProfile.about ?? "");
 
+  // ✅ NEW: media state
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(activeProfile.avatarUrl ?? null);
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(
+    activeProfile.companyLogoUrl ?? null
+  );
+
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -64,6 +75,145 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
   const onSwitchProfile = (slug: string) => {
     window.location.href = `/settings?profile=${encodeURIComponent(slug)}`;
   };
+
+  // ✅ NEW: upload file -> /api/upload -> PATCH /api/profile/media
+  async function uploadAndSave(file: File, field: "avatarUrl" | "companyLogoUrl") {
+    setErr(null);
+    setOk(false);
+    setSaving(true);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+      });
+
+      const uploadJson: unknown = await uploadRes.json().catch(() => ({}));
+      if (!uploadRes.ok) {
+        const msg =
+          typeof uploadJson === "object" && uploadJson !== null && "error" in uploadJson
+            ? String((uploadJson as { error?: unknown }).error ?? "UPLOAD_FAILED")
+            : "UPLOAD_FAILED";
+        throw new Error(msg);
+      }
+
+      const url =
+        typeof uploadJson === "object" && uploadJson !== null && "url" in uploadJson
+          ? String((uploadJson as { url?: unknown }).url ?? "")
+          : "";
+
+      if (!url) throw new Error("UPLOAD_NO_URL");
+
+      const patchRes = await fetch("/api/profile/media", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          profileId: activeProfile.id,
+          [field]: url,
+        }),
+      });
+
+      const patchJson: unknown = await patchRes.json().catch(() => ({}));
+      if (!patchRes.ok) {
+        const msg =
+          typeof patchJson === "object" && patchJson !== null && "error" in patchJson
+            ? String((patchJson as { error?: unknown }).error ?? "SAVE_FAILED")
+            : "SAVE_FAILED";
+        throw new Error(msg);
+      }
+
+      // Expect: { ok: true, profile: { avatarUrl, companyLogoUrl } }
+      const profileObj =
+        typeof patchJson === "object" && patchJson !== null && "profile" in patchJson
+          ? (patchJson as { profile?: unknown }).profile
+          : null;
+
+      const nextAvatar =
+        typeof profileObj === "object" && profileObj !== null && "avatarUrl" in profileObj
+          ? (profileObj as { avatarUrl?: unknown }).avatarUrl
+          : null;
+
+      const nextLogo =
+        typeof profileObj === "object" && profileObj !== null && "companyLogoUrl" in profileObj
+          ? (profileObj as { companyLogoUrl?: unknown }).companyLogoUrl
+          : null;
+
+      if (field === "avatarUrl") setAvatarUrl(typeof nextAvatar === "string" ? nextAvatar : url);
+      if (field === "companyLogoUrl")
+        setCompanyLogoUrl(typeof nextLogo === "string" ? nextLogo : url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "UPLOAD_FAILED");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ✅ NEW: reusable dropzone
+  function ImageDrop({
+    label,
+    value,
+    onPick,
+  }: {
+    label: string;
+    value: string | null;
+    onPick: (file: File) => void;
+  }) {
+    return (
+      <label className="block">
+        <div className="mb-1.5 block text-sm font-semibold text-slate-900">{label}</div>
+
+        <div
+          className="flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition hover:border-slate-300"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const f = e.dataTransfer.files?.[0];
+            if (f) onPick(f);
+          }}
+        >
+          {value ? (
+            <img src={value} alt="" className="h-full w-full object-contain p-3" />
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <ImageIcon className="h-4 w-4" />
+              Drag & drop or click
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) onPick(f);
+            }}
+          />
+        </div>
+
+        {value ? (
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="truncate text-xs text-slate-500">{value}</div>
+            <button
+              type="button"
+              onClick={(ev) => {
+                ev.preventDefault();
+                // soft “remove” just clears UI; you can add real delete later if you want
+                if (label.toLowerCase().includes("avatar")) setAvatarUrl(null);
+                else setCompanyLogoUrl(null);
+              }}
+              className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300"
+            >
+              Clear
+            </button>
+          </div>
+        ) : null}
+      </label>
+    );
+  }
 
   const onSave = async () => {
     setErr(null);
@@ -88,7 +238,10 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
 
       const data: unknown = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const maybeErr = typeof data === "object" && data !== null && "error" in data ? (data as { error?: unknown }).error : undefined;
+        const maybeErr =
+          typeof data === "object" && data !== null && "error" in data
+            ? (data as { error?: unknown }).error
+            : undefined;
         setErr(String(maybeErr ?? "SAVE_FAILED"));
         setSaving(false);
         return;
@@ -140,7 +293,9 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
                     <User className="h-6 w-6 text-slate-400" />
                   </div>
                   <div className="min-w-0">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Profile settings</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                      Profile settings
+                    </h1>
 
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
                       <span className="inline-flex items-center gap-2">
@@ -238,12 +393,36 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
           <div className="grid gap-6 lg:grid-cols-12">
             {/* Left */}
             <div className="lg:col-span-8">
+              {/* ✅ NEW: Media card */}
               <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                <div className="text-lg font-bold text-slate-900">Profile images</div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <ImageDrop
+                    label="Avatar"
+                    value={avatarUrl}
+                    onPick={(f) => uploadAndSave(f, "avatarUrl")}
+                  />
+                  <ImageDrop
+                    label="Company logo"
+                    value={companyLogoUrl}
+                    onPick={(f) => uploadAndSave(f, "companyLogoUrl")}
+                  />
+                </div>
+
+                <div className="mt-3 text-xs text-slate-500">
+                  Tip: PNG with transparent background works best for logos.
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
                 <div className="text-lg font-bold text-slate-900">Basics</div>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Name</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Name
+                    </label>
                     <input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -251,12 +430,15 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
                       placeholder="William M"
                     />
                     <div className="mt-2 text-xs text-slate-500">
-                      URL stays as <span className="font-semibold">/profile/{activeProfile.slug}</span>
+                      URL stays as{" "}
+                      <span className="font-semibold">/profile/{activeProfile.slug}</span>
                     </div>
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Tagline</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Tagline
+                    </label>
                     <input
                       value={tagline}
                       onChange={(e) => setTagline(e.target.value)}
@@ -266,7 +448,9 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Location</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Location
+                    </label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
@@ -299,7 +483,9 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
 
                 <div className="mt-5 grid gap-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Website</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Website
+                    </label>
                     <div className="relative">
                       <Globe className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
@@ -312,7 +498,9 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Email</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Email
+                    </label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
@@ -325,7 +513,9 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">Phone</label>
+                    <label className="mb-1.5 block text-sm font-semibold text-slate-900">
+                      Phone
+                    </label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
@@ -377,7 +567,10 @@ export default function SettingsClient({ profiles, activeSlug }: Props) {
               </div>
 
               <div className="mt-6 text-center text-sm text-slate-600">
-                <Link href="/contact" className="font-semibold text-slate-900 no-underline hover:text-[#ff6a00]">
+                <Link
+                  href="/contact"
+                  className="font-semibold text-slate-900 no-underline hover:text-[#ff6a00]"
+                >
                   Contact support
                 </Link>
               </div>

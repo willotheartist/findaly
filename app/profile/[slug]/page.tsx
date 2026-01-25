@@ -1,4 +1,4 @@
-//·/app/profile/[slug]/page.tsx
+// /app/profile/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -43,8 +43,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const liveListings = profile.listings.filter((l) => l.status === "LIVE");
   const soldListings = profile.listings.filter((l) => l.status === "SOLD");
 
-  // For response rate and time, we'd ideally track this in the DB
-  // For now, we'll use placeholder values that make sense
+  // Placeholder-ish values for now
   const responseRate = profile.isVerified ? 95 : 75;
   const avgResponseTime = profile.isVerified ? "Within 2 hours" : "Within 24 hours";
 
@@ -80,6 +79,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     website: profile.website,
     email: profile.email,
     phone: profile.phone,
+
+    // ✅ NEW
+    avatarUrl: profile.avatarUrl ?? null,
+    companyLogoUrl: profile.companyLogoUrl ?? null,
+
     isVerified: profile.isVerified,
     createdAt: profile.createdAt.toISOString(),
     accountType: profile.user.accountType,
@@ -87,7 +91,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       totalListings: profile.listings.length,
       liveListings: liveListings.length,
       soldListings: soldListings.length,
-      totalViews: 0, // Would need to track this in DB
+      totalViews: 0,
       responseRate,
       avgResponseTime,
     },

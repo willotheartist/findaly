@@ -1,3 +1,4 @@
+// /app/profile/[slug]/ProfilePageClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -72,6 +73,11 @@ type ProfileData = {
   website: string | null;
   email: string | null;
   phone: string | null;
+
+  // ✅ NEW (from Prisma)
+  avatarUrl: string | null;
+  companyLogoUrl: string | null;
+
   isVerified: boolean;
   createdAt: string;
   accountType: string;
@@ -107,7 +113,6 @@ function formatPrice(cents: number | null, currency: string = "EUR"): string {
     maximumFractionDigits: 0,
   }).format(cents / 100);
 }
-
 
 function getRelativeTime(dateStr: string): string {
   const now = new Date();
@@ -306,7 +311,8 @@ function EmptyState({ kind, isOwner }: { kind: string | null; isOwner: boolean }
         <Ship className="h-8 w-8 text-slate-400" />
       </div>
       <h3 className="mt-4 text-lg font-semibold text-slate-900">
-        {kind ? `No ${kindLabels[kind as ListingKind]?.toLowerCase() || "listings"}` : "No listings"} yet
+        {kind ? `No ${kindLabels[kind as ListingKind]?.toLowerCase() || "listings"}` : "No listings"}{" "}
+        yet
       </h3>
       <p className="mt-1 text-sm text-slate-500">
         {isOwner
@@ -365,9 +371,7 @@ function ContactCard({ profile }: { profile: ProfileData }) {
             disabled={messageSent}
             className={cx(
               "flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all",
-              messageSent
-                ? "bg-emerald-500"
-                : "bg-[#ff6a00] hover:brightness-110"
+              messageSent ? "bg-emerald-500" : "bg-[#ff6a00] hover:brightness-110"
             )}
           >
             <MessageCircle className="h-4 w-4" />
@@ -539,6 +543,9 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
 
   const isPro = profile.accountType !== "PRIVATE";
 
+  // ✅ display priority: pro logo > avatar (pro) OR avatar (private)
+  const primaryAvatarUrl = isPro ? profile.companyLogoUrl || profile.avatarUrl : profile.avatarUrl;
+
   return (
     <main className="min-h-screen w-full bg-slate-50">
       {/* Hero Section */}
@@ -584,18 +591,41 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
                   <div className="relative">
                     <div
                       className={cx(
-                        "flex h-20 w-20 items-center justify-center rounded-2xl sm:h-24 sm:w-24",
-                        isPro
+                        "relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl sm:h-24 sm:w-24",
+                        primaryAvatarUrl
+                          ? "bg-slate-100"
+                          : isPro
                           ? "bg-linear-to-br from-[#ff6a00] to-orange-600"
                           : "bg-linear-to-br from-slate-600 to-slate-800"
                       )}
                     >
-                      {isPro ? (
+                      {primaryAvatarUrl ? (
+                        <img
+                          src={primaryAvatarUrl}
+                          alt={isPro ? `${profile.name} logo` : `${profile.name} avatar`}
+                          className={cx(
+                            "h-full w-full",
+                            isPro && profile.companyLogoUrl ? "object-contain p-3" : "object-cover"
+                          )}
+                        />
+                      ) : isPro ? (
                         <Building2 className="h-10 w-10 text-white sm:h-12 sm:w-12" />
                       ) : (
                         <User className="h-10 w-10 text-white sm:h-12 sm:w-12" />
                       )}
                     </div>
+
+                    {/* If pro + has both, show avatar as a small badge */}
+                    {isPro && profile.companyLogoUrl && profile.avatarUrl && (
+                      <div className="absolute -bottom-2 -right-2 h-10 w-10 overflow-hidden rounded-2xl border-2 border-white bg-white shadow-sm">
+                        <img
+                          src={profile.avatarUrl}
+                          alt={`${profile.name} avatar`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
+
                     {profile.isVerified && (
                       <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#ff6a00]">
                         <BadgeCheck className="h-4 w-4 text-white" />
@@ -764,33 +794,16 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
               <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 lg:hidden">
                 <div className="flex gap-3 sm:grid sm:grid-cols-2 md:grid-cols-4">
                   <div className="w-40 shrink-0 sm:w-auto">
-                    <StatCard
-                      icon={Ship}
-                      label="Active listings"
-                      value={profile.stats.liveListings}
-                      accent
-                    />
+                    <StatCard icon={Ship} label="Active listings" value={profile.stats.liveListings} accent />
                   </div>
                   <div className="w-40 shrink-0 sm:w-auto">
-                    <StatCard
-                      icon={CheckCircle2}
-                      label="Items sold"
-                      value={profile.stats.soldListings}
-                    />
+                    <StatCard icon={CheckCircle2} label="Items sold" value={profile.stats.soldListings} />
                   </div>
                   <div className="w-40 shrink-0 sm:w-auto">
-                    <StatCard
-                      icon={ThumbsUp}
-                      label="Response rate"
-                      value={`${profile.stats.responseRate}%`}
-                    />
+                    <StatCard icon={ThumbsUp} label="Response rate" value={`${profile.stats.responseRate}%`} />
                   </div>
                   <div className="w-40 shrink-0 sm:w-auto">
-                    <StatCard
-                      icon={Clock}
-                      label="Avg. response"
-                      value={profile.stats.avgResponseTime || "—"}
-                    />
+                    <StatCard icon={Clock} label="Avg. response" value={profile.stats.avgResponseTime || "—"} />
                   </div>
                 </div>
               </div>
