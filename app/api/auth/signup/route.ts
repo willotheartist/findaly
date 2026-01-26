@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import {
-  COOKIE_NAME,
-  createSession,
-  getSessionCookieOptions,
-} from "@/lib/auth/session";
+import { COOKIE_NAME, createSession, getSessionCookieOptions } from "@/lib/auth/session";
 import { AccountType } from "@prisma/client";
+
+function cookieDomainFor(req: Request) {
+  const host = new URL(req.url).hostname;
+  const isProd = process.env.NODE_ENV === "production";
+  if (!isProd) return undefined;
+  if (host === "findaly.co" || host.endsWith(".findaly.co")) return ".findaly.co";
+  return undefined;
+}
 
 function slugify(v: string) {
   return v
@@ -33,14 +37,12 @@ async function uniqueProfileSlug(base: string) {
 
 function parseAccountType(v: unknown): AccountType {
   const s = String(v ?? "PRIVATE").toUpperCase();
-
   if (s === "BROKER") return AccountType.BROKER;
   if (s === "DEALER") return AccountType.DEALER;
   if (s === "SHIPYARD") return AccountType.SHIPYARD;
   if (s === "SERVICE_PRO") return AccountType.SERVICE_PRO;
   if (s === "CREW") return AccountType.CREW;
   if (s === "EMPLOYER") return AccountType.EMPLOYER;
-
   return AccountType.PRIVATE;
 }
 
@@ -86,10 +88,7 @@ export async function POST(req: Request) {
       passwordHash,
       accountType,
       profiles: {
-        create: {
-          slug,
-          name: profileName,
-        },
+        create: { slug, name: profileName },
       },
     },
     select: { id: true, profiles: { select: { slug: true } } },
@@ -101,6 +100,6 @@ export async function POST(req: Request) {
     { ok: true, profileSlug: user.profiles[0]?.slug ?? null },
     { status: 200 }
   );
-  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt));
+  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt, cookieDomainFor(req)));
   return res;
 }

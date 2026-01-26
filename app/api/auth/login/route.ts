@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import {
-  COOKIE_NAME,
-  createSession,
-  getSessionCookieOptions,
-} from "@/lib/auth/session";
+import { COOKIE_NAME, createSession, getSessionCookieOptions } from "@/lib/auth/session";
+
+function cookieDomainFor(req: Request) {
+  const host = new URL(req.url).hostname;
+  const isProd = process.env.NODE_ENV === "production";
+  if (!isProd) return undefined;
+  // Share cookie across www + apex
+  if (host === "findaly.co" || host.endsWith(".findaly.co")) return ".findaly.co";
+  return undefined;
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -39,6 +44,6 @@ export async function POST(req: Request) {
   const { token, expiresAt } = await createSession(user.id, remember);
 
   const res = NextResponse.json({ ok: true }, { status: 200 });
-  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt));
+  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt, cookieDomainFor(req)));
   return res;
 }

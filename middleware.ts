@@ -7,19 +7,6 @@ const USER_COOKIE = "findaly_session";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // ---------------------------------------------
-  // Canonical host: force non-www in production
-  // (avoid cookie host mismatches without touching cookie domain)
-  // ---------------------------------------------
-  if (process.env.NODE_ENV === "production") {
-    const host = req.headers.get("host") || "";
-    if (host.startsWith("www.")) {
-      const url = req.nextUrl.clone();
-      url.host = host.replace(/^www\./, "");
-      return NextResponse.redirect(url);
-    }
-  }
-
   // ---------------------------
   // Guard /settings (user auth)
   // ---------------------------
@@ -44,6 +31,7 @@ export async function middleware(req: NextRequest) {
 
   const secret = process.env.ADMIN_SECRET || "";
 
+  // Fail closed in prod. In dev, if not configured, still redirect to login.
   if (!secret) {
     const url = new URL("/admin/login", req.url);
     url.searchParams.set("next", pathname);

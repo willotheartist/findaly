@@ -5,23 +5,27 @@ import { cookies } from "next/headers";
 
 export const COOKIE_NAME = "findaly_session";
 
-export function getSessionCookieOptions(expiresAt: Date) {
+type CookieDomain = string | undefined;
+
+export function getSessionCookieOptions(expiresAt: Date, domain?: CookieDomain) {
   return {
     httpOnly: true as const,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     expires: expiresAt,
+    ...(domain ? { domain } : {}),
   };
 }
 
-export function getClearSessionCookieOptions() {
+export function getClearSessionCookieOptions(domain?: CookieDomain) {
   return {
     httpOnly: true as const,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     expires: new Date(0),
+    ...(domain ? { domain } : {}),
   };
 }
 
@@ -50,10 +54,8 @@ export async function getCurrentUser() {
 }
 
 /**
- * IMPORTANT:
- * In Next.js Route Handlers, mutating cookies() inside helper functions is not reliable.
- * So we only create the DB session here and RETURN {token, expiresAt}.
- * The caller must set the cookie on the NextResponse.
+ * Route Handlers must set cookies on the NextResponse.
+ * This only creates the DB session and returns token + expiry.
  */
 export async function createSession(userId: string, remember = true) {
   const token = crypto.randomBytes(32).toString("hex");
@@ -68,7 +70,8 @@ export async function createSession(userId: string, remember = true) {
 }
 
 /**
- * Deletes session record for a token. Cookie clearing must be done by caller via NextResponse.
+ * Deletes the DB session record.
+ * Cookie clearing must be done by caller via NextResponse.
  */
 export async function clearSession(token?: string | null) {
   const t = token ?? (await getSessionToken());
