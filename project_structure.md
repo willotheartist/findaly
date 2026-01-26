@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 26/01/2026, 01:04:59*
+*Generated on: 26/01/2026, 11:09:48*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 110 |
+| 📄 Total Files | 111 |
 | 📁 Total Folders | 67 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,14 +24,14 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 47 files (42.7%)
-- 🔷 **.ts** (TypeScript files): 34 files (30.9%)
+- ⚛️ **.tsx** (React TypeScript files): 47 files (42.3%)
+- 🔷 **.ts** (TypeScript files): 34 files (30.6%)
 - 🎨 **.svg** (SVG images): 5 files (4.5%)
 - ⚙️ **.json** (JSON files): 4 files (3.6%)
 - 📄 **.sql** (Other files): 4 files (3.6%)
+- 🖼️ **.jpg** (JPEG images): 3 files (2.7%)
 - 📖 **.md** (Markdown files): 2 files (1.8%)
 - 📄 **.mjs** (Other files): 2 files (1.8%)
-- 🖼️ **.jpg** (JPEG images): 2 files (1.8%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.9%)
 - 📄 **.txt** (Text files): 1 files (0.9%)
 - 🖼️ **.ico** (Icon files): 1 files (0.9%)
@@ -45,18 +45,18 @@
 
 ### By Category
 
-- **React**: 47 files (42.7%)
-- **TypeScript**: 34 files (30.9%)
-- **Assets**: 9 files (8.2%)
-- **Other**: 9 files (8.2%)
-- **Config**: 6 files (5.5%)
+- **React**: 47 files (42.3%)
+- **TypeScript**: 34 files (30.6%)
+- **Assets**: 10 files (9.0%)
+- **Other**: 9 files (8.1%)
+- **Config**: 6 files (5.4%)
 - **Docs**: 3 files (2.7%)
 - **DevOps**: 1 files (0.9%)
 - **Styles**: 1 files (0.9%)
 
 ### 📁 Largest Directories
 
-- **root**: 110 files
+- **root**: 111 files
 - **app**: 60 files
 - **app/add-listing**: 21 files
 - **app/add-listing/_components**: 17 files
@@ -225,6 +225,7 @@ findaly/
 │   ├── 🎨 next.svg
 │   ├── 📂 uploads/
 │   │   ├── 🖼️ 926df4ff-3967-40ba-998c-87c0f27af596.png
+│   │   ├── 🖼️ 9eca7f55-4b8e-4345-917a-558e7b18324b.jpg
 │   │   ├── 🖼️ dc7cdfa4-1c5f-4613-9d53-848b31484d02.jpg
 │   │   └── 🖼️ e13834c7-5fb1-4015-8f47-96867b62c3c2.jpg
 │   ├── 🎨 vercel.svg

@@ -293,46 +293,60 @@ export async function PATCH(
     recentWorks: s(body.recentWorks) || null,
   };
 
-  // Media sync (photoUrls is the truth) ✅ filter out blob/data
-  const desiredUrls = stringArray(body.photoUrls).filter(
-    (url) => url && !isBlobOrDataUrl(url)
-  );
-  const existingMedia = listing.media;
-
-  const existingByUrl = new Map(existingMedia.map((m) => [m.url, m]));
-  const desiredSet = new Set(desiredUrls);
-
-  const toDeleteIds = existingMedia
-    .filter((m) => !desiredSet.has(m.url))
-    .map((m) => m.id);
-
-  const toCreate = desiredUrls.filter((url) => !existingByUrl.has(url));
+  // ✅ CRITICAL FIX:
+  // Only sync media if the client explicitly sent photoUrls.
+  // Otherwise, do NOT touch existing media (prevents accidental wipe).
+  const hasPhotoUrls = Object.prototype.hasOwnProperty.call(body, "photoUrls");
 
   await prisma.$transaction(async (tx) => {
     await tx.listing.update({ where: { id: listing.id }, data });
 
-    if (toDeleteIds.length) {
-      await tx.listingMedia.deleteMany({ where: { id: { in: toDeleteIds } } });
-    }
+    if (hasPhotoUrls) {
+      const desiredUrls = stringArray(body.photoUrls).filter(
+        (url) => url && !isBlobOrDataUrl(url)
+      );
 
-    if (toCreate.length) {
-      await tx.listingMedia.createMany({
-        data: toCreate.map((url) => ({
-          listingId: listing.id,
-          url,
-          sort: desiredUrls.indexOf(url),
-        })),
+      const existingMedia = await tx.listingMedia.findMany({
+        where: { listingId: listing.id },
       });
-    }
 
-    for (let i = 0; i < desiredUrls.length; i++) {
-      const url = desiredUrls[i];
-      const existing = existingByUrl.get(url);
-      if (existing) {
-        await tx.listingMedia.update({
-          where: { id: existing.id },
-          data: { sort: i },
+      const existingByUrl = new Map(existingMedia.map((m) => [m.url, m]));
+      const desiredSet = new Set(desiredUrls);
+
+      const toDeleteIds = existingMedia
+        .filter((m) => !desiredSet.has(m.url))
+        .map((m) => m.id);
+
+      if (toDeleteIds.length) {
+        await tx.listingMedia.deleteMany({ where: { id: { in: toDeleteIds } } });
+      }
+
+      const toCreate: Array<{ url: string; sort: number }> = [];
+      for (let i = 0; i < desiredUrls.length; i++) {
+        const url = desiredUrls[i];
+        if (!existingByUrl.has(url)) toCreate.push({ url, sort: i });
+      }
+
+      if (toCreate.length) {
+        await tx.listingMedia.createMany({
+          data: toCreate.map((x) => ({
+            listingId: listing.id,
+            url: x.url,
+            sort: x.sort,
+          })),
         });
+      }
+
+      // Re-sort existing ones
+      for (let i = 0; i < desiredUrls.length; i++) {
+        const url = desiredUrls[i];
+        const existing = existingByUrl.get(url);
+        if (existing) {
+          await tx.listingMedia.update({
+            where: { id: existing.id },
+            data: { sort: i },
+          });
+        }
       }
     }
   });
