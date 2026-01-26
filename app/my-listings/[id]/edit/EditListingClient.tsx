@@ -1,4 +1,4 @@
-//·app/my-listings/[id]/edit/EditListingClient.tsx
+// app/my-listings/[id]/edit/EditListingClient.tsx
 "use client";
 
 import * as React from "react";
@@ -47,10 +47,62 @@ function safeBool(v: unknown): boolean {
   return v === true;
 }
 
+function isBlobUrl(url: string) {
+  return typeof url === "string" && url.startsWith("blob:");
+}
+
+function safeRevoke(url: string) {
+  if (!isBlobUrl(url)) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {}
+}
+
+async function uploadSingleFile(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+
+  // If Vercel returns 413/500 HTML, surface it
+  const ct = res.headers.get("content-type") || "";
+  const raw = await res.text().catch(() => "");
+  const data = ct.includes("application/json") ? (JSON.parse(raw || "{}") as { url?: unknown; error?: unknown }) : {};
+
+  if (!res.ok || !data?.url) {
+    const msg =
+      (typeof data?.error === "string" && data.error) ||
+      (raw ? `Upload failed (${res.status}): ${raw.slice(0, 200)}` : `Upload failed (${res.status})`);
+    throw new Error(msg);
+  }
+
+  return String(data.url);
+}
+
+/**
+ * Upload multiple files safely:
+ * - One request per file (avoids Vercel multipart size limits)
+ * - Small concurrency (fast but stable)
+ */
+async function uploadMany(files: File[], concurrency = 3): Promise<string[]> {
+  const out: string[] = new Array(files.length);
+  let idx = 0;
+
+  const workers = new Array(Math.min(concurrency, files.length)).fill(0).map(async () => {
+    while (idx < files.length) {
+      const my = idx++;
+      out[my] = await uploadSingleFile(files[my]);
+    }
+  });
+
+  await Promise.all(workers);
+  return out;
+}
+
 /**
  * Single-page editor for listings.
  * - No stepper
- * - Photos: drag & drop + uploads to /api/uploads
+ * - Photos: drag & drop + uploads to /api/upload (single-file) for stability on Vercel
  */
 export default function EditListingClient({
   listingId,
@@ -65,7 +117,6 @@ export default function EditListingClient({
   const [saveOk, setSaveOk] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // ✅ Always start from initialFormData so NOTHING is ever undefined.
   const [formData, setFormData] = React.useState<FormData>(() => {
     const base = (initial ?? {}) as Partial<FormData>;
 
@@ -73,7 +124,6 @@ export default function EditListingClient({
       ...initialFormData,
       ...base,
 
-      // Arrays (must never be undefined)
       features: ensureStringArray(base.features ?? initialFormData.features),
       electronics: ensureStringArray(base.electronics ?? initialFormData.electronics),
       safetyEquipment: ensureStringArray(
@@ -85,7 +135,6 @@ export default function EditListingClient({
       serviceAreas: ensureStringArray(base.serviceAreas ?? initialFormData.serviceAreas),
       photoUrls: ensureStringArray(base.photoUrls ?? initialFormData.photoUrls),
 
-      // Booleans
       featured: base.featured === undefined ? initialFormData.featured : safeBool(base.featured),
       urgent: base.urgent === undefined ? initialFormData.urgent : safeBool(base.urgent),
       acceptOffers:
@@ -105,37 +154,10 @@ export default function EditListingClient({
 
   const listingType = (formData.listingType ?? "sale") as Exclude<ListingType, null>;
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Photos (drag & drop + upload)
-  // ─────────────────────────────────────────────────────────────────────────────
-
   const photoUrls = React.useMemo(
     () => ensureStringArray(formData.photoUrls),
     [formData.photoUrls]
   );
-
-  const uploadFiles = React.useCallback(async (files: File[]): Promise<string[]> => {
-    const fd = new FormData();
-    for (const f of files) fd.append("files", f);
-
-    const res = await fetch("/api/uploads", { method: "POST", body: fd });
-    const data = (await res.json().catch(() => ({}))) as { urls?: unknown; error?: unknown };
-
-    if (!res.ok) {
-      const msg = typeof data?.error === "string" ? data.error : "Upload failed";
-      throw new Error(msg);
-    }
-
-    const urls = Array.isArray(data.urls)
-      ? data.urls.filter((x): x is string => typeof x === "string")
-      : [];
-
-    return urls;
-  }, []);
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Save
-  // ─────────────────────────────────────────────────────────────────────────────
 
   const handleSave = async () => {
     setSaving(true);
@@ -164,13 +186,8 @@ export default function EditListingClient({
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // UI
-  // ─────────────────────────────────────────────────────────────────────────────
-
   return (
     <main className="min-h-screen w-full bg-slate-50">
-      {/* Sticky header */}
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button
@@ -304,20 +321,24 @@ export default function EditListingClient({
               photoUrls={photoUrls}
               max={30}
               onAddFiles={async (files, previewUrls) => {
-                // 1) instant previews
+                setError(null);
+
+                // 1) show previews immediately
                 const startIndex = photoUrls.length;
                 updateForm({ photoUrls: [...photoUrls, ...previewUrls] });
 
                 try {
-                  // 2) upload real urls
-                  const uploaded = await uploadFiles(files);
+                  // 2) upload as single-file requests (stable)
+                  const uploaded = await uploadMany(files, 3);
 
-                  // 3) replace previews with real urls (same positions)
+                  // 3) swap previews with real urls (same positions)
                   setFormData((prev) => {
                     const urls = ensureStringArray(prev.photoUrls);
                     const next = [...urls];
                     for (let i = 0; i < uploaded.length; i++) {
+                      const preview = next[startIndex + i];
                       next[startIndex + i] = uploaded[i];
+                      if (isBlobUrl(preview)) safeRevoke(preview);
                     }
                     return { ...prev, photoUrls: next };
                   });
@@ -325,7 +346,9 @@ export default function EditListingClient({
                   const msg = e instanceof Error ? e.message : "Upload failed";
                   setError(msg);
 
-                  // rollback
+                  // rollback previews
+                  for (const p of previewUrls) safeRevoke(p);
+
                   setFormData((prev) => {
                     const urls = ensureStringArray(prev.photoUrls);
                     const next = urls.slice(0, startIndex);
@@ -333,7 +356,11 @@ export default function EditListingClient({
                   });
                 }
               }}
-              onRemove={(index) => updateForm({ photoUrls: photoUrls.filter((_, i) => i !== index) })}
+              onRemove={(index) => {
+                const urlToRemove = photoUrls[index];
+                if (isBlobUrl(urlToRemove)) safeRevoke(urlToRemove);
+                updateForm({ photoUrls: photoUrls.filter((_, i) => i !== index) });
+              }}
               onReorder={(nextUrls) => updateForm({ photoUrls: nextUrls })}
             />
           </FormSection>
