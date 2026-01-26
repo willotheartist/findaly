@@ -1,16 +1,9 @@
+// app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { COOKIE_NAME, createSession, getSessionCookieOptions } from "@/lib/auth/session";
+import { createSession } from "@/lib/auth/session";
 import { AccountType } from "@prisma/client";
-
-function cookieDomainFor(req: Request) {
-  const host = new URL(req.url).hostname;
-  const isProd = process.env.NODE_ENV === "production";
-  if (!isProd) return undefined;
-  if (host === "findaly.co" || host.endsWith(".findaly.co")) return ".findaly.co";
-  return undefined;
-}
 
 function slugify(v: string) {
   return v
@@ -58,7 +51,6 @@ export async function POST(req: Request) {
   const password = String(body.password ?? "");
   const accountType = parseAccountType(body.accountType);
   const profileName = String(body.profileName ?? "").trim();
-  const remember = Boolean(body.remember ?? true);
 
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "EMAIL_REQUIRED" }, { status: 400 });
@@ -87,19 +79,15 @@ export async function POST(req: Request) {
       email,
       passwordHash,
       accountType,
-      profiles: {
-        create: { slug, name: profileName },
-      },
+      profiles: { create: { slug, name: profileName } },
     },
     select: { id: true, profiles: { select: { slug: true } } },
   });
 
-  const { token, expiresAt } = await createSession(user.id, remember);
+  await createSession(user.id, true);
 
-  const res = NextResponse.json(
+  return NextResponse.json(
     { ok: true, profileSlug: user.profiles[0]?.slug ?? null },
     { status: 200 }
   );
-  res.cookies.set(COOKIE_NAME, token, getSessionCookieOptions(expiresAt, cookieDomainFor(req)));
-  return res;
 }
