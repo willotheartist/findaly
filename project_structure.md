@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 26/01/2026, 11:09:48*
+*Generated on: 26/01/2026, 11:26:03*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 111 |
+| 📄 Total Files | 112 |
 | 📁 Total Folders | 67 |
 | 🌳 Max Depth | 4 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,12 +24,12 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 47 files (42.3%)
-- 🔷 **.ts** (TypeScript files): 34 files (30.6%)
+- ⚛️ **.tsx** (React TypeScript files): 47 files (42.0%)
+- 🔷 **.ts** (TypeScript files): 34 files (30.4%)
 - 🎨 **.svg** (SVG images): 5 files (4.5%)
 - ⚙️ **.json** (JSON files): 4 files (3.6%)
 - 📄 **.sql** (Other files): 4 files (3.6%)
-- 🖼️ **.jpg** (JPEG images): 3 files (2.7%)
+- 🖼️ **.jpg** (JPEG images): 4 files (3.6%)
 - 📖 **.md** (Markdown files): 2 files (1.8%)
 - 📄 **.mjs** (Other files): 2 files (1.8%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.9%)
@@ -45,10 +45,10 @@
 
 ### By Category
 
-- **React**: 47 files (42.3%)
-- **TypeScript**: 34 files (30.6%)
-- **Assets**: 10 files (9.0%)
-- **Other**: 9 files (8.1%)
+- **React**: 47 files (42.0%)
+- **TypeScript**: 34 files (30.4%)
+- **Assets**: 11 files (9.8%)
+- **Other**: 9 files (8.0%)
 - **Config**: 6 files (5.4%)
 - **Docs**: 3 files (2.7%)
 - **DevOps**: 1 files (0.9%)
@@ -56,7 +56,7 @@
 
 ### 📁 Largest Directories
 
-- **root**: 111 files
+- **root**: 112 files
 - **app**: 60 files
 - **app/add-listing**: 21 files
 - **app/add-listing/_components**: 17 files
@@ -224,6 +224,7 @@ findaly/
 │   ├── 🎨 globe.svg
 │   ├── 🎨 next.svg
 │   ├── 📂 uploads/
+│   │   ├── 🖼️ 3cf4a8bd-377b-4dcb-b66b-1bf4da243d90.jpg
 │   │   ├── 🖼️ 926df4ff-3967-40ba-998c-87c0f27af596.png
 │   │   ├── 🖼️ 9eca7f55-4b8e-4345-917a-558e7b18324b.jpg
 │   │   ├── 🖼️ dc7cdfa4-1c5f-4613-9d53-848b31484d02.jpg
@@ -261,8 +262,8 @@ findaly/
 - ⚙️ Config: YAML files
 - ⚙️ Config: TOML files
 - 🎨 Assets: SVG images
-- 🖼️ Assets: PNG images
 - 🖼️ Assets: JPEG images
+- 🖼️ Assets: PNG images
 
 ### Importance Levels
 - 🔴 Critical: Essential project files

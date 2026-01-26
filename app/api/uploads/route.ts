@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import path from "path";
 import fs from "fs/promises";
 import { randomUUID } from "crypto";
@@ -41,10 +42,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No files received" }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
-
     const urls: string[] = [];
+
+    // Check if we have Vercel Blob token (production)
+    const hasBlobToken =
+      typeof process.env.BLOB_READ_WRITE_TOKEN === "string" &&
+      process.env.BLOB_READ_WRITE_TOKEN.length > 0;
 
     for (const item of files) {
       if (!(item instanceof File)) continue;
@@ -63,15 +66,30 @@ export async function POST(req: Request) {
         );
       }
 
-      const buf = Buffer.from(await item.arrayBuffer());
       const ext = extFromMime(item.type);
-      const filename = `${randomUUID()}.${ext}`;
-      const fullPath = path.join(uploadDir, filename);
+      const safeName = (item.name || "photo")
+        .toLowerCase()
+        .replace(/[^a-z0-9.\-_]+/g, "-")
+        .slice(0, 80);
 
-      await fs.writeFile(fullPath, buf);
+      if (hasBlobToken) {
+        // ✅ Production: Use Vercel Blob
+        const blobPath = `listings/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+        const blob = await put(blobPath, item, { access: "public" });
+        urls.push(blob.url);
+      } else {
+        // ✅ Local dev: Write to public/uploads
+        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        await fs.mkdir(uploadDir, { recursive: true });
 
-      // Public URL
-      urls.push(`/uploads/${filename}`);
+        const filename = `${randomUUID()}.${ext}`;
+        const fullPath = path.join(uploadDir, filename);
+
+        const buf = Buffer.from(await item.arrayBuffer());
+        await fs.writeFile(fullPath, buf);
+
+        urls.push(`/uploads/${filename}`);
+      }
     }
 
     return NextResponse.json({ ok: true, urls });
