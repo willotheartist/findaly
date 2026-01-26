@@ -5,28 +5,36 @@ import { cookies } from "next/headers";
 
 export const COOKIE_NAME = "findaly_session";
 
-type CookieDomain = string | undefined;
+/**
+ * If you run both findaly.co and www.findaly.co, set COOKIE_DOMAIN in prod:
+ * COOKIE_DOMAIN=.findaly.co
+ *
+ * In local dev, leave undefined.
+ */
+function getCookieDomain(): string | undefined {
+  const env = process.env.COOKIE_DOMAIN?.trim();
+  return env || undefined;
+}
 
-export function getSessionCookieOptions(expiresAt: Date, domain?: CookieDomain) {
+function baseCookieOptions(expires?: Date) {
   return {
-    httpOnly: true as const,
+    httpOnly: true,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    expires: expiresAt,
-    ...(domain ? { domain } : {}),
+    ...(expires ? { expires } : {}),
+    ...(process.env.NODE_ENV === "production" && getCookieDomain()
+      ? { domain: getCookieDomain() }
+      : {}),
   };
 }
 
-export function getClearSessionCookieOptions(domain?: CookieDomain) {
-  return {
-    httpOnly: true as const,
-    sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    expires: new Date(0),
-    ...(domain ? { domain } : {}),
-  };
+/**
+ * Some routes import this. Keep it for compatibility.
+ * Use it like: res.cookies.set(COOKIE_NAME, "", getClearSessionCookieOptions())
+ */
+export function getClearSessionCookieOptions() {
+  return baseCookieOptions(new Date(0));
 }
 
 export async function getSessionToken() {
@@ -53,10 +61,6 @@ export async function getCurrentUser() {
   return session.user;
 }
 
-/**
- * Route Handlers must set cookies on the NextResponse.
- * This only creates the DB session and returns token + expiry.
- */
 export async function createSession(userId: string, remember = true) {
   const token = crypto.randomBytes(32).toString("hex");
   const ttlMs = remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8; // 30d vs 8h
@@ -66,16 +70,21 @@ export async function createSession(userId: string, remember = true) {
     data: { userId, token, expiresAt },
   });
 
-  return { token, expiresAt };
+  const c = await cookies();
+  c.set(COOKIE_NAME, token, baseCookieOptions(expiresAt));
+
+  return token;
 }
 
 /**
- * Deletes the DB session record.
- * Cookie clearing must be done by caller via NextResponse.
+ * Some code may call clearSession(req). Allow it (ignore the arg).
  */
-export async function clearSession(token?: string | null) {
-  const t = token ?? (await getSessionToken());
-  if (t) {
-    await prisma.session.delete({ where: { token: t } }).catch(() => {});
+export async function clearSession(_req?: unknown) {
+  const token = await getSessionToken();
+  if (token) {
+    await prisma.session.delete({ where: { token } }).catch(() => {});
   }
+
+  const c = await cookies();
+  c.set(COOKIE_NAME, "", getClearSessionCookieOptions());
 }
