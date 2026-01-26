@@ -4,11 +4,15 @@ import { prisma } from "@/lib/db";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import MyListingsClient from "./MyListingsClient";
 
+export const metadata = {
+  title: "My Listings | Findaly",
+  description: "Manage your boat listings on Findaly",
+};
+
 export default async function MyListingsPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login?redirect=%2Fmy-listings");
 
-  // Fetch all listings for this profile
   const listings = await prisma.listing.findMany({
     where: { profileId: profile.id },
     orderBy: { createdAt: "desc" },
@@ -18,14 +22,11 @@ export default async function MyListingsPage() {
         take: 1,
       },
       _count: {
-        select: {
-          conversations: true,
-        },
+        select: { conversations: true },
       },
     },
   });
 
-  // Calculate stats
   const stats = {
     total: listings.length,
     live: listings.filter((l) => l.status === "LIVE").length,
@@ -36,7 +37,6 @@ export default async function MyListingsPage() {
     totalInquiries: listings.reduce((sum, l) => sum + l._count.conversations, 0),
   };
 
-  // Transform listings for client
   const transformedListings = listings.map((listing) => ({
     id: listing.id,
     slug: listing.slug,
@@ -70,8 +70,3 @@ export default async function MyListingsPage() {
     />
   );
 }
-
-export const metadata = {
-  title: "My Listings | Findaly",
-  description: "Manage your boat listings on Findaly",
-};

@@ -2,7 +2,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { Camera, Sailboat, X } from "lucide-react";
 
 type Props = {
@@ -15,10 +14,6 @@ type Props = {
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
-}
-
-function isBlobOrData(url: string) {
-  return url.startsWith("blob:") || url.startsWith("data:");
 }
 
 export default function PhotoUploader({
@@ -42,16 +37,14 @@ export default function PhotoUploader({
   const addFiles = (files: File[]) => {
     if (!files.length || !remaining) return;
 
-    const picked = files.filter((f) => f.type.startsWith("image/")).slice(0, remaining);
+    const picked = files
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, remaining);
+
     if (!picked.length) return;
 
-    // IMPORTANT:
-    // We intentionally DO NOT revoke object URLs on unmount here.
-    // Because the wizard unmounts steps when you click Next/Back,
-    // revoking would break previews stored in parent state.
-    //
-    // Cleanup is handled by the parent when photos are removed,
-    // or when we successfully upload & replace blob URLs.
+    // NOTE: Do not revoke object URLs here (wizard/edit can rerender).
+    // Parent replaces blob URLs with uploaded URLs after upload completes.
     const previews = picked.map((f) => URL.createObjectURL(f));
 
     onAddFiles(picked, previews);
@@ -113,6 +106,7 @@ export default function PhotoUploader({
   };
 
   const onTileDrop = (dropIndex: number) => (e: React.DragEvent) => {
+    // If user drops files onto a tile, treat as add
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       e.preventDefault();
       addFiles(Array.from(e.dataTransfer.files));
@@ -121,7 +115,8 @@ export default function PhotoUploader({
 
     e.preventDefault();
 
-    const from = dragIndexRef.current ?? Number(e.dataTransfer.getData("text/plain"));
+    const from =
+      dragIndexRef.current ?? Number(e.dataTransfer.getData("text/plain"));
     dragIndexRef.current = null;
 
     if (!onReorder) return;
@@ -164,7 +159,9 @@ export default function PhotoUploader({
         onDrop={onDrop}
         className={cx(
           "rounded-2xl border-2 border-dashed p-3 transition-all",
-          isDropActive ? "border-[#ff6a00] bg-orange-50/60" : "border-transparent"
+          isDropActive
+            ? "border-[#ff6a00] bg-orange-50/60"
+            : "border-transparent"
         )}
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
@@ -201,22 +198,14 @@ export default function PhotoUploader({
               title={onReorder ? "Drag to reorder" : undefined}
             >
               {url ? (
-                isBlobOrData(url) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={url}
-                    alt={`Listing photo ${index + 1}`}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <Image
-                    src={url}
-                    alt={`Listing photo ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                  />
-                )
+                // ✅ Always use <img> so remote domains can never break tiles
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={url}
+                  alt={`Listing photo ${index + 1}`}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Sailboat className="h-8 w-8 text-slate-300" />
@@ -255,7 +244,8 @@ export default function PhotoUploader({
       </div>
 
       <p className="mt-3 text-xs text-slate-500">
-        Tip: High-quality photos get 3x more inquiries. Include interior, exterior, engine, and detail shots.
+        Tip: High-quality photos get 3x more inquiries. Include interior,
+        exterior, engine, and detail shots.
       </p>
     </div>
   );

@@ -11,6 +11,8 @@ function cx(...v: Array<string | false | null | undefined>) {
 
 export default function LoginClient() {
   const sp = useSearchParams();
+
+  // ✅ accept both next and redirect (you have both in the codebase)
   const next = sp.get("next") || sp.get("redirect") || "/settings";
 
   const [email, setEmail] = useState("");
@@ -163,10 +165,7 @@ export default function LoginClient() {
 
                 <div className="pt-1 text-center text-sm text-slate-600">
                   No account?{" "}
-                  <Link
-                    href="/signup"
-                    className="font-semibold text-slate-900 no-underline hover:text-[#ff6a00]"
-                  >
+                  <Link href="/signup" className="font-semibold text-slate-900 no-underline hover:text-[#ff6a00]">
                     Create one
                   </Link>
                 </div>
