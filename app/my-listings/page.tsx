@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { getCurrentUser } from "@/lib/auth/session";
 import MyListingsClient from "./MyListingsClient";
 
 export const metadata = {
@@ -10,11 +11,18 @@ export const metadata = {
 };
 
 export default async function MyListingsPage() {
-  // Middleware ensures user has a valid session cookie before this runs.
-  // getCurrentProfile() fetches the profile for the authenticated user.
+  // ✅ IMPORTANT FIX:
+  // Middleware only guarantees "cookie exists".
+  // We must ensure the session token is valid in DB here.
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect(`/login?redirect=${encodeURIComponent("/my-listings")}`);
+  }
+
   const profile = await getCurrentProfile();
-  
-  // User is authenticated but has no profile - send to settings to create one
+
+  // User authenticated but has no profile
   if (!profile) {
     redirect("/settings?setup=profile");
   }

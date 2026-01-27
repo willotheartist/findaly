@@ -8,7 +8,7 @@ const USER_COOKIE = "findaly_session";
 // Routes that require user authentication
 const PROTECTED_USER_ROUTES = [
   "/settings",
-  "/my-listings", 
+  "/my-listings",
   "/messages",
   "/searches",
   "/saved",
@@ -23,30 +23,31 @@ function isProtectedRoute(pathname: string): boolean {
 }
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
 
   // ---------------------------
   // Guard protected user routes
   // ---------------------------
   if (isProtectedRoute(pathname)) {
     const token = req.cookies.get(USER_COOKIE)?.value;
-    
+
     if (!token) {
-      // No session cookie - redirect to login
       const url = new URL("/login", req.url);
-      url.searchParams.set("redirect", pathname);
+      url.searchParams.set("redirect", pathname + (search || ""));
       return NextResponse.redirect(url);
     }
 
-    // Token exists - let the request through
-    // The server component will validate the token against the database
-    const response = NextResponse.next();
-    
-    // Pass the token to server components via a header
-    // This ensures the token is available even if cookies() has issues
-    response.headers.set("x-session-token", token);
-    
-    return response;
+    // ✅ IMPORTANT FIX:
+    // Pass token to server components via a REQUEST header.
+    // (Response headers are not readable via next/headers in server components.)
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-session-token", token);
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   // ---------------------------

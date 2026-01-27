@@ -40,11 +40,8 @@ export async function getSessionToken(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
-    if (cookie?.value) {
-      return cookie.value;
-    }
+    if (cookie?.value) return cookie.value;
   } catch (e) {
-    // cookies() can fail in some contexts
     console.warn("[getSessionToken] cookies() failed:", e);
   }
 
@@ -52,9 +49,7 @@ export async function getSessionToken(): Promise<string | null> {
   try {
     const headerStore = await headers();
     const headerToken = headerStore.get("x-session-token");
-    if (headerToken) {
-      return headerToken;
-    }
+    if (headerToken) return headerToken;
   } catch (e) {
     console.warn("[getSessionToken] headers() failed:", e);
   }
@@ -62,43 +57,57 @@ export async function getSessionToken(): Promise<string | null> {
   return null;
 }
 
+async function clearSessionCookieOnly() {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set(COOKIE_NAME, "", getClearSessionCookieOptions());
+  } catch (e) {
+    console.warn("[clearSessionCookieOnly] cookies() failed:", e);
+  }
+}
+
 export async function getCurrentUser() {
   const token = await getSessionToken();
-  
-  if (!token) {
-    return null;
-  }
+
+  if (!token) return null;
 
   try {
     const now = new Date();
+
     const session = await prisma.session.findUnique({
       where: { token },
       select: {
         expiresAt: true,
-        user: { 
-          select: { 
-            id: true, 
-            email: true, 
-            accountType: true, 
-            role: true 
-          } 
+        user: {
+          select: {
+            id: true,
+            email: true,
+            accountType: true,
+            role: true,
+          },
         },
       },
     });
 
+    // ✅ IMPORTANT FIX:
+    // Cookie exists but session row doesn't => stale cookie => clear it.
     if (!session) {
+      await clearSessionCookieOnly();
       return null;
     }
 
+    // Expired session => delete row + clear cookie
     if (session.expiresAt <= now) {
-      // Session expired - clean it up
       await prisma.session.delete({ where: { token } }).catch(() => {});
+      await clearSessionCookieOnly();
       return null;
     }
 
     return session.user;
   } catch (error) {
     console.error("[getCurrentUser] Database error:", error);
+    // Defensive: if DB errors while token exists, do NOT clear cookie automatically.
+    // (Keeps you from random logouts during transient DB issues.)
     return null;
   }
 }

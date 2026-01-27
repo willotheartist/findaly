@@ -1,4 +1,4 @@
-//·app/login/LoginClient.tsx
+// app/login/LoginClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -10,11 +10,29 @@ function cx(...v: Array<string | false | null | undefined>) {
   return v.filter(Boolean).join(" ");
 }
 
+function safeNext(input: string | null | undefined) {
+  const fallback = "/my-listings";
+
+  if (!input) return fallback;
+
+  let v = input;
+  try {
+    v = decodeURIComponent(input);
+  } catch {
+    // ignore decode errors
+  }
+
+  // Only allow internal paths. Block http(s):// and protocol-relative //.
+  if (!v.startsWith("/") || v.startsWith("//")) return fallback;
+
+  return v;
+}
+
 export default function LoginClient() {
   const sp = useSearchParams();
 
-  // ✅ accept both next and redirect (you have both in the codebase)
-  const next = sp.get("next") || sp.get("redirect") || "/settings";
+  // accept both next and redirect
+  const next = safeNext(sp.get("next") || sp.get("redirect"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,7 +73,8 @@ export default function LoginClient() {
         return;
       }
 
-      window.location.href = next;
+      // Hard redirect so middleware + server components see cookie immediately.
+      window.location.assign(next);
     } catch {
       setError("NETWORK_ERROR");
       setLoading(false);
@@ -87,7 +106,7 @@ export default function LoginClient() {
                 </div>
                 <div>
                   <div className="text-lg font-bold text-slate-900">Sign in</div>
-                  <div className="mt-0.5 text-sm text-slate-600">Manage your profile.</div>
+                  <div className="mt-0.5 text-sm text-slate-600">Manage your account.</div>
                 </div>
               </div>
             </div>
