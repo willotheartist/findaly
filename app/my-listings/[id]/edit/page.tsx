@@ -39,16 +39,19 @@ function toDateInput(d: Date | null | undefined): string {
 }
 
 type PageProps = {
-  // Next 16 can pass params as a Promise in RSC. Awaiting handles both cases.
   params: { id: string } | Promise<{ id: string }>;
 };
 
 export default async function EditListingPage({ params }: PageProps) {
   const { id } = await params;
 
+  // Middleware already ensures user has valid session cookie.
+  // This fetches the profile data for the authenticated user.
   const profile = await getCurrentProfile();
+  
+  // If user is authenticated but has no profile yet, redirect to settings
   if (!profile) {
-    redirect(`/login?redirect=${encodeURIComponent(`/my-listings/${id}/edit`)}`);
+    redirect("/settings?setup=profile");
   }
 
   const listing = await prisma.listing.findUnique({

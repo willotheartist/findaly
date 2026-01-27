@@ -62,5 +62,14 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/settings/:path*", "/my-listings/:path*", "/messages/:path*"],
+  // Match all protected routes and their sub-routes explicitly
+  matcher: [
+    "/admin/:path*",
+    "/settings",
+    "/settings/:path*", 
+    "/my-listings",
+    "/my-listings/:path*",
+    "/messages",
+    "/messages/:path*",
+  ],
 };
