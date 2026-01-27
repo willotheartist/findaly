@@ -1,15 +1,13 @@
 // lib/auth/session.ts
 import crypto from "crypto";
 import { prisma } from "@/lib/db";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export const COOKIE_NAME = "findaly_session";
 
 /**
  * If you run both findaly.co and www.findaly.co, set COOKIE_DOMAIN in prod:
  * COOKIE_DOMAIN=.findaly.co
- *
- * In local dev, leave undefined.
  */
 function getCookieDomain(): string | undefined {
   const env = process.env.COOKIE_DOMAIN?.trim();
@@ -29,47 +27,69 @@ function baseCookieOptions(expires?: Date) {
   };
 }
 
-/**
- * Some routes import this. Keep it for compatibility.
- * Use it like: res.cookies.set(COOKIE_NAME, "", getClearSessionCookieOptions())
- */
 export function getClearSessionCookieOptions() {
   return baseCookieOptions(new Date(0));
 }
 
+/**
+ * Get the session token from cookies or from the x-session-token header
+ * (which middleware sets as a fallback).
+ */
 export async function getSessionToken(): Promise<string | null> {
+  // Try reading from cookies first
   try {
     const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
-    return cookie?.value ?? null;
-  } catch (error) {
-    // cookies() can throw in certain contexts (e.g., during static generation)
-    console.error("[getSessionToken] Failed to read cookies:", error);
-    return null;
+    if (cookie?.value) {
+      return cookie.value;
+    }
+  } catch (e) {
+    // cookies() can fail in some contexts
+    console.warn("[getSessionToken] cookies() failed:", e);
   }
+
+  // Fallback: try reading from header (set by middleware)
+  try {
+    const headerStore = await headers();
+    const headerToken = headerStore.get("x-session-token");
+    if (headerToken) {
+      return headerToken;
+    }
+  } catch (e) {
+    console.warn("[getSessionToken] headers() failed:", e);
+  }
+
+  return null;
 }
 
 export async function getCurrentUser() {
   const token = await getSessionToken();
+  
   if (!token) {
     return null;
   }
 
-  const now = new Date();
-  
   try {
+    const now = new Date();
     const session = await prisma.session.findUnique({
       where: { token },
       select: {
         expiresAt: true,
-        user: { select: { id: true, email: true, accountType: true, role: true } },
+        user: { 
+          select: { 
+            id: true, 
+            email: true, 
+            accountType: true, 
+            role: true 
+          } 
+        },
       },
     });
 
     if (!session) {
       return null;
     }
-    
+
     if (session.expiresAt <= now) {
       // Session expired - clean it up
       await prisma.session.delete({ where: { token } }).catch(() => {});
@@ -98,9 +118,6 @@ export async function createSession(userId: string, remember = true) {
   return token;
 }
 
-/**
- * Some code may call clearSession(req). Allow it (ignore the arg).
- */
 export async function clearSession(_req?: unknown) {
   const token = await getSessionToken();
   if (token) {

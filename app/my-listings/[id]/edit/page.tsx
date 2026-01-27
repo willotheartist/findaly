@@ -45,11 +45,11 @@ type PageProps = {
 export default async function EditListingPage({ params }: PageProps) {
   const { id } = await params;
 
-  // Middleware already ensures user has valid session cookie.
-  // This fetches the profile data for the authenticated user.
+  // Middleware ensures user has a valid session cookie before this runs.
+  // getCurrentProfile() fetches the profile for the authenticated user.
   const profile = await getCurrentProfile();
   
-  // If user is authenticated but has no profile yet, redirect to settings
+  // User is authenticated but has no profile - send to settings to create one
   if (!profile) {
     redirect("/settings?setup=profile");
   }
@@ -60,6 +60,8 @@ export default async function EditListingPage({ params }: PageProps) {
   });
 
   if (!listing) return notFound();
+  
+  // User doesn't own this listing
   if (listing.profileId !== profile.id) return notFound();
 
   const initial: Partial<FormData> = {

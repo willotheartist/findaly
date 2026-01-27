@@ -6,7 +6,21 @@ const ADMIN_COOKIE = "findaly_admin";
 const USER_COOKIE = "findaly_session";
 
 // Routes that require user authentication
-const PROTECTED_USER_ROUTES = ["/settings", "/my-listings", "/messages"];
+const PROTECTED_USER_ROUTES = [
+  "/settings",
+  "/my-listings", 
+  "/messages",
+  "/searches",
+  "/saved",
+  "/alerts",
+  "/add-listing",
+];
+
+function isProtectedRoute(pathname: string): boolean {
+  return PROTECTED_USER_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -14,28 +28,33 @@ export async function middleware(req: NextRequest) {
   // ---------------------------
   // Guard protected user routes
   // ---------------------------
-  const isProtectedUserRoute = PROTECTED_USER_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  if (isProtectedUserRoute) {
+  if (isProtectedRoute(pathname)) {
     const token = req.cookies.get(USER_COOKIE)?.value;
     
-    if (token) {
-      // User has session cookie, allow through
-      return NextResponse.next();
+    if (!token) {
+      // No session cookie - redirect to login
+      const url = new URL("/login", req.url);
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
     }
 
-    // No session - redirect to login with proper redirect param
-    const url = new URL("/login", req.url);
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+    // Token exists - let the request through
+    // The server component will validate the token against the database
+    const response = NextResponse.next();
+    
+    // Pass the token to server components via a header
+    // This ensures the token is available even if cookies() has issues
+    response.headers.set("x-session-token", token);
+    
+    return response;
   }
 
   // ---------------------------
   // Guard /admin (admin auth)
   // ---------------------------
-  if (!pathname.startsWith("/admin")) return NextResponse.next();
+  if (!pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
 
   // Allow login + logout
   if (pathname === "/admin/login" || pathname.startsWith("/admin/logout")) {
@@ -44,7 +63,6 @@ export async function middleware(req: NextRequest) {
 
   const secret = process.env.ADMIN_SECRET || "";
 
-  // Fail closed in prod. In dev, if not configured, still redirect to login.
   if (!secret) {
     const url = new URL("/admin/login", req.url);
     url.searchParams.set("next", pathname);
@@ -62,14 +80,23 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Match all protected routes and their sub-routes explicitly
   matcher: [
-    "/admin/:path*",
+    // Protected user routes
     "/settings",
-    "/settings/:path*", 
+    "/settings/:path*",
     "/my-listings",
     "/my-listings/:path*",
     "/messages",
     "/messages/:path*",
+    "/searches",
+    "/searches/:path*",
+    "/saved",
+    "/saved/:path*",
+    "/alerts",
+    "/alerts/:path*",
+    "/add-listing",
+    "/add-listing/:path*",
+    // Admin routes
+    "/admin/:path*",
   ],
 };

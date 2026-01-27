@@ -10,12 +10,11 @@ export const metadata = {
 };
 
 export default async function MyListingsPage() {
-  // Middleware already ensures user is authenticated via cookie check.
-  // This getCurrentProfile call fetches the profile data.
+  // Middleware ensures user has a valid session cookie before this runs.
+  // getCurrentProfile() fetches the profile for the authenticated user.
   const profile = await getCurrentProfile();
   
-  // If somehow profile is still null (user exists but no profile yet),
-  // redirect to settings to create profile
+  // User is authenticated but has no profile - send to settings to create one
   if (!profile) {
     redirect("/settings?setup=profile");
   }
