@@ -37,28 +37,50 @@ export function getClearSessionCookieOptions() {
   return baseCookieOptions(new Date(0));
 }
 
-export async function getSessionToken() {
-  const c = await cookies();
-  return c.get(COOKIE_NAME)?.value ?? null;
+export async function getSessionToken(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get(COOKIE_NAME);
+    return cookie?.value ?? null;
+  } catch (error) {
+    // cookies() can throw in certain contexts (e.g., during static generation)
+    console.error("[getSessionToken] Failed to read cookies:", error);
+    return null;
+  }
 }
 
 export async function getCurrentUser() {
   const token = await getSessionToken();
-  if (!token) return null;
+  if (!token) {
+    return null;
+  }
 
   const now = new Date();
-  const session = await prisma.session.findUnique({
-    where: { token },
-    select: {
-      expiresAt: true,
-      user: { select: { id: true, email: true, accountType: true, role: true } },
-    },
-  });
+  
+  try {
+    const session = await prisma.session.findUnique({
+      where: { token },
+      select: {
+        expiresAt: true,
+        user: { select: { id: true, email: true, accountType: true, role: true } },
+      },
+    });
 
-  if (!session) return null;
-  if (session.expiresAt <= now) return null;
+    if (!session) {
+      return null;
+    }
+    
+    if (session.expiresAt <= now) {
+      // Session expired - clean it up
+      await prisma.session.delete({ where: { token } }).catch(() => {});
+      return null;
+    }
 
-  return session.user;
+    return session.user;
+  } catch (error) {
+    console.error("[getCurrentUser] Database error:", error);
+    return null;
+  }
 }
 
 export async function createSession(userId: string, remember = true) {
@@ -70,8 +92,8 @@ export async function createSession(userId: string, remember = true) {
     data: { userId, token, expiresAt },
   });
 
-  const c = await cookies();
-  c.set(COOKIE_NAME, token, baseCookieOptions(expiresAt));
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, baseCookieOptions(expiresAt));
 
   return token;
 }
@@ -85,6 +107,6 @@ export async function clearSession(_req?: unknown) {
     await prisma.session.delete({ where: { token } }).catch(() => {});
   }
 
-  const c = await cookies();
-  c.set(COOKIE_NAME, "", getClearSessionCookieOptions());
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, "", getClearSessionCookieOptions());
 }

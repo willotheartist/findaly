@@ -10,8 +10,15 @@ export const metadata = {
 };
 
 export default async function MyListingsPage() {
+  // Middleware already ensures user is authenticated via cookie check.
+  // This getCurrentProfile call fetches the profile data.
   const profile = await getCurrentProfile();
-  if (!profile) redirect("/login?redirect=%2Fmy-listings");
+  
+  // If somehow profile is still null (user exists but no profile yet),
+  // redirect to settings to create profile
+  if (!profile) {
+    redirect("/settings?setup=profile");
+  }
 
   const listings = await prisma.listing.findMany({
     where: { profileId: profile.id },
