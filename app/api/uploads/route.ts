@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import { randomUUID } from "crypto";
 
 const MAX_FILE_SIZE_BYTES = 12 * 1024 * 1024; // 12MB per image
+const MAX_BATCH_SIZE = 30; // Maximum files per batch
 const ALLOWED_MIME = new Set([
   "image/jpeg",
   "image/png",
@@ -42,13 +43,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No files received" }, { status: 400 });
     }
 
-    const urls: string[] = [];
+    if (files.length > MAX_BATCH_SIZE) {
+      return NextResponse.json(
+        { error: `Too many files. Maximum ${MAX_BATCH_SIZE} per batch.` },
+        { status: 400 }
+      );
+    }
 
-    // Check if we have Vercel Blob token (production)
-    const hasBlobToken =
-      typeof process.env.BLOB_READ_WRITE_TOKEN === "string" &&
-      process.env.BLOB_READ_WRITE_TOKEN.length > 0;
-
+    // Validate all files first before uploading any
+    const validFiles: File[] = [];
     for (const item of files) {
       if (!(item instanceof File)) continue;
 
@@ -61,40 +64,59 @@ export async function POST(req: Request) {
 
       if (item.size > MAX_FILE_SIZE_BYTES) {
         return NextResponse.json(
-          { error: `File too large (max ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)}MB)` },
+          { error: `File "${item.name}" too large (max ${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)}MB)` },
           { status: 400 }
         );
       }
 
-      const ext = extFromMime(item.type);
-      const safeName = (item.name || "photo")
+      validFiles.push(item);
+    }
+
+    if (!validFiles.length) {
+      return NextResponse.json({ error: "No valid files received" }, { status: 400 });
+    }
+
+    // Check if we have Vercel Blob token (production)
+    const hasBlobToken =
+      typeof process.env.BLOB_READ_WRITE_TOKEN === "string" &&
+      process.env.BLOB_READ_WRITE_TOKEN.length > 0;
+
+    // Upload all files in parallel for efficiency
+    const uploadPromises = validFiles.map(async (file) => {
+      const ext = extFromMime(file.type);
+      const safeName = (file.name || "photo")
         .toLowerCase()
         .replace(/[^a-z0-9.\-_]+/g, "-")
         .slice(0, 80);
 
       if (hasBlobToken) {
-        // ✅ Production: Use Vercel Blob
+        // Production: Use Vercel Blob
         const blobPath = `listings/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-        const blob = await put(blobPath, item, { access: "public" });
-        urls.push(blob.url);
+        const blob = await put(blobPath, file, { access: "public" });
+        return blob.url;
       } else {
-        // ✅ Local dev: Write to public/uploads
+        // Local dev: Write to public/uploads
         const uploadDir = path.join(process.cwd(), "public", "uploads");
         await fs.mkdir(uploadDir, { recursive: true });
 
         const filename = `${randomUUID()}.${ext}`;
         const fullPath = path.join(uploadDir, filename);
 
-        const buf = Buffer.from(await item.arrayBuffer());
+        const buf = Buffer.from(await file.arrayBuffer());
         await fs.writeFile(fullPath, buf);
 
-        urls.push(`/uploads/${filename}`);
+        return `/uploads/${filename}`;
       }
-    }
+    });
+
+    const urls = await Promise.all(uploadPromises);
 
     return NextResponse.json({ ok: true, urls });
   } catch (e) {
-    console.error("Upload error:", e);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("Batch upload error:", e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Upload failed" },
+      { status: 500 }
+    );
   }
 }

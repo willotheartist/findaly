@@ -15,21 +15,29 @@ function safeRevoke(url: string) {
   } catch {}
 }
 
+type PartialFormUpdate = Partial<FormData>;
+
 export default function Step6Photos({
   formData,
   updateForm,
 }: {
   formData: FormData;
-  updateForm: (updates: Partial<FormData>) => void;
+  updateForm: (updates: PartialFormUpdate | ((prev: FormData) => PartialFormUpdate)) => void;
 }) {
+  /**
+   * FIX: Use functional updater to avoid stale closure.
+   * When multiple files are added at once (drag & drop), React batches updates.
+   * Without functional updater, each update uses the same stale `formData` reference,
+   * causing only the last file to be added.
+   */
   const handleAddFiles = React.useCallback(
     (files: File[], previewUrls: string[]) => {
-      updateForm({
-        photos: [...(formData.photos ?? []), ...files],
-        photoUrls: [...(formData.photoUrls ?? []), ...previewUrls],
-      });
+      updateForm((prev) => ({
+        photos: [...(prev.photos ?? []), ...files],
+        photoUrls: [...(prev.photoUrls ?? []), ...previewUrls],
+      }));
     },
-    [formData.photos, formData.photoUrls, updateForm]
+    [updateForm]
   );
 
   const handleRemove = React.useCallback(
@@ -37,53 +45,49 @@ export default function Step6Photos({
       const currentUrls = formData.photoUrls ?? [];
       const urlToRemove = currentUrls[index] || "";
 
-      // IMPORTANT:
-      // Step components unmount when navigating wizard steps.
-      // If we revoke on unmount, previews break.
-      // So we revoke ONLY when user removes a photo (or after successful upload).
+      // Revoke blob URL when user explicitly removes a photo
       safeRevoke(urlToRemove);
 
-      const nextUrls = currentUrls.filter((_, i) => i !== index);
-      const nextFiles = (formData.photos ?? []).filter((_, i) => i !== index);
-
-      updateForm({
-        photoUrls: nextUrls,
-        photos: nextFiles,
-      });
+      updateForm((prev) => ({
+        photoUrls: (prev.photoUrls ?? []).filter((_, i) => i !== index),
+        photos: (prev.photos ?? []).filter((_, i) => i !== index),
+      }));
     },
-    [formData.photoUrls, formData.photos, updateForm]
+    [formData.photoUrls, updateForm]
   );
 
   const handleReorder = React.useCallback(
     (nextUrls: string[]) => {
-      const currentUrls = formData.photoUrls ?? [];
-      const currentFiles = formData.photos ?? [];
+      updateForm((prev) => {
+        const currentUrls = prev.photoUrls ?? [];
+        const currentFiles = prev.photos ?? [];
 
-      const usedOld = new Set<number>();
-      const nextFiles: File[] = [];
+        const usedOld = new Set<number>();
+        const nextFiles: File[] = [];
 
-      for (const url of nextUrls) {
-        let foundOld = -1;
-        for (let i = 0; i < currentUrls.length; i++) {
-          if (usedOld.has(i)) continue;
-          if (currentUrls[i] === url) {
-            foundOld = i;
-            break;
+        for (const url of nextUrls) {
+          let foundOld = -1;
+          for (let i = 0; i < currentUrls.length; i++) {
+            if (usedOld.has(i)) continue;
+            if (currentUrls[i] === url) {
+              foundOld = i;
+              break;
+            }
+          }
+
+          if (foundOld >= 0) {
+            usedOld.add(foundOld);
+            nextFiles.push(currentFiles[foundOld]);
           }
         }
 
-        if (foundOld >= 0) {
-          usedOld.add(foundOld);
-          nextFiles.push(currentFiles[foundOld]);
-        }
-      }
-
-      updateForm({
-        photoUrls: nextUrls,
-        photos: nextFiles,
+        return {
+          photoUrls: nextUrls,
+          photos: nextFiles,
+        };
       });
     },
-    [formData.photoUrls, formData.photos, updateForm]
+    [updateForm]
   );
 
   return (

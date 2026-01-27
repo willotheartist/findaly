@@ -1,14 +1,14 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 26/01/2026, 11:35:10*
+*Generated on: 27/01/2026, 09:53:25*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 112 |
-| 📁 Total Folders | 67 |
-| 🌳 Max Depth | 4 levels |
+| 📄 Total Files | 120 |
+| 📁 Total Folders | 72 |
+| 🌳 Max Depth | 5 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
 ## ⭐ Important Files
@@ -24,39 +24,39 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 47 files (42.0%)
-- 🔷 **.ts** (TypeScript files): 34 files (30.4%)
-- 🎨 **.svg** (SVG images): 5 files (4.5%)
-- ⚙️ **.json** (JSON files): 4 files (3.6%)
-- 📄 **.sql** (Other files): 4 files (3.6%)
-- 🖼️ **.jpg** (JPEG images): 4 files (3.6%)
-- 📖 **.md** (Markdown files): 2 files (1.8%)
-- 📄 **.mjs** (Other files): 2 files (1.8%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.9%)
-- 📄 **.txt** (Text files): 1 files (0.9%)
-- 🖼️ **.ico** (Icon files): 1 files (0.9%)
-- 🎨 **.css** (Stylesheets): 1 files (0.9%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.9%)
-- ⚙️ **.toml** (TOML files): 1 files (0.9%)
-- 📄 **.prisma** (Other files): 1 files (0.9%)
-- 🖼️ **.png** (PNG images): 1 files (0.9%)
-- 📄 **.patch** (Other files): 1 files (0.9%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.9%)
+- ⚛️ **.tsx** (React TypeScript files): 53 files (44.2%)
+- 🔷 **.ts** (TypeScript files): 35 files (29.2%)
+- 🎨 **.svg** (SVG images): 5 files (4.2%)
+- ⚙️ **.json** (JSON files): 4 files (3.3%)
+- 📄 **.sql** (Other files): 4 files (3.3%)
+- 🖼️ **.jpg** (JPEG images): 4 files (3.3%)
+- 📄 **.mjs** (Other files): 3 files (2.5%)
+- 📖 **.md** (Markdown files): 2 files (1.7%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.8%)
+- 📄 **.txt** (Text files): 1 files (0.8%)
+- 🖼️ **.ico** (Icon files): 1 files (0.8%)
+- 🎨 **.css** (Stylesheets): 1 files (0.8%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.8%)
+- ⚙️ **.toml** (TOML files): 1 files (0.8%)
+- 📄 **.prisma** (Other files): 1 files (0.8%)
+- 🖼️ **.png** (PNG images): 1 files (0.8%)
+- 📄 **.patch** (Other files): 1 files (0.8%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.8%)
 
 ### By Category
 
-- **React**: 47 files (42.0%)
-- **TypeScript**: 34 files (30.4%)
-- **Assets**: 11 files (9.8%)
-- **Other**: 9 files (8.0%)
-- **Config**: 6 files (5.4%)
-- **Docs**: 3 files (2.7%)
-- **DevOps**: 1 files (0.9%)
-- **Styles**: 1 files (0.9%)
+- **React**: 53 files (44.2%)
+- **TypeScript**: 35 files (29.2%)
+- **Assets**: 11 files (9.2%)
+- **Other**: 10 files (8.3%)
+- **Config**: 6 files (5.0%)
+- **Docs**: 3 files (2.5%)
+- **DevOps**: 1 files (0.8%)
+- **Styles**: 1 files (0.8%)
 
 ### 📁 Largest Directories
 
-- **root**: 112 files
+- **root**: 120 files
 - **app**: 60 files
 - **app/add-listing**: 21 files
 - **app/add-listing/_components**: 17 files
@@ -188,6 +188,19 @@ findaly/
 │   └── 📂 stack/
 │   │   └── 🔷 questions.ts
 ├── 🔵 🔍 **eslint.config.mjs**
+├── 📂 eyb-sell-your-boat/
+│   ├── 🚀 app/
+│   │   ├── 📂 add-listing/
+│   │   │   └── 📂 _components/
+│   │   │   │   ├── 📂 fields/
+│   │   │   │   │   ├── ⚛️ CheckboxGroup.tsx
+│   │   │   │   │   ├── ⚛️ Input.tsx
+│   │   │   │   │   ├── ⚛️ Select.tsx
+│   │   │   │   │   └── ⚛️ TextArea.tsx
+│   │   │   │   └── ⚛️ FormSection.tsx
+│   │   └── ⚛️ layout.tsx
+│   ├── 📄 postcss.config.mjs
+│   └── 🔷 tailwind.config.ts
 ├── 📂 generated/
 ├── 📚 lib/
 │   ├── 📂 admin/

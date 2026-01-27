@@ -8,6 +8,7 @@ import {
   Search,
   User,
   ExternalLink,
+  Ship,
 } from "lucide-react";
 import HeaderDropdownClient from "@/components/HeaderDropdownClient";
 import { getCurrentUser, getSessionToken } from "@/lib/auth/session";
@@ -178,6 +179,13 @@ export default async function Header() {
                   <ExternalLink className="h-4 w-4 text-slate-400" />
                 </Link>
                 <Link
+                  href="/my-listings"
+                  className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
+                >
+                  My listings
+                  <Ship className="h-4 w-4 text-slate-400" />
+                </Link>
+                <Link
                   href="/settings"
                   className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
                 >
@@ -259,6 +267,12 @@ export default async function Header() {
                       className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
                     >
                       My profile
+                    </Link>
+                    <Link
+                      href="/my-listings"
+                      className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                    >
+                      My listings
                     </Link>
                     <Link
                       href="/settings"
