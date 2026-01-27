@@ -48,6 +48,29 @@ function safeRevoke(url: string) {
   } catch {}
 }
 
+/**
+ * Upload multiple files in a single batch request for efficiency.
+ * Falls back to single-file uploads if batch endpoint fails.
+ */
+async function uploadBatch(files: File[]): Promise<string[]> {
+  const fd = new FormData();
+  for (const file of files) {
+    fd.append("files", file);
+  }
+
+  const res = await fetch("/api/uploads", { method: "POST", body: fd });
+  const data = (await res.json().catch(() => ({}))) as { urls?: string[]; error?: string };
+
+  if (!res.ok || !data.urls) {
+    throw new Error(data.error || "Batch upload failed");
+  }
+
+  return data.urls;
+}
+
+/**
+ * Upload a single file (fallback).
+ */
 async function uploadSingleFile(file: File): Promise<string> {
   const fd = new FormData();
   fd.append("file", file);
@@ -62,12 +85,8 @@ async function uploadSingleFile(file: File): Promise<string> {
 }
 
 /**
- * Replace any blob/data preview URLs with real uploaded URLs (keeps ordering).
- * Uses photoUrls + photos alignment by index (your Step6Photos maintains it).
- *
- * IMPORTANT:
- * We revoke blob: URLs after we successfully replace them with remote URLs,
- * otherwise step navigation (unmount/remount) can break previews if revoked too early.
+ * Replace any blob/data preview URLs with real uploaded URLs.
+ * Uses batch upload for efficiency, with single-file fallback.
  */
 async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
   const urls = Array.isArray(formData.photoUrls) ? formData.photoUrls : [];
@@ -75,42 +94,63 @@ async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
 
   if (urls.length === 0) return formData;
 
-  const hasLocal = urls.some((u) => typeof u === "string" && isBlobOrDataUrl(u));
-  if (!hasLocal) return formData;
-
-  const nextUrls: string[] = [];
-  const uploadPromises: Array<Promise<void>> = [];
+  // Find indices that need uploading
+  const toUpload: { index: number; file: File; blobUrl: string }[] = [];
 
   for (let i = 0; i < urls.length; i++) {
     const u = urls[i] || "";
     if (typeof u === "string" && isBlobOrDataUrl(u)) {
       const f = files[i];
       if (f instanceof File) {
-        const originalBlobUrl = u;
-
-        const p = uploadSingleFile(f).then((remote) => {
-          nextUrls[i] = remote;
-          // Revoke only AFTER replacement is safely in place
-          safeRevoke(originalBlobUrl);
-        });
-
-        uploadPromises.push(p);
-      } else {
-        nextUrls[i] = "";
+        toUpload.push({ index: i, file: f, blobUrl: u });
       }
-    } else {
-      nextUrls[i] = u;
     }
   }
 
-  await Promise.all(uploadPromises);
+  if (toUpload.length === 0) return formData;
 
-  const cleaned = nextUrls.filter((u) => typeof u === "string" && u && !isBlobOrDataUrl(u));
+  // Clone urls array for mutation
+  const nextUrls = [...urls];
+
+  try {
+    // Try batch upload first (more efficient)
+    const filesToUpload = toUpload.map((t) => t.file);
+    const uploadedUrls = await uploadBatch(filesToUpload);
+
+    // Map uploaded URLs back to their original indices
+    for (let i = 0; i < toUpload.length; i++) {
+      const { index, blobUrl } = toUpload[i];
+      nextUrls[index] = uploadedUrls[i];
+      safeRevoke(blobUrl);
+    }
+  } catch (batchError) {
+    console.warn("Batch upload failed, falling back to individual uploads:", batchError);
+
+    // Fallback: upload individually in parallel
+    const uploadPromises = toUpload.map(async ({ index, file, blobUrl }) => {
+      try {
+        const remoteUrl = await uploadSingleFile(file);
+        nextUrls[index] = remoteUrl;
+        safeRevoke(blobUrl);
+      } catch (err) {
+        console.error(`Failed to upload file at index ${index}:`, err);
+        // Mark as empty string so it gets filtered out
+        nextUrls[index] = "";
+      }
+    });
+
+    await Promise.all(uploadPromises);
+  }
+
+  // Filter out any failed uploads (empty strings) or remaining blob URLs
+  const cleaned = nextUrls.filter(
+    (u) => typeof u === "string" && u && !isBlobOrDataUrl(u)
+  );
 
   return {
     ...formData,
     photoUrls: cleaned,
-    photos: [], // once uploaded, do not keep File[] in state for submit
+    photos: [], // Clear File[] after upload
   };
 }
 
@@ -131,9 +171,20 @@ export default function ListingWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const updateForm = useCallback((updates: Partial<FormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
-  }, []);
+  /**
+   * Update form with either a partial object or a functional updater.
+   * The functional updater pattern is essential for avoiding stale closures
+   * when multiple rapid updates occur (e.g., drag & drop multiple files).
+   */
+  const updateForm = useCallback(
+    (updates: Partial<FormData> | ((prev: FormData) => Partial<FormData>)) => {
+      setFormData((prev) => {
+        const partial = typeof updates === "function" ? updates(prev) : updates;
+        return { ...prev, ...partial };
+      });
+    },
+    []
+  );
 
   const steps = useMemo(() => {
     const baseSteps = [
@@ -234,6 +285,8 @@ export default function ListingWizard({
 
     try {
       const uploaded = await uploadPhotosIfNeeded(formData);
+
+      // Update local state with uploaded URLs
       if (
         uploaded.photoUrls !== formData.photoUrls ||
         (uploaded.photos?.length ?? 0) !== (formData.photos?.length ?? 0)
@@ -266,7 +319,9 @@ export default function ListingWizard({
       onSuccess?.(data);
     } catch (error) {
       console.error("Error submitting listing:", error);
-      setSubmitError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      setSubmitError(
+        error instanceof Error ? error.message : "Something went wrong. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -278,7 +333,7 @@ export default function ListingWizard({
   };
 
   const handleCreateAnother = () => {
-    // Revoke any leftover blob URLs before reset (best-effort)
+    // Revoke any leftover blob URLs before reset
     const urls = Array.isArray(formData.photoUrls) ? formData.photoUrls : [];
     for (const u of urls) safeRevoke(String(u || ""));
 
@@ -305,9 +360,21 @@ export default function ListingWizard({
             />
           );
         case 2:
-          return <Step2Category listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+          return (
+            <Step2Category
+              listingType={formData.listingType}
+              formData={formData}
+              updateForm={updateForm}
+            />
+          );
         case 3:
-          return <Step5Location listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+          return (
+            <Step5Location
+              listingType={formData.listingType}
+              formData={formData}
+              updateForm={updateForm}
+            />
+          );
         case 4:
           return <Step6Photos formData={formData} updateForm={updateForm} />;
         case 5:
@@ -329,11 +396,29 @@ export default function ListingWizard({
             />
           );
         case 2:
-          return <Step2Category listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+          return (
+            <Step2Category
+              listingType={formData.listingType}
+              formData={formData}
+              updateForm={updateForm}
+            />
+          );
         case 3:
-          return <Step3Details listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+          return (
+            <Step3Details
+              listingType={formData.listingType}
+              formData={formData}
+              updateForm={updateForm}
+            />
+          );
         case 4:
-          return <Step5Location listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+          return (
+            <Step5Location
+              listingType={formData.listingType}
+              formData={formData}
+              updateForm={updateForm}
+            />
+          );
         case 5:
           return <Step6Photos formData={formData} updateForm={updateForm} />;
         case 6:
@@ -354,13 +439,31 @@ export default function ListingWizard({
           />
         );
       case 2:
-        return <Step2Category listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+        return (
+          <Step2Category
+            listingType={formData.listingType}
+            formData={formData}
+            updateForm={updateForm}
+          />
+        );
       case 3:
-        return <Step3Details listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+        return (
+          <Step3Details
+            listingType={formData.listingType}
+            formData={formData}
+            updateForm={updateForm}
+          />
+        );
       case 4:
         return <Step4Features formData={formData} updateForm={updateForm} />;
       case 5:
-        return <Step5Location listingType={formData.listingType} formData={formData} updateForm={updateForm} />;
+        return (
+          <Step5Location
+            listingType={formData.listingType}
+            formData={formData}
+            updateForm={updateForm}
+          />
+        );
       case 6:
         return <Step6Photos formData={formData} updateForm={updateForm} />;
       case 7:
@@ -427,7 +530,9 @@ export default function ListingWizard({
           </div>
         ) : null}
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">{renderStep()}</div>
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
+          {renderStep()}
+        </div>
 
         <div className="mt-6 flex items-center justify-between">
           <button
