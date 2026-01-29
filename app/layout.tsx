@@ -1,8 +1,10 @@
-// app/layout.tsx  
+// app/layout.tsx
 import "./globals.css";
 import { Inter_Tight } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+export const dynamic = "force-dynamic";
 
 const interTight = Inter_Tight({
   subsets: ["latin"],
@@ -10,7 +12,11 @@ const interTight = Inter_Tight({
   display: "swap",
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={interTight.variable}>
       <body className="min-h-screen">
