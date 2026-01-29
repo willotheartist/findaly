@@ -5,10 +5,6 @@ import { cookies, headers } from "next/headers";
 
 export const COOKIE_NAME = "findaly_session";
 
-/**
- * If you run both findaly.co and www.findaly.co, set COOKIE_DOMAIN in prod:
- * COOKIE_DOMAIN=.findaly.co
- */
 function getCookieDomain(): string | undefined {
   const env = process.env.COOKIE_DOMAIN?.trim();
   return env || undefined;
@@ -32,11 +28,10 @@ export function getClearSessionCookieOptions() {
 }
 
 /**
- * Get the session token from cookies or from the x-session-token header
- * (which middleware sets as a fallback).
+ * Get the session token from cookies or x-session-token header
  */
 export async function getSessionToken(): Promise<string | null> {
-  // Try reading from cookies first
+  // cookies()
   try {
     const cookieStore = await cookies();
     const cookie = cookieStore.get(COOKIE_NAME);
@@ -45,7 +40,7 @@ export async function getSessionToken(): Promise<string | null> {
     console.warn("[getSessionToken] cookies() failed:", e);
   }
 
-  // Fallback: try reading from header (set by middleware)
+  // headers()
   try {
     const headerStore = await headers();
     const headerToken = headerStore.get("x-session-token");
@@ -68,7 +63,6 @@ async function clearSessionCookieOnly() {
 
 export async function getCurrentUser() {
   const token = await getSessionToken();
-
   if (!token) return null;
 
   try {
@@ -89,14 +83,13 @@ export async function getCurrentUser() {
       },
     });
 
-    // ✅ IMPORTANT FIX:
-    // Cookie exists but session row doesn't => stale cookie => clear it.
+    // stale cookie
     if (!session) {
       await clearSessionCookieOnly();
       return null;
     }
 
-    // Expired session => delete row + clear cookie
+    // expired
     if (session.expiresAt <= now) {
       await prisma.session.delete({ where: { token } }).catch(() => {});
       await clearSessionCookieOnly();
@@ -105,16 +98,17 @@ export async function getCurrentUser() {
 
     return session.user;
   } catch (error) {
-    console.error("[getCurrentUser] Database error:", error);
-    // Defensive: if DB errors while token exists, do NOT clear cookie automatically.
-    // (Keeps you from random logouts during transient DB issues.)
+    console.error("[getCurrentUser] DB error:", error);
     return null;
   }
 }
 
 export async function createSession(userId: string, remember = true) {
   const token = crypto.randomBytes(32).toString("hex");
-  const ttlMs = remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 8; // 30d vs 8h
+  const ttlMs = remember
+    ? 1000 * 60 * 60 * 24 * 30
+    : 1000 * 60 * 60 * 8;
+
   const expiresAt = new Date(Date.now() + ttlMs);
 
   await prisma.session.create({
@@ -127,8 +121,9 @@ export async function createSession(userId: string, remember = true) {
   return token;
 }
 
-export async function clearSession(_req?: unknown) {
+export async function clearSession() {
   const token = await getSessionToken();
+
   if (token) {
     await prisma.session.delete({ where: { token } }).catch(() => {});
   }
