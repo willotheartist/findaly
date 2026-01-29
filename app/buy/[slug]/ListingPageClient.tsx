@@ -214,9 +214,10 @@ function ImageGallery({ images }: { images: string[] }) {
 
   return (
     <>
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-50">
+      <div className="relative w-full aspect-video max-h-[70vh] overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-50">
+
         {displayImages[currentIndex] ? (
-          <img src={displayImages[currentIndex]} alt="Listing photo" className="h-full w-full object-cover" />
+          <img src={displayImages[currentIndex]} alt="Listing photo" className="h-full w-full object-contain bg-black" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
             <Sailboat className="h-24 w-24 text-slate-200" />
@@ -260,7 +261,7 @@ function ImageGallery({ images }: { images: string[] }) {
               }`}
             >
               {img ? (
-                <img src={img} alt="" className="h-full w-full object-cover" />
+                <img src={img} alt="" className="h-full w-full object-contain bg-black" />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Sailboat className="h-6 w-6 text-slate-300" />
@@ -465,8 +466,8 @@ export default function ListingPageClient({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-          <div className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0 space-y-6">
             <ImageGallery images={listing.images} />
 
             <div className="lg:hidden">
@@ -522,10 +523,10 @@ export default function ListingPageClient({
 
               <div className="p-5 sm:p-6">
                 {activeTab === "description" && (
-                  <div className="prose prose-slate max-w-none">
+                  <div className="prose prose-slate max-w-none wrap-break-word">
                     {listing.description ? (
                       listing.description.split("\n\n").map((paragraph, i) => (
-                        <p key={i} className="whitespace-pre-wrap">
+                        <p key={i} className="whitespace-pre-wrap wrap-break-word">
                           {paragraph}
                         </p>
                       ))
@@ -536,7 +537,7 @@ export default function ListingPageClient({
                 )}
 
                 {activeTab === "specs" && (
-                  <div className="space-y-6">
+                  <div className="min-w-0 space-y-6">
                     <div>
                       <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                         <Ruler className="h-5 w-5 text-slate-400" />
@@ -739,7 +740,7 @@ export default function ListingPageClient({
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <div className="hidden rounded-2xl border border-slate-200 bg-white p-5 lg:block">
               {listing.badge && (
                 <div className="mb-3">

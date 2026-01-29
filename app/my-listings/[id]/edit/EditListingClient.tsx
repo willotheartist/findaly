@@ -238,6 +238,17 @@ export default function EditListingClient({
 
         <div className="space-y-6">
           <FormSection title="Listing type">
+          <FormSection title="Title">
+            <Input
+              label="Listing title"
+              name="title"
+              value={safeString(formData.title)}
+              onChange={(v) => updateForm({ title: v })}
+              placeholder="e.g., Sunseeker Predator 57 (2016)"
+              required
+            />
+          </FormSection>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <Select
                 label="Type"

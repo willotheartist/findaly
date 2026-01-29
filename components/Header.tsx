@@ -1,6 +1,5 @@
 // components/Header.tsx
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   Bell,
   Heart,
@@ -11,7 +10,7 @@ import {
   Ship,
 } from "lucide-react";
 import HeaderDropdownClient from "@/components/HeaderDropdownClient";
-import { getCurrentUser, getSessionToken } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
 const TOP_NAV = [
@@ -75,11 +74,33 @@ async function getPrimaryProfileSlugForUser(userId: string) {
   return p?.slug ?? null;
 }
 
+// Small client button for logout (no /logout navigation required)
+function LogoutButton({ className }: { className: string }) {
+  return (
+    <form
+      action="/api/auth/logout"
+      method="post"
+      onSubmit={(e) => {
+        // Make it instant without relying on full form submit navigation.
+        e.preventDefault();
+        fetch("/api/auth/logout", { method: "POST" })
+          .catch(() => {})
+          .finally(() => {
+            window.location.assign("/");
+          });
+      }}
+    >
+      <button type="submit" className={className}>
+        Log out
+      </button>
+    </form>
+  );
+}
+
 export default async function Header() {
   const dropdownPanel =
     "bg-white border border-slate-200 shadow-[0_30px_90px_rgba(2,6,23,0.14)]";
 
-  // auth-aware header (server-side)
   const user = await getCurrentUser().catch(() => null);
   const isAuthed = Boolean(user?.id);
 
@@ -192,12 +213,7 @@ export default async function Header() {
                   Settings
                 </Link>
                 <div className="my-2 border-t border-slate-200" />
-                <Link
-                  href="/logout"
-                  className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
-                >
-                  Log out
-                </Link>
+                <LogoutButton className="w-full rounded-md px-3 py-2 text-left text-sm no-underline hover:bg-slate-100" />
               </div>
             </HeaderDropdownClient>
           )}
@@ -280,12 +296,7 @@ export default async function Header() {
                     >
                       Settings
                     </Link>
-                    <Link
-                      href="/logout"
-                      className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
-                    >
-                      Log out
-                    </Link>
+                    <LogoutButton className="w-full rounded-md px-3 py-2 text-left text-sm no-underline hover:bg-slate-100" />
                   </>
                 )}
               </div>

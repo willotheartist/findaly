@@ -73,11 +73,7 @@ function formatPrice(currency: string | null, priceCents: number | null) {
   const value = priceCents / 100;
 
   try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currency || "EUR",
-      maximumFractionDigits: 0,
-    }).format(value);
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency, maximumFractionDigits: 0, currencyDisplay: "symbol" }).format(value);
   } catch {
     return `${currency || "EUR"} ${Math.round(value).toLocaleString()}`;
   }
