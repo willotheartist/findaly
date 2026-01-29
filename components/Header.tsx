@@ -10,6 +10,7 @@ import {
   Ship,
 } from "lucide-react";
 import HeaderDropdownClient from "@/components/HeaderDropdownClient";
+import LogoutButtonClient from "@/components/LogoutButtonClient";
 import { getCurrentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
@@ -72,29 +73,6 @@ async function getPrimaryProfileSlugForUser(userId: string) {
     select: { slug: true },
   });
   return p?.slug ?? null;
-}
-
-// Small client button for logout (no /logout navigation required)
-function LogoutButton({ className }: { className: string }) {
-  return (
-    <form
-      action="/api/auth/logout"
-      method="post"
-      onSubmit={(e) => {
-        // Make it instant without relying on full form submit navigation.
-        e.preventDefault();
-        fetch("/api/auth/logout", { method: "POST" })
-          .catch(() => {})
-          .finally(() => {
-            window.location.assign("/");
-          });
-      }}
-    >
-      <button type="submit" className={className}>
-        Log out
-      </button>
-    </form>
-  );
 }
 
 export default async function Header() {
@@ -199,6 +177,7 @@ export default async function Header() {
                   My profile
                   <ExternalLink className="h-4 w-4 text-slate-400" />
                 </Link>
+
                 <Link
                   href="/my-listings"
                   className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
@@ -206,14 +185,17 @@ export default async function Header() {
                   My listings
                   <Ship className="h-4 w-4 text-slate-400" />
                 </Link>
+
                 <Link
                   href="/settings"
-                  className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                  className="block rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                 >
                   Settings
                 </Link>
+
                 <div className="my-2 border-t border-slate-200" />
-                <LogoutButton className="w-full rounded-md px-3 py-2 text-left text-sm no-underline hover:bg-slate-100" />
+
+                <LogoutButtonClient className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100" />
               </div>
             </HeaderDropdownClient>
           )}
@@ -252,19 +234,19 @@ export default async function Header() {
               <div className="grid gap-1">
                 <Link
                   href="/saved"
-                  className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                  className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                 >
                   Saved
                 </Link>
                 <Link
                   href="/messages"
-                  className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                  className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                 >
                   Messages
                 </Link>
                 <Link
                   href="/alerts"
-                  className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                  className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                 >
                   Alerts
                 </Link>
@@ -272,7 +254,7 @@ export default async function Header() {
                 {!isAuthed ? (
                   <Link
                     href="/login"
-                    className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                    className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                   >
                     Sign in
                   </Link>
@@ -280,23 +262,23 @@ export default async function Header() {
                   <>
                     <Link
                       href={myProfileHref}
-                      className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                      className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                     >
                       My profile
                     </Link>
                     <Link
                       href="/my-listings"
-                      className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                      className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                     >
                       My listings
                     </Link>
                     <Link
                       href="/settings"
-                      className="rounded-md px-3 py-2 text-sm no-underline hover:bg-slate-100"
+                      className="rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
                     >
                       Settings
                     </Link>
-                    <LogoutButton className="w-full rounded-md px-3 py-2 text-left text-sm no-underline hover:bg-slate-100" />
+                    <LogoutButtonClient className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100" />
                   </>
                 )}
               </div>
