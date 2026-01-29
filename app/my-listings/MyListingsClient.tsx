@@ -72,10 +72,19 @@ function formatPrice(currency: string | null, priceCents: number | null) {
   if (!priceCents || priceCents <= 0) return "Price on request";
   const value = priceCents / 100;
 
+  // Intl.NumberFormat requires a non-null currency code.
+  // Also avoid hardcoding locale so it respects user/browser locale.
+  const safeCurrency: string = currency?.trim() || "EUR";
+
   try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency, maximumFractionDigits: 0, currencyDisplay: "symbol" }).format(value);
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: safeCurrency,
+      maximumFractionDigits: 0,
+      currencyDisplay: "symbol",
+    }).format(value);
   } catch {
-    return `${currency || "EUR"} ${Math.round(value).toLocaleString()}`;
+    return `${safeCurrency} ${Math.round(value).toLocaleString()}`;
   }
 }
 
@@ -333,7 +342,10 @@ function ListingCard({
                 <MoreHorizontal className="h-4 w-4" />
               </button>
               {menuOpen && (
-                <ListingMenu listing={listing} onClose={() => setMenuOpen(false)} />
+                <ListingMenu
+                  listing={listing}
+                  onClose={() => setMenuOpen(false)}
+                />
               )}
             </div>
           </div>
@@ -448,7 +460,9 @@ function ListingCard({
               statusConfig.border
             )}
           >
-            <span className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)} />
+            <span
+              className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)}
+            />
             {statusConfig.label}
           </div>
         </div>
@@ -625,7 +639,9 @@ export default function MyListingsClient({
                   <div className="text-2xl font-bold text-slate-900">
                     {stats.live}
                   </div>
-                  <div className="text-xs font-medium text-emerald-600">Live</div>
+                  <div className="text-xs font-medium text-emerald-600">
+                    Live
+                  </div>
                 </div>
               </div>
             </div>
@@ -639,7 +655,9 @@ export default function MyListingsClient({
                   <div className="text-2xl font-bold text-slate-900">
                     {stats.draft}
                   </div>
-                  <div className="text-xs font-medium text-slate-500">Drafts</div>
+                  <div className="text-xs font-medium text-slate-500">
+                    Drafts
+                  </div>
                 </div>
               </div>
             </div>
@@ -653,7 +671,9 @@ export default function MyListingsClient({
                   <div className="text-2xl font-bold text-slate-900">
                     {stats.paused}
                   </div>
-                  <div className="text-xs font-medium text-slate-500">Paused</div>
+                  <div className="text-xs font-medium text-slate-500">
+                    Paused
+                  </div>
                 </div>
               </div>
             </div>
