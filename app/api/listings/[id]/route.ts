@@ -123,6 +123,116 @@ function isBlobOrDataUrl(url: string) {
   return url.startsWith("blob:") || url.startsWith("data:image/");
 }
 
+function nonEmpty(v: unknown) {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+function hasAnyContact(sellerEmail: unknown, sellerPhone: unknown) {
+  return nonEmpty(sellerEmail) || nonEmpty(sellerPhone);
+}
+
+/**
+ * Validate listing required fields for publishing (status LIVE).
+ * Returns array of "missing keys" used by client modal.
+ */
+function validateForPublish(effective: {
+  kind: "VESSEL" | "PARTS" | "SERVICES";
+  intent: "SALE" | "CHARTER";
+  title: string;
+  brand: string | null;
+  model: string | null;
+  year: number | null;
+  boatCategory: string | null;
+  serviceCategory: string | null;
+  serviceName: string | null;
+  partsCategory: string | null;
+
+  location: string | null;
+  country: string | null;
+
+  priceType: PriceType;
+  priceCents: number | null;
+  charterPricePeriod: CharterPricePeriod | null;
+
+  sellerType: SellerType;
+  sellerName: string | null;
+  sellerCompany: string | null;
+  sellerEmail: string | null;
+  sellerPhone: string | null;
+
+  photoCount: number;
+  description: string | null;
+}): string[] {
+  const missing: string[] = [];
+
+  // Common
+  if (!effective.kind) missing.push("listingType");
+
+  const hasTitleOrBrandModel =
+    nonEmpty(effective.title) || (nonEmpty(effective.brand) && nonEmpty(effective.model));
+
+  // Type-specific requireds
+  if (effective.kind === "VESSEL") {
+    if (!nonEmpty(effective.boatCategory)) missing.push("boatCategory");
+    if (!hasTitleOrBrandModel) missing.push("title");
+    if (!effective.year) missing.push("year");
+    // For vessel, require description
+    if (!nonEmpty(effective.description)) missing.push("description");
+  }
+
+  if (effective.kind === "SERVICES") {
+    if (!nonEmpty(effective.serviceCategory)) missing.push("serviceCategory");
+    if (!nonEmpty(effective.serviceName)) missing.push("serviceName");
+    // price optional for services
+  }
+
+  if (effective.kind === "PARTS") {
+    if (!nonEmpty(effective.partsCategory)) missing.push("partsCategory");
+    if (!hasTitleOrBrandModel) missing.push("title");
+    // price required unless POA
+    if (effective.priceType !== "POA" && !effective.priceCents) missing.push("price");
+  }
+
+  // Location
+  if (!nonEmpty(effective.location)) missing.push("location");
+  if (!nonEmpty(effective.country)) missing.push("country");
+
+  // Photos
+  if (!effective.photoCount || effective.photoCount < 1) missing.push("photos");
+
+  // Pricing rules for vessels
+  if (effective.kind === "VESSEL") {
+    if (effective.priceType !== "POA" && !effective.priceCents) {
+      // Charter may come via priceCents too, but if it's not POA, require some price
+      missing.push(effective.intent === "CHARTER" ? "charterBasePrice" : "price");
+    }
+    if (effective.intent === "CHARTER") {
+      if (!effective.charterPricePeriod) missing.push("charterPricePeriod");
+    }
+  }
+
+  // Seller/contact
+  if (!effective.sellerType) missing.push("sellerType");
+  if (effective.sellerType === "PROFESSIONAL") {
+    if (!nonEmpty(effective.sellerCompany)) missing.push("sellerCompany");
+  } else {
+    if (!nonEmpty(effective.sellerName)) missing.push("sellerName");
+  }
+  if (!hasAnyContact(effective.sellerEmail, effective.sellerPhone)) missing.push("sellerContact");
+
+  // Dedupe
+  return Array.from(new Set(missing));
+}
+
+/**
+ * Build an "effective" view of the listing after applying PATCH body,
+ * without writing to DB first. This lets us block publishing before update.
+ */
+function effectiveValue<T>(body: Incoming, key: string, fallback: T): T {
+  if (Object.prototype.hasOwnProperty.call(body, key)) return (body as any)[key] as T;
+  return fallback;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GET - Fetch a single listing
 // ─────────────────────────────────────────────────────────────────────────────
@@ -182,6 +292,41 @@ export async function PATCH(
     const newStatus = statusOrNull(body.status);
     if (!newStatus) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
+    // 🔒 Block publishing unless required fields are present
+    if (newStatus === "LIVE") {
+      const missing = validateForPublish({
+        kind: listing.kind as any,
+        intent: listing.intent as any,
+        title: listing.title,
+        brand: listing.brand,
+        model: listing.model,
+        year: listing.year,
+        boatCategory: listing.boatCategory,
+        serviceCategory: listing.serviceCategory,
+        serviceName: listing.serviceName,
+        partsCategory: listing.partsCategory,
+        location: listing.location,
+        country: listing.country,
+        priceType: listing.priceType,
+        priceCents: listing.priceCents,
+        charterPricePeriod: listing.charterPricePeriod,
+        sellerType: listing.sellerType,
+        sellerName: listing.sellerName,
+        sellerCompany: listing.sellerCompany,
+        sellerEmail: listing.sellerEmail,
+        sellerPhone: listing.sellerPhone,
+        photoCount: listing.media?.length ?? 0,
+        description: listing.description,
+      });
+
+      if (missing.length > 0) {
+        return NextResponse.json(
+          { error: "LISTING_INCOMPLETE", missing },
+          { status: 400 }
+        );
+      }
+    }
+
     const updated = await prisma.listing.update({
       where: { id },
       data: { status: newStatus },
@@ -194,6 +339,68 @@ export async function PATCH(
 
   const nextCurrency = currencyOrNull(body.currency) ?? listing.currency;
   const nextPriceType = priceTypeOrNull(body.priceType) ?? listing.priceType;
+
+  const requestedStatus = body.status !== undefined ? statusOrNull(body.status) : null;
+
+  // If trying to publish as part of the full payload, validate first.
+  if (requestedStatus === "LIVE") {
+    const hasPhotoUrls = Object.prototype.hasOwnProperty.call(body, "photoUrls");
+    const desiredUrls = hasPhotoUrls
+      ? stringArray(body.photoUrls).filter((url) => url && !isBlobOrDataUrl(url))
+      : [];
+
+    const effectivePhotoCount = hasPhotoUrls ? desiredUrls.length : (listing.media?.length ?? 0);
+
+    const effective = {
+      kind,
+      intent,
+
+      title: nonEmpty(effectiveValue(body, "title", listing.title)) ? s(effectiveValue(body, "title", listing.title)) : s(effectiveValue(body, "title", listing.title)),
+      brand: nonEmpty(effectiveValue(body, "brand", listing.brand ?? "")) ? s(effectiveValue(body, "brand", listing.brand ?? "")) : (listing.brand ?? null),
+      model: nonEmpty(effectiveValue(body, "model", listing.model ?? "")) ? s(effectiveValue(body, "model", listing.model ?? "")) : (listing.model ?? null),
+      year: intOrNull(effectiveValue(body, "year", listing.year ?? null)) ?? listing.year ?? null,
+
+      boatCategory: s(effectiveValue(body, "boatCategory", listing.boatCategory ?? "")) || listing.boatCategory || null,
+      serviceCategory: s(effectiveValue(body, "serviceCategory", listing.serviceCategory ?? "")) || listing.serviceCategory || null,
+      serviceName: s(effectiveValue(body, "serviceName", listing.serviceName ?? "")) || listing.serviceName || null,
+      partsCategory: s(effectiveValue(body, "partsCategory", listing.partsCategory ?? "")) || listing.partsCategory || null,
+
+      location: s(effectiveValue(body, "location", listing.location ?? "")) || listing.location || null,
+      country: s(effectiveValue(body, "country", listing.country ?? "")) || listing.country || null,
+
+      priceType: nextPriceType,
+      priceCents: (() => {
+        const priceCandidate = (() => {
+          const raw = s(body.price);
+          if (raw) return body.price;
+          const rawCharterBase = s(body.charterBasePrice);
+          if (rawCharterBase) return body.charterBasePrice;
+          return undefined;
+        })();
+        const computed = priceCandidate !== undefined ? priceCentsFromPriceString(priceCandidate) : null;
+        return computed ?? listing.priceCents ?? null;
+      })(),
+
+      charterPricePeriod:
+        charterPricePeriodOrNull(effectiveValue(body, "charterPricePeriod", listing.charterPricePeriod ?? null)) ??
+        listing.charterPricePeriod ??
+        null,
+
+      sellerType: sellerTypeOrNull(effectiveValue(body, "sellerType", (listing.sellerType as any) ?? "private")) ?? listing.sellerType,
+      sellerName: s(effectiveValue(body, "sellerName", listing.sellerName ?? "")) || listing.sellerName || null,
+      sellerCompany: s(effectiveValue(body, "sellerCompany", listing.sellerCompany ?? "")) || listing.sellerCompany || null,
+      sellerEmail: s(effectiveValue(body, "sellerEmail", listing.sellerEmail ?? "")) || listing.sellerEmail || null,
+      sellerPhone: s(effectiveValue(body, "sellerPhone", listing.sellerPhone ?? "")) || listing.sellerPhone || null,
+
+      photoCount: effectivePhotoCount,
+      description: s(effectiveValue(body, "description", listing.description ?? "")) || listing.description || null,
+    };
+
+    const missing = validateForPublish(effective);
+    if (missing.length > 0) {
+      return NextResponse.json({ error: "LISTING_INCOMPLETE", missing }, { status: 400 });
+    }
+  }
 
   const priceCandidate = (() => {
     const raw = s(body.price);
@@ -293,6 +500,11 @@ export async function PATCH(
     recentWorks: s(body.recentWorks) || null,
   };
 
+  // Allow status change in full payload
+  if (requestedStatus) {
+    data.status = requestedStatus;
+  }
+
   // ✅ CRITICAL FIX:
   // Only sync media if the client explicitly sent photoUrls.
   // Otherwise, do NOT touch existing media (prevents accidental wipe).
@@ -302,9 +514,7 @@ export async function PATCH(
     await tx.listing.update({ where: { id: listing.id }, data });
 
     if (hasPhotoUrls) {
-      const desiredUrls = stringArray(body.photoUrls).filter(
-        (url) => url && !isBlobOrDataUrl(url)
-      );
+      const desiredUrls = stringArray(body.photoUrls).filter((url) => url && !isBlobOrDataUrl(url));
 
       const existingMedia = await tx.listingMedia.findMany({
         where: { listingId: listing.id },
@@ -313,9 +523,7 @@ export async function PATCH(
       const existingByUrl = new Map(existingMedia.map((m) => [m.url, m]));
       const desiredSet = new Set(desiredUrls);
 
-      const toDeleteIds = existingMedia
-        .filter((m) => !desiredSet.has(m.url))
-        .map((m) => m.id);
+      const toDeleteIds = existingMedia.filter((m) => !desiredSet.has(m.url)).map((m) => m.id);
 
       if (toDeleteIds.length) {
         await tx.listingMedia.deleteMany({ where: { id: { in: toDeleteIds } } });
@@ -353,10 +561,10 @@ export async function PATCH(
 
   const updated = await prisma.listing.findUnique({
     where: { id: listing.id },
-    select: { slug: true },
+    select: { slug: true, status: true },
   });
 
-  return NextResponse.json({ ok: true, slug: updated?.slug ?? null });
+  return NextResponse.json({ ok: true, slug: updated?.slug ?? null, status: updated?.status ?? null });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -90,7 +90,7 @@ export default async function Header() {
   const myProfileHref = profileSlug ? `/profile/${profileSlug}` : "/profile";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-[#E9FF63]">
       {/* Row 1 */}
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
         {/* Logo */}
@@ -99,7 +99,7 @@ export default async function Header() {
           className="mr-1 inline-flex items-center gap-2 rounded-md px-2 py-1 no-underline hover:bg-slate-100"
           aria-label="Findaly home"
         >
-          <span className="text-2xl font-extrabold tracking-tight text-[#ff6a00]">
+          <span className="text-2xl font-extrabold tracking-tight text-[#F56462]">
             findaly
           </span>
         </Link>
@@ -107,7 +107,7 @@ export default async function Header() {
         {/* CTA */}
         <Link
           href="/add-listing"
-          className="hidden items-center gap-2 rounded-md bg-[#ff6a00] px-4 py-2 text-sm font-semibold text-white no-underline hover:brightness-95 md:inline-flex"
+          className="hidden items-center gap-2 rounded-md bg-[#F56462] px-4 py-2 text-sm font-semibold text-white no-underline hover:brightness-95 md:inline-flex"
         >
           + List a yacht
         </Link>
@@ -119,11 +119,11 @@ export default async function Header() {
               <input
                 name="q"
                 placeholder="Search yachts, parts, services…"
-                className="h-11 w-full rounded-md border border-slate-200 bg-slate-100 px-4 pr-12 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-slate-300"
+                className="h-11 w-full rounded-md border border-slate-000 bg-slate-100 px-4 pr-12 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-slate-300"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#ff6a00] text-white hover:brightness-95"
+                className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#F56462] text-white hover:brightness-95"
                 aria-label="Search"
               >
                 <Search className="h-4 w-4" />

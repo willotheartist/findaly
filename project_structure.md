@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 29/01/2026, 14:31:47*
+*Generated on: 31/01/2026, 21:52:19*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 120 |
-| 📁 Total Folders | 72 |
+| 📄 Total Files | 148 |
+| 📁 Total Folders | 78 |
 | 🌳 Max Depth | 5 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,43 +24,43 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 53 files (44.2%)
-- 🔷 **.ts** (TypeScript files): 35 files (29.2%)
-- 🎨 **.svg** (SVG images): 5 files (4.2%)
-- ⚙️ **.json** (JSON files): 4 files (3.3%)
-- 📄 **.sql** (Other files): 4 files (3.3%)
-- 🖼️ **.jpg** (JPEG images): 4 files (3.3%)
-- 📄 **.mjs** (Other files): 3 files (2.5%)
-- 📖 **.md** (Markdown files): 2 files (1.7%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.8%)
-- 📄 **.txt** (Text files): 1 files (0.8%)
-- 🖼️ **.ico** (Icon files): 1 files (0.8%)
-- 🎨 **.css** (Stylesheets): 1 files (0.8%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.8%)
-- ⚙️ **.toml** (TOML files): 1 files (0.8%)
-- 📄 **.prisma** (Other files): 1 files (0.8%)
-- 🖼️ **.png** (PNG images): 1 files (0.8%)
-- 📄 **.patch** (Other files): 1 files (0.8%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.8%)
+- ⚛️ **.tsx** (React TypeScript files): 68 files (45.9%)
+- 🔷 **.ts** (TypeScript files): 36 files (24.3%)
+- 🖼️ **.png** (PNG images): 9 files (6.1%)
+- 🖼️ **.jpg** (JPEG images): 8 files (5.4%)
+- 🎨 **.svg** (SVG images): 5 files (3.4%)
+- ⚙️ **.json** (JSON files): 4 files (2.7%)
+- 📄 **.sql** (Other files): 4 files (2.7%)
+- 📄 **.mjs** (Other files): 3 files (2.0%)
+- 📖 **.md** (Markdown files): 2 files (1.4%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.7%)
+- 📄 **.txt** (Text files): 1 files (0.7%)
+- 🖼️ **.ico** (Icon files): 1 files (0.7%)
+- 🎨 **.css** (Stylesheets): 1 files (0.7%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.7%)
+- ⚙️ **.toml** (TOML files): 1 files (0.7%)
+- 📄 **.prisma** (Other files): 1 files (0.7%)
+- 📄 **.patch** (Other files): 1 files (0.7%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.7%)
 
 ### By Category
 
-- **React**: 53 files (44.2%)
-- **TypeScript**: 35 files (29.2%)
-- **Assets**: 11 files (9.2%)
-- **Other**: 10 files (8.3%)
-- **Config**: 6 files (5.0%)
-- **Docs**: 3 files (2.5%)
-- **DevOps**: 1 files (0.8%)
-- **Styles**: 1 files (0.8%)
+- **React**: 68 files (45.9%)
+- **TypeScript**: 36 files (24.3%)
+- **Assets**: 23 files (15.5%)
+- **Other**: 10 files (6.8%)
+- **Config**: 6 files (4.1%)
+- **Docs**: 3 files (2.0%)
+- **DevOps**: 1 files (0.7%)
+- **Styles**: 1 files (0.7%)
 
 ### 📁 Largest Directories
 
-- **root**: 120 files
-- **app**: 60 files
+- **root**: 148 files
+- **app**: 65 files
+- **public**: 22 files
 - **app/add-listing**: 21 files
-- **app/add-listing/_components**: 17 files
-- **app/api**: 15 files
+- **components**: 18 files
 
 ## 🌳 Directory Structure
 
@@ -138,6 +138,13 @@ findaly/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ BuyPageClient.tsx
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 destinations/
+│   │   ├── 📂 [slug]/
+│   │   │   ├── 🔷 _data.ts
+│   │   │   ├── ⚛️ page.tsx
+│   │   │   └── 📂 things-to-do/
+│   │   │   │   └── ⚛️ page.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
 │   ├── 🎨 globals.css
 │   ├── ⚛️ layout.tsx
@@ -146,7 +153,8 @@ findaly/
 │   │   ├── ⚛️ LoginClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 logout/
-│   │   └── 🔷 route.ts
+│   │   ├── ⚛️ LogoutClient.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 messages/
 │   │   ├── ⚛️ MessagesClient.tsx
 │   │   └── ⚛️ page.tsx
@@ -174,11 +182,24 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   └── 📂 use-cases/
 ├── 🧩 components/
+│   ├── 📂 destinations/
+│   │   ├── ⚛️ DestinationCard.tsx
+│   │   ├── ⚛️ DestinationHighlights.tsx
+│   │   ├── ⚛️ DestinationLinkCard.tsx
+│   │   ├── ⚛️ DestinationQuickFacts.tsx
+│   │   ├── 🔷 destinations.data.ts
+│   │   ├── ⚛️ DestinationSearchClient.tsx
+│   │   ├── ⚛️ DestinationSection.tsx
+│   │   └── ⚛️ DestinationSlugHero.tsx
 │   ├── ⚛️ Footer.tsx
 │   ├── ⚛️ Header.tsx
 │   ├── ⚛️ HeaderDropdownClient.tsx
+│   ├── 📂 home/
+│   │   ├── ⚛️ HomeHero.tsx
+│   │   └── ⚛️ ThingsToDo.tsx
 │   ├── 📂 listing/
 │   │   └── ⚛️ SellerCard.tsx
+│   ├── ⚛️ LogoutButtonClient.tsx
 │   └── 📂 stack/
 │   │   ├── ⚛️ StackBuilderClient.tsx
 │   │   ├── ⚛️ StackLoading.tsx
@@ -231,10 +252,23 @@ findaly/
 ├── 🔷 prisma.config.ts
 ├── 📖 project_structure.md
 ├── 🌐 public/
+│   ├── 📂 destinations/
+│   │   ├── 🖼️ Amalfi Coast.png
+│   │   ├── 🖼️ Balearics.png
+│   │   ├── 🖼️ Caribbean.png
+│   │   ├── 🖼️ Croatia.png
+│   │   ├── 🖼️ Dubai.png
+│   │   ├── 🖼️ FrenchRiviera.png
+│   │   ├── 🖼️ Greece.png
+│   │   └── 🖼️ Turkey.png
 │   ├── 🎨 file.svg
 │   ├── 📂 fonts/
 │   │   └── 📂 inter-tight/
 │   ├── 🎨 globe.svg
+│   ├── 🖼️ hero-buy.jpg
+│   ├── 🖼️ hero-charter.jpg
+│   ├── 🖼️ hero-pros.jpg
+│   ├── 🖼️ hero-sell.jpg
 │   ├── 🎨 next.svg
 │   ├── 📂 uploads/
 │   │   ├── 🖼️ 3cf4a8bd-377b-4dcb-b66b-1bf4da243d90.jpg
@@ -274,9 +308,9 @@ findaly/
 - 📄 Other: Other files
 - ⚙️ Config: YAML files
 - ⚙️ Config: TOML files
+- 🖼️ Assets: PNG images
 - 🎨 Assets: SVG images
 - 🖼️ Assets: JPEG images
-- 🖼️ Assets: PNG images
 
 ### Importance Levels
 - 🔴 Critical: Essential project files

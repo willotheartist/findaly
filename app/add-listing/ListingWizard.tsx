@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Loader2, Save, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Save, Send, X } from "lucide-react";
 
 import StepIndicator from "./_components/StepIndicator";
 import SuccessModal from "./_components/SuccessModal";
@@ -25,6 +25,7 @@ type SubmitResult = {
   slug?: string | null;
   listing?: { slug?: string | null };
   error?: string;
+  missing?: string[];
   [key: string]: unknown;
 };
 
@@ -36,6 +37,8 @@ type Props = {
   onSuccess?: (result: SubmitResult) => void;
 };
 
+type PublishStatus = "LIVE" | "DRAFT";
+
 function isBlobOrDataUrl(url: string) {
   return url.startsWith("blob:") || url.startsWith("data:image/");
 }
@@ -46,6 +49,14 @@ function safeRevoke(url: string) {
   try {
     URL.revokeObjectURL(url);
   } catch {}
+}
+
+function nonEmpty(s: unknown) {
+  return typeof s === "string" && s.trim().length > 0;
+}
+
+function hasAnyContact(formData: FormData) {
+  return nonEmpty(formData.sellerEmail) || nonEmpty(formData.sellerPhone);
 }
 
 /**
@@ -143,15 +154,133 @@ async function uploadPhotosIfNeeded(formData: FormData): Promise<FormData> {
   }
 
   // Filter out any failed uploads (empty strings) or remaining blob URLs
-  const cleaned = nextUrls.filter(
-    (u) => typeof u === "string" && u && !isBlobOrDataUrl(u)
-  );
+  const cleaned = nextUrls.filter((u) => typeof u === "string" && u && !isBlobOrDataUrl(u));
 
   return {
     ...formData,
     photoUrls: cleaned,
     photos: [], // Clear File[] after upload
   };
+}
+
+/**
+ * Compute required-field missing list + the earliest step to jump to.
+ * NOTE: We only enforce this for PUBLISH (LIVE). Saving as draft is always allowed.
+ */
+function computePublishMissing(formData: FormData): { missing: string[]; firstStep: number } {
+  const missing: Array<{ key: string; step: number }> = [];
+
+  const lt = formData.listingType;
+
+  // Step mapping differs per type
+  const stepFor = (area:
+    | "type"
+    | "category"
+    | "details"
+    | "features"
+    | "location"
+    | "photos"
+    | "description"
+    | "contact") => {
+    if (lt === "parts") {
+      // 1 Type, 2 Details(Category), 3 Location, 4 Photos, 5 Contact, 6 Review
+      if (area === "type") return 1;
+      if (area === "category") return 2;
+      if (area === "details") return 2;
+      if (area === "location") return 3;
+      if (area === "photos") return 4;
+      if (area === "contact") return 5;
+      return 6;
+    }
+    if (lt === "service") {
+      // 1 Type, 2 Category, 3 Details, 4 Location, 5 Photos, 6 Contact, 7 Review
+      if (area === "type") return 1;
+      if (area === "category") return 2;
+      if (area === "details") return 3;
+      if (area === "location") return 4;
+      if (area === "photos") return 5;
+      if (area === "contact") return 6;
+      return 7;
+    }
+    // sale/charter
+    // 1 Type, 2 Category, 3 Details, 4 Features, 5 Location, 6 Photos, 7 Description, 8 Contact, 9 Review
+    if (area === "type") return 1;
+    if (area === "category") return 2;
+    if (area === "details") return 3;
+    if (area === "features") return 4;
+    if (area === "location") return 5;
+    if (area === "photos") return 6;
+    if (area === "description") return 7;
+    if (area === "contact") return 8;
+    return 9;
+  };
+
+  // Common: type must be chosen
+  if (!lt) missing.push({ key: "listingType", step: stepFor("type") });
+
+  // Category / primary identifier
+  if (lt === "sale" || lt === "charter") {
+    if (!formData.boatCategory) missing.push({ key: "boatCategory", step: stepFor("category") });
+  }
+  if (lt === "service") {
+    if (!formData.serviceCategory) missing.push({ key: "serviceCategory", step: stepFor("category") });
+    if (!nonEmpty(formData.serviceName)) missing.push({ key: "serviceName", step: stepFor("details") });
+  }
+  if (lt === "parts") {
+    if (!nonEmpty(formData.partsCategory)) missing.push({ key: "partsCategory", step: stepFor("details") });
+    if (!nonEmpty(formData.title) && !(nonEmpty(formData.brand) && nonEmpty(formData.model))) {
+      missing.push({ key: "title", step: stepFor("details") });
+    }
+  }
+
+  // Title / brand+model
+  if (lt === "sale" || lt === "charter") {
+    if (!nonEmpty(formData.title) && !(nonEmpty(formData.brand) && nonEmpty(formData.model))) {
+      missing.push({ key: "title", step: stepFor("details") });
+    }
+    if (!nonEmpty(formData.year)) missing.push({ key: "year", step: stepFor("details") });
+  }
+
+  // Location
+  if (!nonEmpty(formData.location)) missing.push({ key: "location", step: stepFor("location") });
+  if (!nonEmpty(formData.country)) missing.push({ key: "country", step: stepFor("location") });
+
+  // Photos
+  if ((formData.photoUrls?.length ?? 0) < 1) missing.push({ key: "photos", step: stepFor("photos") });
+
+  // Description (for vessels we want something meaningful)
+  if (lt === "sale" || lt === "charter") {
+    if (!nonEmpty(formData.description)) missing.push({ key: "description", step: stepFor("description") });
+  }
+
+  // Pricing
+  const priceType = formData.priceType;
+  const isPOA = priceType === "poa";
+  const hasPrice =
+    nonEmpty(formData.price) || nonEmpty(formData.charterBasePrice);
+
+  if (lt === "sale" || lt === "parts") {
+    if (!isPOA && !nonEmpty(formData.price)) missing.push({ key: "price", step: stepFor("details") });
+  }
+
+  if (lt === "charter") {
+    if (!isPOA && !hasPrice) missing.push({ key: "charterBasePrice", step: stepFor("details") });
+    if (!nonEmpty(formData.charterPricePeriod)) missing.push({ key: "charterPricePeriod", step: stepFor("details") });
+  }
+
+  // Contact (seller)
+  if (!formData.sellerType) missing.push({ key: "sellerType", step: stepFor("contact") });
+
+  if (formData.sellerType === "professional") {
+    if (!nonEmpty(formData.sellerCompany)) missing.push({ key: "sellerCompany", step: stepFor("contact") });
+  } else if (formData.sellerType === "private") {
+    if (!nonEmpty(formData.sellerName)) missing.push({ key: "sellerName", step: stepFor("contact") });
+  }
+
+  if (!hasAnyContact(formData)) missing.push({ key: "sellerContact", step: stepFor("contact") });
+
+  const firstStep = missing.reduce((min, m) => Math.min(min, m.step), Infinity);
+  return { missing: missing.map((m) => m.key), firstStep: Number.isFinite(firstStep) ? firstStep : 1 };
 }
 
 export default function ListingWizard({
@@ -166,15 +295,19 @@ export default function ListingWizard({
     ...initialFormData,
     ...(initial ?? {}),
   });
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submittedListingSlug, setSubmittedListingSlug] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Unfinished modal state
+  const [showUnfinishedModal, setShowUnfinishedModal] = useState(false);
+  const [missingKeys, setMissingKeys] = useState<string[]>([]);
+  const [missingJumpStep, setMissingJumpStep] = useState<number>(1);
+
   /**
    * Update form with either a partial object or a functional updater.
-   * The functional updater pattern is essential for avoiding stale closures
-   * when multiple rapid updates occur (e.g., drag & drop multiple files).
    */
   const updateForm = useCallback(
     (updates: Partial<FormData> | ((prev: FormData) => Partial<FormData>)) => {
@@ -279,7 +412,12 @@ export default function ListingWizard({
     }
   };
 
-  const handleSubmit = async () => {
+  const jumpToStep = (step: number) => {
+    setCurrentStep(step);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSubmit = async (desiredStatus?: PublishStatus) => {
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -294,10 +432,12 @@ export default function ListingWizard({
         setFormData(uploaded);
       }
 
+      const payload = desiredStatus ? { ...uploaded, status: desiredStatus } : uploaded;
+
       const response = await fetch(submitUrl, {
         method: submitMethod,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(uploaded),
+        body: JSON.stringify(payload),
       });
 
       const data: SubmitResult = await response.json().catch(() => ({} as SubmitResult));
@@ -308,6 +448,16 @@ export default function ListingWizard({
           window.location.href = `/login?redirect=${currentPath}&message=Please log in to publish your listing`;
           return;
         }
+
+        // If API returns missing fields, we can show the same modal
+        if ((data.error || "").toString().includes("LISTING_INCOMPLETE") && Array.isArray(data.missing)) {
+          setMissingKeys(data.missing);
+          const computed = computePublishMissing(formData);
+          setMissingJumpStep(computed.firstStep);
+          setShowUnfinishedModal(true);
+          return;
+        }
+
         throw new Error(data.error || "Failed to save listing");
       }
 
@@ -325,6 +475,31 @@ export default function ListingWizard({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const requestPublish = async () => {
+    // Only enforce required fields when publishing (create flow).
+    // Edit mode "Save" can remain permissive.
+    if (mode === "create") {
+      const check = computePublishMissing(formData);
+      if (check.missing.length > 0) {
+        setMissingKeys(check.missing);
+        setMissingJumpStep(check.firstStep);
+        setShowUnfinishedModal(true);
+        return;
+      }
+      await handleSubmit("LIVE");
+      return;
+    }
+
+    // Edit mode -> treat as save (or publish if your edit endpoint supports it).
+    await handleSubmit();
+  };
+
+  const saveAsDraft = async () => {
+    setShowUnfinishedModal(false);
+    // Draft should always be allowed
+    await handleSubmit("DRAFT");
   };
 
   const handleViewListing = () => {
@@ -477,8 +652,51 @@ export default function ListingWizard({
     }
   };
 
+  const missingLabel = (k: string) => {
+    switch (k) {
+      case "listingType":
+        return "Choose listing type";
+      case "boatCategory":
+        return "Choose a boat category";
+      case "serviceCategory":
+        return "Choose a service category";
+      case "serviceName":
+        return "Add service name";
+      case "partsCategory":
+        return "Choose parts category";
+      case "title":
+        return "Add a title (or brand + model)";
+      case "year":
+        return "Add year";
+      case "location":
+        return "Add location";
+      case "country":
+        return "Add country";
+      case "photos":
+        return "Upload at least 1 photo";
+      case "description":
+        return "Add description";
+      case "price":
+        return "Add price (or set POA)";
+      case "charterBasePrice":
+        return "Add charter price (or set POA)";
+      case "charterPricePeriod":
+        return "Select price period";
+      case "sellerType":
+        return "Select seller type";
+      case "sellerCompany":
+        return "Add company name";
+      case "sellerName":
+        return "Add seller name";
+      case "sellerContact":
+        return "Add email or phone";
+      default:
+        return k;
+    }
+  };
+
   return (
-    <main className="min-h-screen w-full bg-slate-50">
+    <>
       <SuccessModal
         isOpen={showSuccessModal}
         listingTitle={formData.title || `${formData.brand} ${formData.model}`.trim()}
@@ -488,72 +706,180 @@ export default function ListingWizard({
         onGoHome={handleGoHome}
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-10">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Link>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">
-                {mode === "edit" ? "Edit listing" : "Add listing"}
-              </h1>
-              <p className="text-sm text-slate-600">Complete the steps to publish.</p>
+      {/* Unfinished modal */}
+      {showUnfinishedModal && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="border-b border-slate-200 px-6 py-5">
+              <div className="text-lg font-semibold text-slate-900">Unfinished listing</div>
+              <div className="mt-1 text-sm text-slate-600">
+                This listing is missing required details. You can keep it as a draft, or continue editing.
+              </div>
+            </div>
+
+            <div className="px-6 py-5">
+              {missingKeys.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  <div className="font-medium">Missing required fields:</div>
+                  <ul className="mt-2 list-disc pl-5 text-amber-800">
+                    {missingKeys.slice(0, 8).map((k) => (
+                      <li key={k}>{missingLabel(k)}</li>
+                    ))}
+                    {missingKeys.length > 8 && <li>…and {missingKeys.length - 8} more</li>}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  onClick={() => {
+                    setShowUnfinishedModal(false);
+                    jumpToStep(missingJumpStep || 1);
+                  }}
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  Continue editing
+                </button>
+
+                <button
+                  onClick={saveAsDraft}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                >
+                  Save as draft
+                </button>
+              </div>
             </div>
           </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : mode === "edit" ? (
-              <Save className="h-4 w-4" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            {mode === "edit" ? "Save changes" : "Publish"}
-          </button>
         </div>
+      )}
 
-        <StepIndicator steps={steps} currentStep={currentStep} onStepClick={goToStep} />
+      {/* Main layout */}
+      <main className="flex min-h-screen flex-col bg-slate-50">
+        {/* Top header bar */}
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                aria-label="Back to home"
+              >
+                <X className="h-4 w-4" />
+              </Link>
+              <div>
+                <h1 className="text-base font-semibold text-slate-900 sm:text-lg">
+                  {mode === "edit" ? "Edit listing" : "Create listing"}
+                </h1>
+                <p className="hidden text-xs text-slate-500 sm:block">
+                  {steps.find((s) => s.id === currentStep)?.label} · Step {currentStep} of {totalSteps}
+                </p>
+              </div>
+            </div>
 
-        {submitError ? (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-            {submitError}
+            {/* Quick publish button (desktop) */}
+            <button
+              onClick={requestPublish}
+              disabled={isSubmitting}
+              className="hidden items-center gap-2 rounded-full bg-[#ff6a00] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#e55f00] hover:shadow-md disabled:opacity-60 sm:inline-flex"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "edit" ? (
+                <Save className="h-4 w-4" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              {mode === "edit" ? "Save" : "Publish"}
+            </button>
           </div>
-        ) : null}
+        </header>
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-          {renderStep()}
+        {/* Content */}
+        <div className="flex-1 pb-24">
+          <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+            <div className="mb-6 sm:mb-8">
+              <StepIndicator steps={steps} currentStep={currentStep} onStepClick={goToStep} />
+            </div>
+
+            {submitError && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <p className="font-medium">Something went wrong</p>
+                <p className="mt-1 text-red-600">{submitError}</p>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+              {renderStep()}
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <button
-            onClick={prevStep}
-            disabled={isFirstStep}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
+        {/* Sticky bottom navigation bar */}
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
+            <button
+              onClick={prevStep}
+              disabled={isFirstStep}
+              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-all sm:px-5 ${
+                isFirstStep
+                  ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+              }`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
 
-          <button
-            onClick={nextStep}
-            disabled={isLastStep || !canProceed()}
-            className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-          >
-            Next
-            <ArrowRight className="h-4 w-4" />
-          </button>
+            <div className="flex items-center gap-1 sm:hidden">
+              {steps.map((step) => (
+                <span
+                  key={step.id}
+                  className={`h-1.5 rounded-full transition-all ${
+                    currentStep === step.id
+                      ? "w-4 bg-[#ff6a00]"
+                      : currentStep > step.id
+                      ? "w-1.5 bg-emerald-500"
+                      : "w-1.5 bg-slate-200"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              {isLastStep ? (
+                <button
+                  onClick={requestPublish}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#ff6a00] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#e55f00] hover:shadow-md disabled:opacity-60 sm:px-6"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : mode === "edit" ? (
+                    <Save className="h-4 w-4" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {mode === "edit" ? "Save changes" : "Publish listing"}
+                </button>
+              ) : (
+                <button
+                  onClick={nextStep}
+                  disabled={!canProceed()}
+                  className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all sm:px-6 ${
+                    canProceed()
+                      ? "bg-slate-900 text-white hover:bg-slate-800"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                  }`}
+                >
+                  <span>Continue</span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
