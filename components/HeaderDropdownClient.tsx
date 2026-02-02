@@ -1,8 +1,9 @@
-//·components/HeaderDropdownClient.tsx
 "use client";
 
+import * as React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 
 export default function HeaderDropdownClient({
   label,
@@ -11,7 +12,7 @@ export default function HeaderDropdownClient({
   triggerClassName = "",
   panelClassName = "",
 }: {
-  label: string;
+  label: React.ReactNode;
   align?: "left" | "right";
   children: React.ReactNode;
   triggerClassName?: string;
@@ -40,7 +41,7 @@ export default function HeaderDropdownClient({
     };
   }, []);
 
-  // Optional: auto-close when any link inside is clicked
+  // auto-close when any link inside is clicked
   const onPanelClickCapture = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const link = target.closest("a");
@@ -51,16 +52,20 @@ export default function HeaderDropdownClient({
     <div ref={wrapRef} className="relative">
       <button
         type="button"
-        className={`group inline-flex items-center gap-1 ${triggerClassName}`}
+        className={`group inline-flex items-center gap-2 ${triggerClassName}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={panelId}
         aria-haspopup="menu"
       >
         {label}
-        <span className="text-xs opacity-60 transition group-hover:opacity-80">
-          ▾
-        </span>
+        <ChevronDown
+          className={[
+            "h-4 w-4 text-slate-500 transition-transform duration-150",
+            open ? "rotate-180" : "",
+          ].join(" ")}
+          aria-hidden="true"
+        />
       </button>
 
       {open ? (
@@ -74,17 +79,13 @@ export default function HeaderDropdownClient({
             panelClassName,
           ].join(" ")}
         >
-          <div className="p-2">{children}</div>
+          {children}
         </div>
       ) : null}
     </div>
   );
 }
 
-/**
- * (Optional) If you ever want menu items to be client links that close automatically:
- * you can use this, but you don't need it right now since we close on click-capture above.
- */
 export function DropdownLink({
   href,
   className,

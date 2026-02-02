@@ -8,6 +8,21 @@ import Select from "../fields/Select";
 import { COUNTRIES, CURRENCIES, TAX_STATUSES } from "../../_data/options";
 import type { FormData, ListingType } from "../../_types/listing";
 
+/**
+ * Keep raw numeric string in state (e.g. "1000000"),
+ * but display it formatted (e.g. "1,000,000").
+ */
+function onlyDigits(s: string) {
+  return (s || "").replace(/[^\d]/g, "");
+}
+
+function formatThousands(rawDigits: string) {
+  const d = onlyDigits(rawDigits);
+  if (!d) return "";
+  // String-based grouping (no Number() -> avoids precision issues for big values)
+  return d.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 export default function Step5Location({
   listingType,
   formData,
@@ -17,6 +32,8 @@ export default function Step5Location({
   formData: FormData;
   updateForm: (updates: Partial<FormData>) => void;
 }) {
+  const priceDisplay = formatThousands(formData.price);
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <FormSection title="Location">
@@ -47,7 +64,9 @@ export default function Step5Location({
 
           {(listingType === "sale" || listingType === "charter") && (
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Currently lying</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Currently lying
+              </label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2">
                   <input
@@ -81,9 +100,9 @@ export default function Step5Location({
             <Input
               label={listingType === "charter" ? "Base Price" : "Asking Price"}
               name="price"
-              value={formData.price}
-              onChange={(v) => updateForm({ price: v })}
-              placeholder="590000"
+              value={priceDisplay}
+              onChange={(v) => updateForm({ price: onlyDigits(v) })}
+              placeholder="590,000"
               required
             />
             <Select
@@ -91,7 +110,10 @@ export default function Step5Location({
               name="currency"
               value={formData.currency}
               onChange={(v) => updateForm({ currency: v })}
-              options={CURRENCIES.map((c) => ({ value: c.code, label: `${c.symbol} ${c.label}` }))}
+              options={CURRENCIES.map((c) => ({
+                value: c.code,
+                label: `${c.symbol} ${c.label}`,
+              }))}
             />
           </div>
 
@@ -100,7 +122,11 @@ export default function Step5Location({
               label="Price Period"
               name="charterPricePeriod"
               value={formData.charterPricePeriod}
-              onChange={(v) => updateForm({ charterPricePeriod: v as FormData["charterPricePeriod"] })}
+              onChange={(v) =>
+                updateForm({
+                  charterPricePeriod: v as FormData["charterPricePeriod"],
+                })
+              }
               options={[
                 { value: "hour", label: "Per Hour" },
                 { value: "day", label: "Per Day" },
@@ -112,7 +138,9 @@ export default function Step5Location({
           {listingType === "sale" && (
             <>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">Price type</label>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Price type
+                </label>
                 <div className="flex flex-wrap gap-3">
                   {[
                     { id: "fixed", label: "Fixed price" },
@@ -124,7 +152,11 @@ export default function Step5Location({
                         type="radio"
                         name="priceType"
                         checked={formData.priceType === opt.id}
-                        onChange={() => updateForm({ priceType: opt.id as FormData["priceType"] })}
+                        onChange={() =>
+                          updateForm({
+                            priceType: opt.id as FormData["priceType"],
+                          })
+                        }
                         className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
                       />
                       <span className="text-sm text-slate-700">{opt.label}</span>

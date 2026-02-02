@@ -170,14 +170,17 @@ export default function HomeHero() {
 
   const mode = HERO_MODES[activeMode];
 
-  const changeMode = useCallback((index: number) => {
-    if (index === activeMode) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setActiveMode(index);
-      setIsTransitioning(false);
-    }, 150);
-  }, [activeMode]);
+  const changeMode = useCallback(
+    (index: number) => {
+      if (index === activeMode) return;
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveMode(index);
+        setIsTransitioning(false);
+      }, 150);
+    },
+    [activeMode]
+  );
 
   return (
     <section className="relative w-full px-4 pt-4 sm:px-6 sm:pt-6">
@@ -204,7 +207,15 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/20 to-black/50" />
 
         {/* Content */}
-        <div className="relative flex min-h-[520px] flex-col items-center justify-center px-4 pb-48 pt-12 sm:min-h-[600px] sm:pb-52 sm:pt-14 lg:min-h-[660px]">
+        <div
+          className="relative flex flex-col items-center justify-center px-4"
+          style={{
+            // More “VH aware” spacing so the hero feels airy and consistent
+            paddingTop: "clamp(3rem, 6vh, 4rem)",
+            paddingBottom: "clamp(12rem, 18vh, 15rem)", // leaves room for the bar
+            minHeight: "clamp(520px, 72vh, 660px)",
+          }}
+        >
           <div
             className={`text-center transition-all duration-200 ${
               isTransitioning
@@ -316,7 +327,7 @@ function HeroSearchBar({
   // Handle search submit
   const handleSearch = () => {
     setOpenPanel("none");
-    
+
     if (mode.id === "charter") {
       const params = new URLSearchParams();
       if (charterLocation) params.set("location", charterLocation);
@@ -358,17 +369,14 @@ function HeroSearchBar({
   const handleDateSelect = (date: Date) => {
     if (openPanel === "checkin") {
       setCheckIn(date);
-      // Auto-advance to checkout
       setOpenPanel("checkout");
     } else if (openPanel === "checkout") {
       if (checkIn && isBefore(date, checkIn)) {
-        // If selected date is before check-in, swap them
         setCheckOut(checkIn);
         setCheckIn(date);
       } else {
         setCheckOut(date);
       }
-      // Auto-advance to guests
       setOpenPanel("guests");
     }
   };
@@ -376,45 +384,49 @@ function HeroSearchBar({
   return (
     <div
       ref={wrapRef}
-      className="absolute bottom-6 left-1/2 w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 sm:bottom-8 sm:w-[calc(100%-3rem)]"
+      className="absolute bottom-6 left-1/2 w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 sm:bottom-8 sm:w-[calc(100%-3rem)]"
     >
-      {/* Tabs */}
-      <div className="relative z-10 flex justify-center gap-0">
-        {HERO_MODES.map((m, i) => {
-          const isActive = i === activeMode;
-          return (
-            <button
-              key={m.id}
-              onClick={() => {
-                setOpenPanel("none");
-                onChangeMode(i);
-              }}
-              className="relative px-6 py-3 text-[14px] font-medium transition-all sm:px-8 sm:text-[15px]"
-              style={{
-                fontFamily: '"Inter Tight", "Inter", system-ui, sans-serif',
-                backgroundColor: m.tabBg,
-                color: m.tabText,
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
-                transform: isActive ? "translateY(0)" : "translateY(4px)",
-                opacity: isActive ? 1 : 0.9,
-                zIndex: isActive ? 20 : 10,
-              }}
-            >
-              {m.label}
-            </button>
-          );
-        })}
+      {/* Tabs (attached look) */}
+      <div className="relative z-10 flex justify-center">
+        <div className="flex overflow-hidden rounded-t-2xl">
+          {HERO_MODES.map((m, i) => {
+            const isActive = i === activeMode;
+            return (
+              <button
+                key={m.id}
+                onClick={() => {
+                  setOpenPanel("none");
+                  onChangeMode(i);
+                }}
+                className="relative px-7 py-3 text-[14px] font-medium transition-all sm:px-10 sm:text-[15px]"
+                style={{
+                  fontFamily: '"Inter Tight", "Inter", system-ui, sans-serif',
+                  backgroundColor: m.tabBg,
+                  color: m.tabText,
+                  transform: isActive ? "translateY(0)" : "translateY(6px)",
+                  opacity: isActive ? 1 : 0.92,
+                  zIndex: isActive ? 20 : 10,
+                }}
+              >
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Main Search Bar */}
+      {/* Main Search Bar (no shadows, premium border) */}
       <div
-        className="relative z-20 overflow-hidden rounded-2xl bg-white shadow-2xl"
-        style={{ marginTop: -1 }}
+        className="relative z-20 overflow-hidden bg-white"
+        style={{
+          marginTop: -1,
+          borderRadius: 28, // more “Airbnb pill” radius
+          border: "1px solid rgba(15,23,42,0.10)",
+        }}
       >
         {mode.id === "sell" ? (
           /* Sell Mode - Simple CTA */
-          <div className="flex items-center justify-between px-6 py-5 sm:px-8 sm:py-6">
+          <div className="flex items-center justify-between px-6 py-6 sm:px-8 sm:py-7">
             <div>
               <div
                 className="text-[15px] font-semibold text-slate-900 sm:text-[16px]"
@@ -440,11 +452,10 @@ function HeroSearchBar({
         ) : (
           /* Buy / Charter / Pros Mode */
           <div className="flex items-stretch">
-            {/* Search Fields */}
+            {/* Fields */}
             <div className="flex flex-1 flex-col sm:flex-row">
               {mode.id === "buy" && (
                 <>
-                  {/* Search Query */}
                   <SearchField
                     label="Search"
                     placeholder="Brand, model, keyword..."
@@ -455,7 +466,6 @@ function HeroSearchBar({
                     onClick={() => setOpenPanel("none")}
                     hasDivider
                   />
-                  {/* Location */}
                   <SearchField
                     label="Location"
                     placeholder="Anywhere"
@@ -464,7 +474,9 @@ function HeroSearchBar({
                     icon={<MapPin className="h-4 w-4" />}
                     isActive={openPanel === "location"}
                     onClick={() =>
-                      setOpenPanel(openPanel === "location" ? "none" : "location")
+                      setOpenPanel(
+                        openPanel === "location" ? "none" : "location"
+                      )
                     }
                     hasDivider={false}
                   />
@@ -473,7 +485,6 @@ function HeroSearchBar({
 
               {mode.id === "charter" && (
                 <>
-                  {/* Location */}
                   <SearchField
                     label="Location"
                     placeholder="Where are you going?"
@@ -482,12 +493,14 @@ function HeroSearchBar({
                     icon={<MapPin className="h-4 w-4" />}
                     isActive={openPanel === "location"}
                     onClick={() =>
-                      setOpenPanel(openPanel === "location" ? "none" : "location")
+                      setOpenPanel(
+                        openPanel === "location" ? "none" : "location"
+                      )
                     }
                     hasDivider
                     className="flex-[1.3]"
                   />
-                  {/* Check-in */}
+
                   <SearchFieldButton
                     label="Check-in"
                     value={checkIn ? fmtShort(checkIn) : "Add dates"}
@@ -498,21 +511,27 @@ function HeroSearchBar({
                     }
                     hasDivider
                   />
-                  {/* Check-out */}
+
                   <SearchFieldButton
                     label="Check-out"
                     value={checkOut ? fmtShort(checkOut) : "Add dates"}
                     isEmpty={!checkOut}
                     isActive={openPanel === "checkout"}
                     onClick={() =>
-                      setOpenPanel(openPanel === "checkout" ? "none" : "checkout")
+                      setOpenPanel(
+                        openPanel === "checkout" ? "none" : "checkout"
+                      )
                     }
                     hasDivider
                   />
-                  {/* Guests */}
+
                   <SearchFieldButton
                     label="Guests"
-                    value={guests > 0 ? `${guests} guest${guests !== 1 ? "s" : ""}` : "Add guests"}
+                    value={
+                      guests > 0
+                        ? `${guests} guest${guests !== 1 ? "s" : ""}`
+                        : "Add guests"
+                    }
                     isEmpty={guests === 0}
                     isActive={openPanel === "guests"}
                     onClick={() =>
@@ -525,7 +544,6 @@ function HeroSearchBar({
 
               {mode.id === "pros" && (
                 <>
-                  {/* Service Type */}
                   <SearchFieldSelect
                     label="Service"
                     value={prosService}
@@ -544,7 +562,6 @@ function HeroSearchBar({
                     ]}
                     hasDivider
                   />
-                  {/* Location */}
                   <SearchField
                     label="Location"
                     placeholder="City or region"
@@ -553,7 +570,9 @@ function HeroSearchBar({
                     icon={<MapPin className="h-4 w-4" />}
                     isActive={openPanel === "location"}
                     onClick={() =>
-                      setOpenPanel(openPanel === "location" ? "none" : "location")
+                      setOpenPanel(
+                        openPanel === "location" ? "none" : "location"
+                      )
                     }
                     hasDivider={false}
                   />
@@ -561,21 +580,21 @@ function HeroSearchBar({
               )}
             </div>
 
-            {/* Search Button */}
-            <div className="flex items-center pr-3">
+            {/* Search Button (bigger, like your design) */}
+            <div className="flex items-center pr-4">
               <button
                 type="button"
                 onClick={handleSearch}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#5BC0EB] text-white transition-all hover:bg-[#4AB0DB] active:scale-95"
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-[#5BC0EB] text-white transition-all hover:brightness-95 active:scale-95"
                 aria-label="Search"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-6 w-6" />
               </button>
             </div>
           </div>
         )}
 
-        {/* Dropdown Panels */}
+        {/* Panels */}
         {openPanel === "location" && mode.id !== "sell" && (
           <LocationPanel
             onSelect={selectLocation}
@@ -589,7 +608,11 @@ function HeroSearchBar({
             minDate={openPanel === "checkout" ? checkIn : null}
             onSelect={handleDateSelect}
             onClose={() => setOpenPanel("none")}
-            title={openPanel === "checkin" ? "Select check-in date" : "Select check-out date"}
+            title={
+              openPanel === "checkin"
+                ? "Select check-in date"
+                : "Select check-out date"
+            }
           />
         )}
 
@@ -631,31 +654,37 @@ function SearchField({
   className?: string;
 }) {
   return (
-    <div
-      className={`flex-1 ${hasDivider ? "border-r border-slate-200" : ""} ${className}`}
-    >
-      <div
-        className={`flex h-[72px] cursor-text items-center gap-3 px-5 transition-colors ${
-          isActive ? "bg-slate-50" : "hover:bg-slate-50/50"
-        }`}
-        onClick={onClick}
-      >
-        <div className="shrink-0 text-slate-400">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <div
-            className="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          >
-            {label}
+    <div className={`flex-1 ${className}`}>
+      <div className="relative h-[84px]">
+        {/* Divider (Airbnb style) */}
+        {hasDivider ? (
+          <div className="pointer-events-none absolute right-0 top-1/2 h-11 w-px -translate-y-1/2 bg-slate-200" />
+        ) : null}
+
+        <div
+          className={`flex h-full cursor-text items-center gap-3 px-6 transition-colors ${
+            isActive ? "bg-slate-50/60" : "hover:bg-slate-50/40"
+          }`}
+          onClick={onClick}
+        >
+          <div className="shrink-0 text-slate-400">{icon}</div>
+
+          <div className="min-w-0 flex-1">
+            <div
+              className="text-[12px] font-semibold text-slate-900"
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            >
+              {label}
+            </div>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={placeholder}
+              className="mt-1 w-full bg-transparent text-[15px] font-medium text-slate-700 placeholder:text-slate-500 focus:outline-none"
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            />
           </div>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="mt-0.5 w-full bg-transparent text-[14px] font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          />
         </div>
       </div>
     </div>
@@ -678,31 +707,37 @@ function SearchFieldButton({
   hasDivider: boolean;
 }) {
   return (
-    <div className={`flex-1 ${hasDivider ? "border-r border-slate-200" : ""}`}>
-      <button
-        type="button"
-        className={`flex h-[72px] w-full items-center px-5 text-left transition-colors ${
-          isActive ? "bg-slate-50" : "hover:bg-slate-50/50"
-        }`}
-        onClick={onClick}
-      >
-        <div className="min-w-0 flex-1">
-          <div
-            className="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          >
-            {label}
+    <div className="flex-1">
+      <div className="relative h-[84px]">
+        {hasDivider ? (
+          <div className="pointer-events-none absolute right-0 top-1/2 h-11 w-px -translate-y-1/2 bg-slate-200" />
+        ) : null}
+
+        <button
+          type="button"
+          className={`flex h-full w-full items-center px-6 text-left transition-colors ${
+            isActive ? "bg-slate-50/60" : "hover:bg-slate-50/40"
+          }`}
+          onClick={onClick}
+        >
+          <div className="min-w-0 flex-1">
+            <div
+              className="text-[12px] font-semibold text-slate-900"
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            >
+              {label}
+            </div>
+            <div
+              className={`mt-1 truncate text-[15px] font-medium ${
+                isEmpty ? "text-slate-500" : "text-slate-700"
+              }`}
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            >
+              {value}
+            </div>
           </div>
-          <div
-            className={`mt-0.5 truncate text-[14px] font-medium ${
-              isEmpty ? "text-slate-400" : "text-slate-900"
-            }`}
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          >
-            {value}
-          </div>
-        </div>
-      </button>
+        </button>
+      </div>
     </div>
   );
 }
@@ -723,28 +758,34 @@ function SearchFieldSelect({
   hasDivider: boolean;
 }) {
   return (
-    <div className={`flex-1 ${hasDivider ? "border-r border-slate-200" : ""}`}>
-      <div className="flex h-[72px] items-center gap-3 px-5">
-        <div className="shrink-0 text-slate-400">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <div
-            className="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          >
-            {label}
+    <div className="flex-1">
+      <div className="relative h-[84px]">
+        {hasDivider ? (
+          <div className="pointer-events-none absolute right-0 top-1/2 h-11 w-px -translate-y-1/2 bg-slate-200" />
+        ) : null}
+
+        <div className="flex h-full items-center gap-3 px-6">
+          <div className="shrink-0 text-slate-400">{icon}</div>
+          <div className="min-w-0 flex-1">
+            <div
+              className="text-[12px] font-semibold text-slate-900"
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            >
+              {label}
+            </div>
+            <select
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="mt-1 w-full appearance-none bg-transparent text-[15px] font-medium text-slate-700 focus:outline-none"
+              style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+            >
+              {options.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="mt-0.5 w-full appearance-none bg-transparent text-[14px] font-medium text-slate-900 focus:outline-none"
-            style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-          >
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
     </div>
@@ -838,17 +879,15 @@ function DatePanel({
 
   const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-  const isOutside = (d: Date) =>
-    isBefore(d, monthStart) || isAfter(d, monthEnd);
-  
+  const isOutside = (d: Date) => isBefore(d, monthStart) || isAfter(d, monthEnd);
+
   const isDisabled = (d: Date) => {
     if (isBefore(d, today)) return true;
     if (minDate && isBefore(d, minDate)) return true;
     return false;
   };
 
-  const isSelected = (d: Date) =>
-    selectedDate ? isSameDay(d, selectedDate) : false;
+  const isSelected = (d: Date) => (selectedDate ? isSameDay(d, selectedDate) : false);
 
   return (
     <div className="border-t border-slate-100 p-4">
@@ -869,7 +908,6 @@ function DatePanel({
       </div>
 
       <div className="mx-auto mt-4 max-w-sm">
-        {/* Month Navigation */}
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -894,9 +932,7 @@ function DatePanel({
           </button>
         </div>
 
-        {/* Calendar Grid */}
         <div className="mt-4 grid grid-cols-7 gap-1">
-          {/* Week day headers */}
           {weekDays.map((day) => (
             <div
               key={day}
@@ -907,16 +943,13 @@ function DatePanel({
             </div>
           ))}
 
-          {/* Days */}
           {grid.map((d) => {
             const outside = isOutside(d);
             const disabled = isDisabled(d);
             const selected = isSelected(d);
             const isToday = isSameDay(d, today);
 
-            if (outside) {
-              return <div key={d.toISOString()} className="h-10" />;
-            }
+            if (outside) return <div key={d.toISOString()} className="h-10" />;
 
             return (
               <button
@@ -930,7 +963,7 @@ function DatePanel({
                     selected
                       ? "bg-slate-900 text-white"
                       : disabled
-                      ? "text-slate-300 cursor-not-allowed"
+                      ? "cursor-not-allowed text-slate-300"
                       : "text-slate-700 hover:bg-slate-100"
                   }
                   ${isToday && !selected ? "ring-1 ring-slate-300" : ""}

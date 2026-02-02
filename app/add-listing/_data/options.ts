@@ -1,4 +1,4 @@
-//·/app/add-listing/_data/options.ts
+// app/add-listing/_data/options.ts
 import {
   Building2,
   Calendar,
@@ -156,9 +156,24 @@ export const COUNTRIES = [
 
 export const TAX_STATUSES = ["VAT Paid", "VAT Not Paid", "Tax Paid (non-EU)", "Duty Paid", "Unknown"];
 
+/**
+ * Equipment & Features
+ * - Onboard equipment, deck hardware, comfort, sails/rigging, etc.
+ */
 export const FEATURE_OPTIONS = [
+  // Comfort / onboard
   "Air conditioning",
-  "Generator",
+  "Heating", // ✅ added
+  "Oven", // ✅ added
+  "Microwave", // ✅ added
+  "Deep freezer", // ✅ added
+  "Ice maker",
+  "Dishwasher", // ✅ added (was already present; kept)
+  "Washer/dryer",
+  "TV set", // ✅ added
+  "Watermaker",
+
+  // Deck & handling
   "Bow thruster",
   "Stern thruster",
   "Hydraulic swim platform",
@@ -167,27 +182,37 @@ export const FEATURE_OPTIONS = [
   "Teak side decks",
   "Bimini top",
   "Cockpit cover",
-  "Underwater lights",
-  "Dinghy with outboard",
-  "Garage for tender",
-  "Watermaker",
-  "Ice maker",
-  "Dishwasher",
-  "Washer/dryer",
   "Deck shower",
+  "Gangway", // ✅ added
   "Passerelle",
+  "Davits",
+  "Crane",
+  "Garage for tender",
+  "Dinghy with outboard",
+  "Underwater lights",
+  "Hardtop",
+  "Flybridge",
+
+  // Power / utilities
+  "Generator",
+  "Solar panels",
+  "Wind generator",
+  "Battery charger", // ✅ added
+
+  // Luxury / other
   "Jacuzzi",
   "Stabilizers",
   "Zero speed stabilizers",
-  "Heating",
-  "Solar panels",
-  "Wind generator",
-  "Davits",
-  "Crane",
-  "Hardtop",
-  "Flybridge",
+  "Fully-battened mainsail", // ✅ added (sails section, but still “features”)
+  "Genoa", // ✅ added
+  "Furling genoa", // ✅ added
+  "Spinnaker", // ✅ added
 ];
 
+/**
+ * Electronics & Navigation
+ * - Helm electronics, comms, audio, cameras, etc.
+ */
 export const ELECTRONICS_OPTIONS = [
   "Chartplotter",
   "Radar",
@@ -196,7 +221,11 @@ export const ELECTRONICS_OPTIONS = [
   "AIS",
   "Depth sounder",
   "GPS",
+  "SSB Radio",
+  "Weather station",
+  "Fish finder",
   "Satellite TV",
+  "Satellite phone",
   "WiFi booster",
   "Stereo system",
   "Cockpit speakers",
@@ -204,21 +233,20 @@ export const ELECTRONICS_OPTIONS = [
   "Engine room camera",
   "Night vision",
   "Thermal camera",
-  "Satellite phone",
-  "SSB Radio",
-  "Weather station",
-  "Fish finder",
 ];
 
+/**
+ * Safety Equipment
+ * - Safety + pumps, emergency systems, detectors, etc.
+ */
 export const SAFETY_OPTIONS = [
   "Life jackets",
   "Life raft",
   "EPIRB",
   "Fire extinguishers",
+  "Fire suppression system",
   "Flares",
   "First aid kit",
-  "Bilge pumps (auto)",
-  "Fire suppression system",
   "CO detector",
   "Smoke detectors",
   "MOB system",
@@ -226,6 +254,12 @@ export const SAFETY_OPTIONS = [
   "Search light",
   "Horn",
   "Navigation lights",
+
+  // ✅ added (split pumps)
+  "Bilge pump (manual)",
+  "Bilge pump (electric)",
+  // Keep the existing generic one (some users expect it)
+  "Bilge pumps (auto)",
 ];
 
 export const CHARTER_INCLUDED_OPTIONS = [
