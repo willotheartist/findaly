@@ -9,6 +9,8 @@ import {
   Sparkles,
   ChevronRight,
   Heart,
+  Trash2,
+  MessageCircle,
 } from "lucide-react";
 
 import HomeHero from "@/components/home/HomeHero";
@@ -101,37 +103,103 @@ function SectionHeader({
   );
 }
 
-function CardRail({ items }: { items: Card[] }) {
+/** Shared “portal-style” listing card (used in rails + featured grid) */
+function ListingCard({ it }: { it: Card }) {
+  const splitMeta = (meta: string) => {
+    const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
+    if (parts.length <= 1) return { specs: meta, location: "" };
+    return {
+      specs: parts.slice(0, -1).join(" • "),
+      location: parts[parts.length - 1],
+    };
+  };
+
+  const { specs, location } = splitMeta(it.meta);
+
   return (
-    <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-      {items.map((it, idx) => (
-        <Link
-          key={it.href}
-          href={it.href}
-          className="group min-w-[300px] flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white no-underline shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-lg sm:min-w-0"
-          style={{ animationDelay: `${idx * 50}ms` }}
-        >
-          <div className="relative h-44 overflow-hidden bg-linear-to-br from-slate-100 to-slate-50">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgwLDAsMCwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50" />
+    <Link
+      href={it.href}
+      className="group overflow-hidden rounded-2xl bg-white no-underline shadow-sm ring-1 ring-slate-200/70 transition-all duration-300 hover:shadow-md hover:ring-slate-300"
+    >
+      {/* Image */}
+      <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+        {it.image ? (
+          <Image
+            src={it.image}
+            alt={it.title}
+            fill
+            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-linear-to-br from-slate-100 to-slate-50">
+            <div className="absolute inset-0 bg-[radial-gradient(600px_300px_at_30%_40%,rgba(0,0,0,0.06),transparent)]" />
             <div className="absolute inset-0 flex items-center justify-center">
               <Sailboat className="h-16 w-16 text-slate-200 transition-transform duration-500 group-hover:scale-110" />
             </div>
-            {it.badge ? (
-              <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm">
-                <Sparkles className="h-3 w-3 text-[#ff6a00]" />
-                {it.badge}
-              </div>
-            ) : null}
+          </div>
+        )}
+
+        {it.badge ? (
+          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
+            <Sparkles className="h-3 w-3 text-[#ff6a00]" />
+            {it.badge}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Body */}
+      <div className="px-4 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="text-[22px] font-semibold tracking-tight text-slate-900">
+            {it.price ?? "POA"}
           </div>
 
-          <div className="p-4">
-            <div className="text-[15px] font-semibold text-slate-900 transition-colors group-hover:text-[#ff6a00]">
-              {it.title}
+          <div className="flex items-center gap-2">
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+              <Trash2 className="h-4 w-4 text-slate-500" />
             </div>
-            <div className="mt-1 text-sm text-slate-500">{it.meta}</div>
-            {it.price ? <div className="mt-3 text-base font-bold text-slate-900">{it.price}</div> : null}
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+              <Heart className="h-4 w-4 text-slate-600" />
+            </div>
           </div>
-        </Link>
+        </div>
+
+        <div className="mt-1.5 text-sm text-slate-700">
+          {location ? location : <span className="text-slate-500">Location</span>}
+        </div>
+
+        <div className="mt-2 text-sm text-slate-500">{specs}</div>
+
+        <div className="mt-3 line-clamp-1 text-[15px] font-medium text-slate-900">
+          {it.title}
+        </div>
+      </div>
+
+      {/* Footer bar */}
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
+            F
+          </div>
+          <div className="truncate text-sm text-slate-500">Findaly</div>
+        </div>
+
+        <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+          <MessageCircle className="h-4 w-4 text-slate-600" />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function CardRail({ items }: { items: Card[] }) {
+  return (
+    <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
+      {items.map((it) => (
+        <div key={it.href} className="min-w-[320px] sm:min-w-0">
+          <ListingCard it={it} />
+        </div>
       ))}
     </div>
   );
@@ -192,37 +260,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured yachts — larger cards */}
+      {/* Featured yachts — NOW MATCHES THE SAME CARD STYLE */}
       <section className="w-full">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
           <SectionHeader title="Featured yachts" subtitle="Hand-picked highlights" href="/featured" />
-          <div className="grid gap-5 md:grid-cols-3">
-            {FEATURED.map((it, idx) => (
-              <Link
-                key={it.href}
-                href={it.href}
-                className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white no-underline shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-xl"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <div className="relative h-52 overflow-hidden bg-linear-to-br from-slate-100 via-slate-50 to-orange-50/30">
-                  <div className="absolute inset-0 bg-[radial-gradient(600px_300px_at_30%_40%,rgba(255,106,0,0.15),transparent)]" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Sailboat className="h-20 w-20 text-slate-200 transition-transform duration-500 group-hover:scale-110" />
-                  </div>
-                  <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm">
-                    <Sparkles className="h-3 w-3 text-[#ff6a00]" />
-                    {it.badge ?? "Featured"}
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  <div className="text-base font-semibold text-slate-900 transition-colors group-hover:text-[#ff6a00]">
-                    {it.title}
-                  </div>
-                  <div className="mt-1.5 text-sm text-slate-500">{it.meta}</div>
-                  {it.price ? <div className="mt-4 text-lg font-bold text-slate-900">{it.price}</div> : null}
-                </div>
-              </Link>
+          <div className="grid gap-6 md:grid-cols-3">
+            {FEATURED.map((it) => (
+              <ListingCard key={it.href} it={it} />
             ))}
           </div>
         </div>

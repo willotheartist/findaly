@@ -1,3 +1,4 @@
+//·components/Header.tsx
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -145,7 +146,10 @@ export default async function Header() {
   const avatarUrl = profile?.avatarUrl ?? null;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white">
+    <header
+      data-site-header="true"
+      className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white"
+    >
       <div className="h-px w-full bg-[#E9FF63]" />
 
       {/* Row 1 */}

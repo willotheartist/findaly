@@ -11,9 +11,8 @@ export const metadata = {
 };
 
 export default async function MyListingsPage() {
-  // ✅ IMPORTANT FIX:
-  // Middleware only guarantees "cookie exists".
-  // We must ensure the session token is valid in DB here.
+  // ✅ Middleware only guarantees cookie exists
+  // We must validate session token is valid in DB here
   const user = await getCurrentUser();
 
   if (!user) {

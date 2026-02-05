@@ -17,3 +17,12 @@ body {
   background: rgb(var(--bg));
   color: rgb(var(--fg));
 }
+
+:root {
+  --site-header-h: 112px;
+}
+
+html[data-header="compact"] {
+  --site-header-h: 64px;
+}
+

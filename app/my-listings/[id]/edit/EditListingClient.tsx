@@ -64,7 +64,6 @@ async function uploadSingleFile(file: File): Promise<string> {
 
   const res = await fetch("/api/upload", { method: "POST", body: fd });
 
-  // If Vercel returns 413/500 HTML, surface it
   const ct = res.headers.get("content-type") || "";
   const raw = await res.text().catch(() => "");
   const data = ct.includes("application/json") ? (JSON.parse(raw || "{}") as { url?: unknown; error?: unknown }) : {};
@@ -79,11 +78,6 @@ async function uploadSingleFile(file: File): Promise<string> {
   return String(data.url);
 }
 
-/**
- * Upload multiple files safely:
- * - One request per file (avoids Vercel multipart size limits)
- * - Small concurrency (fast but stable)
- */
 async function uploadMany(files: File[], concurrency = 3): Promise<string[]> {
   const out: string[] = new Array(files.length);
   let idx = 0;
@@ -99,11 +93,6 @@ async function uploadMany(files: File[], concurrency = 3): Promise<string[]> {
   return out;
 }
 
-/**
- * Single-page editor for listings.
- * - No stepper
- * - Photos: drag & drop + uploads to /api/upload (single-file) for stability on Vercel
- */
 export default function EditListingClient({
   listingId,
   initial,
@@ -188,8 +177,9 @@ export default function EditListingClient({
 
   return (
     <main className="min-h-screen w-full bg-slate-50">
+      {/* Sticky header */}
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
             onClick={() => router.back()}
@@ -223,21 +213,22 @@ export default function EditListingClient({
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+      {/* Content - consistent max-w-4xl */}
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit listing</h1>
-          <p className="mt-1 text-sm text-slate-600">Single-page edit — no steps, nothing gets wiped.</p>
+          <p className="mt-1 text-sm text-slate-600">Update your listing details below</p>
         </div>
 
         {error && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
-            <AlertTriangle className="mt-0.5 h-5 w-5" />
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
             <div className="text-sm font-medium">{error}</div>
           </div>
         )}
 
         <div className="space-y-6">
-          <FormSection title="Listing type">
+          {/* Title */}
           <FormSection title="Title">
             <Input
               label="Listing title"
@@ -249,6 +240,8 @@ export default function EditListingClient({
             />
           </FormSection>
 
+          {/* Listing type */}
+          <FormSection title="Listing type">
             <div className="grid gap-4 sm:grid-cols-2">
               <Select
                 label="Type"
@@ -276,16 +269,26 @@ export default function EditListingClient({
             </div>
           </FormSection>
 
-          <Step3Details listingType={listingType as ListingType} formData={formData} updateForm={updateForm} />
+          {/* Details - now wrapped in consistent container */}
+          <div className="rounded-2xl border border-slate-200 bg-white">
+            <Step3Details listingType={listingType as ListingType} formData={formData} updateForm={updateForm} />
+          </div>
 
+          {/* Features - consistent container */}
           {(listingType === "sale" || listingType === "charter") && (
-            <FormSection title="Features & equipment">
-              <Step4Features formData={formData} updateForm={updateForm} />
-            </FormSection>
+            <div className="rounded-2xl border border-slate-200 bg-white">
+              <FormSection title="Features & equipment">
+                <Step4Features formData={formData} updateForm={updateForm} />
+              </FormSection>
+            </div>
           )}
 
-          <Step5Location listingType={listingType as ListingType} formData={formData} updateForm={updateForm} />
+          {/* Location - consistent container */}
+          <div className="rounded-2xl border border-slate-200 bg-white">
+            <Step5Location listingType={listingType as ListingType} formData={formData} updateForm={updateForm} />
+          </div>
 
+          {/* Charter inclusions */}
           {listingType === "charter" && (
             <FormSection title="Charter inclusions">
               <CheckboxGroup
@@ -297,14 +300,14 @@ export default function EditListingClient({
               />
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Select
-                  label="Country (quick edit)"
+                  label="Country"
                   name="country"
                   value={safeString(formData.country)}
                   onChange={(v) => updateForm({ country: v })}
                   options={COUNTRIES}
                 />
                 <Select
-                  label="Currency (quick edit)"
+                  label="Currency"
                   name="currency"
                   value={safeString(formData.currency)}
                   onChange={(v) => updateForm({ currency: v as FormData["currency"] })}
@@ -314,6 +317,7 @@ export default function EditListingClient({
             </FormSection>
           )}
 
+          {/* Description */}
           <FormSection title="Description">
             <TextArea
               label="Listing description"
@@ -327,6 +331,7 @@ export default function EditListingClient({
             />
           </FormSection>
 
+          {/* Photos */}
           <FormSection title="Photos">
             <PhotoUploader
               photoUrls={photoUrls}
@@ -334,15 +339,12 @@ export default function EditListingClient({
               onAddFiles={async (files, previewUrls) => {
                 setError(null);
 
-                // 1) show previews immediately
                 const startIndex = photoUrls.length;
                 updateForm({ photoUrls: [...photoUrls, ...previewUrls] });
 
                 try {
-                  // 2) upload as single-file requests (stable)
                   const uploaded = await uploadMany(files, 3);
 
-                  // 3) swap previews with real urls (same positions)
                   setFormData((prev) => {
                     const urls = ensureStringArray(prev.photoUrls);
                     const next = [...urls];
@@ -357,7 +359,6 @@ export default function EditListingClient({
                   const msg = e instanceof Error ? e.message : "Upload failed";
                   setError(msg);
 
-                  // rollback previews
                   for (const p of previewUrls) safeRevoke(p);
 
                   setFormData((prev) => {
@@ -376,6 +377,7 @@ export default function EditListingClient({
             />
           </FormSection>
 
+          {/* Video & Virtual Tour */}
           <FormSection title="Video & Virtual Tour (Optional)">
             <div className="space-y-4">
               <Input
@@ -396,6 +398,7 @@ export default function EditListingClient({
             </div>
           </FormSection>
 
+          {/* Seller details */}
           <FormSection title="Seller details">
             <div className="grid gap-4 sm:grid-cols-2">
               <Select
@@ -408,19 +411,57 @@ export default function EditListingClient({
                   { value: "professional", label: "Professional" },
                 ]}
               />
-              <Input label="Seller name" name="sellerName" value={safeString(formData.sellerName)} onChange={(v) => updateForm({ sellerName: v })} placeholder="e.g., John Smith" />
-              <Input label="Company (optional)" name="sellerCompany" value={safeString(formData.sellerCompany)} onChange={(v) => updateForm({ sellerCompany: v })} placeholder="e.g., Riviera Yachts" />
-              <Input label="Email (optional)" name="sellerEmail" value={safeString(formData.sellerEmail)} onChange={(v) => updateForm({ sellerEmail: v })} placeholder="name@email.com" />
-              <Input label="Phone (optional)" name="sellerPhone" value={safeString(formData.sellerPhone)} onChange={(v) => updateForm({ sellerPhone: v })} placeholder="+33 ..." />
-              <Input label="Location (optional)" name="sellerLocation" value={safeString(formData.sellerLocation)} onChange={(v) => updateForm({ sellerLocation: v })} placeholder="e.g., Cannes" />
-              <Input label="Website (optional)" name="sellerWebsite" value={safeString(formData.sellerWebsite)} onChange={(v) => updateForm({ sellerWebsite: v })} placeholder="https://..." />
+              <Input
+                label="Seller name"
+                name="sellerName"
+                value={safeString(formData.sellerName)}
+                onChange={(v) => updateForm({ sellerName: v })}
+                placeholder="e.g., John Smith"
+              />
+              <Input
+                label="Company (optional)"
+                name="sellerCompany"
+                value={safeString(formData.sellerCompany)}
+                onChange={(v) => updateForm({ sellerCompany: v })}
+                placeholder="e.g., Riviera Yachts"
+              />
+              <Input
+                label="Email (optional)"
+                name="sellerEmail"
+                value={safeString(formData.sellerEmail)}
+                onChange={(v) => updateForm({ sellerEmail: v })}
+                placeholder="name@email.com"
+              />
+              <Input
+                label="Phone (optional)"
+                name="sellerPhone"
+                value={safeString(formData.sellerPhone)}
+                onChange={(v) => updateForm({ sellerPhone: v })}
+                placeholder="+33 ..."
+              />
+              <Input
+                label="Location (optional)"
+                name="sellerLocation"
+                value={safeString(formData.sellerLocation)}
+                onChange={(v) => updateForm({ sellerLocation: v })}
+                placeholder="e.g., Cannes"
+              />
+              <Input
+                label="Website (optional)"
+                name="sellerWebsite"
+                value={safeString(formData.sellerWebsite)}
+                onChange={(v) => updateForm({ sellerWebsite: v })}
+                placeholder="https://..."
+                className="sm:col-span-2"
+              />
             </div>
           </FormSection>
 
+          {/* Visibility & options */}
           <FormSection title="Visibility & options">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <label className="flex items-start gap-3">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={safeBool(formData.featured)}
@@ -429,13 +470,13 @@ export default function EditListingClient({
                   />
                   <div>
                     <div className="text-sm font-semibold text-slate-900">Featured</div>
-                    <div className="text-sm text-slate-500">Highlight this listing in search and discovery.</div>
+                    <div className="text-sm text-slate-500">Highlight in search results</div>
                   </div>
                 </label>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <label className="flex items-start gap-3">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={safeBool(formData.urgent)}
@@ -444,13 +485,13 @@ export default function EditListingClient({
                   />
                   <div>
                     <div className="text-sm font-semibold text-slate-900">Urgent</div>
-                    <div className="text-sm text-slate-500">Adds an “urgent” emphasis (if used in UI).</div>
+                    <div className="text-sm text-slate-500">Show urgent badge</div>
                   </div>
                 </label>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:col-span-2">
-                <label className="flex items-start gap-3">
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={safeBool(formData.acceptOffers)}
@@ -459,13 +500,14 @@ export default function EditListingClient({
                   />
                   <div>
                     <div className="text-sm font-semibold text-slate-900">Accept offers</div>
-                    <div className="text-sm text-slate-500">Indicates you’re open to offers (used later in UI).</div>
+                    <div className="text-sm text-slate-500">Open to price negotiations</div>
                   </div>
                 </label>
               </div>
             </div>
           </FormSection>
 
+          {/* Save button */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             {saveOk && (
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">

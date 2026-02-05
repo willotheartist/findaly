@@ -27,6 +27,8 @@ import {
   ExternalLink,
   Calendar,
   Anchor,
+  Loader2,
+  X,
 } from "lucide-react";
 
 type ListingRow = {
@@ -72,8 +74,6 @@ function formatPrice(currency: string | null, priceCents: number | null) {
   if (!priceCents || priceCents <= 0) return "Price on request";
   const value = priceCents / 100;
 
-  // Intl.NumberFormat requires a non-null currency code.
-  // Also avoid hardcoding locale so it respects user/browser locale.
   const safeCurrency: string = currency?.trim() || "EUR";
 
   try {
@@ -150,13 +150,165 @@ function getStatusConfig(status: string) {
   return STATUS_CONFIG[s] || STATUS_CONFIG.DRAFT;
 }
 
+function computeStats(listings: ListingRow[]): Stats {
+  return {
+    total: listings.length,
+    live: listings.filter((l) => String(l.status).toUpperCase() === "LIVE").length,
+    draft: listings.filter((l) => String(l.status).toUpperCase() === "DRAFT").length,
+    paused: listings.filter((l) => String(l.status).toUpperCase() === "PAUSED").length,
+    sold: listings.filter((l) => String(l.status).toUpperCase() === "SOLD").length,
+    featured: listings.filter((l) => !!l.featured).length,
+    totalInquiries: listings.reduce((sum, l) => sum + (l.inquiriesCount || 0), 0),
+  };
+}
+
+type ApiErrorResponse = {
+  error?: string;
+  missing?: string[];
+};
+
+async function apiPatchListingStatus(listingId: string, status: string) {
+  const res = await fetch(`/api/listings/${listingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  const data = (await res.json().catch(() => ({}))) as ApiErrorResponse;
+  if (!res.ok) {
+    const err = new Error(data?.error || "Failed to update listing status") as Error & {
+      code?: string;
+      missing?: string[];
+      raw?: ApiErrorResponse;
+    };
+    err.code = data?.error;
+    err.missing = Array.isArray(data?.missing) ? data.missing : undefined;
+    err.raw = data;
+    throw err;
+  }
+  return data as { ok: true; status: string };
+}
+
+async function apiDeleteListing(listingId: string) {
+  const res = await fetch(`/api/listings/${listingId}`, { method: "DELETE" });
+  const data = (await res.json().catch(() => ({}))) as ApiErrorResponse;
+  if (!res.ok) throw new Error(data?.error || "Failed to delete listing");
+  return data as { ok: true };
+}
+
+function ConfirmDeleteModal({
+  open,
+  listing,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  listing: ListingRow | null;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  React.useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    if (open) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open || !listing) return null;
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/30"
+        onClick={busy ? undefined : onClose}
+        aria-label="Close"
+      />
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-black/10">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">Delete listing</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              This will permanently remove it from Findaly.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={busy ? undefined : onClose}
+            className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <div className="rounded-xl border border-rose-100 bg-rose-50 p-4">
+            <div className="text-sm font-semibold text-slate-900">
+              {listing.title || "Untitled listing"}
+            </div>
+            <div className="mt-1 text-xs text-slate-600">
+              {[
+                listing.brand,
+                listing.model,
+                listing.year ? String(listing.year) : null,
+                listing.location,
+                listing.country,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={busy}
+              className={cx(
+                "inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50",
+                busy && "cursor-not-allowed opacity-60"
+              )}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={busy}
+              className={cx(
+                "inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700",
+                busy && "cursor-not-allowed opacity-80"
+              )}
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Dropdown menu component
 function ListingMenu({
   listing,
   onClose,
+  onPauseToggle,
+  onDelete,
+  onDuplicate,
+  busy,
 }: {
   listing: ListingRow;
   onClose: () => void;
+  onPauseToggle: (listing: ListingRow) => void;
+  onDelete: (listing: ListingRow) => void;
+  onDuplicate: (listing: ListingRow) => void;
+  busy: boolean;
 }) {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -171,6 +323,8 @@ function ListingMenu({
   }, [onClose]);
 
   const viewHref = listing.slug ? `/buy/${listing.slug}` : null;
+  const isLive = String(listing.status).toUpperCase() === "LIVE";
+  const isPaused = String(listing.status).toUpperCase() === "PAUSED";
 
   return (
     <div
@@ -196,38 +350,57 @@ function ListingMenu({
           <Pencil className="h-4 w-4 text-slate-400" />
           Edit listing
         </Link>
+
         <button
           type="button"
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
-          onClick={onClose}
+          disabled={busy}
+          className={cx(
+            "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50",
+            busy && "cursor-not-allowed opacity-60"
+          )}
+          onClick={() => {
+            onClose();
+            onDuplicate(listing);
+          }}
         >
           <Copy className="h-4 w-4 text-slate-400" />
           Duplicate
         </button>
+
         <div className="my-1.5 h-px bg-slate-100" />
-        {listing.status === "LIVE" ? (
+
+        {(isLive || isPaused) && (
           <button
             type="button"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-amber-600 transition-colors hover:bg-amber-50"
-            onClick={onClose}
+            disabled={busy}
+            className={cx(
+              "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+              isLive
+                ? "text-amber-600 hover:bg-amber-50"
+                : "text-emerald-600 hover:bg-emerald-50",
+              busy && "cursor-not-allowed opacity-60"
+            )}
+            onClick={() => {
+              onClose();
+              onPauseToggle(listing);
+            }}
           >
-            <Pause className="h-4 w-4" />
-            Pause listing
+            {isLive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {isLive ? "Pause listing" : "Reactivate"}
           </button>
-        ) : listing.status === "PAUSED" ? (
-          <button
-            type="button"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-emerald-600 transition-colors hover:bg-emerald-50"
-            onClick={onClose}
-          >
-            <Play className="h-4 w-4" />
-            Reactivate
-          </button>
-        ) : null}
+        )}
+
         <button
           type="button"
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-rose-600 transition-colors hover:bg-rose-50"
-          onClick={onClose}
+          disabled={busy}
+          className={cx(
+            "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-rose-600 transition-colors hover:bg-rose-50",
+            busy && "cursor-not-allowed opacity-60"
+          )}
+          onClick={() => {
+            onClose();
+            onDelete(listing);
+          }}
         >
           <Trash2 className="h-4 w-4" />
           Delete
@@ -241,9 +414,17 @@ function ListingMenu({
 function ListingCard({
   listing,
   viewMode,
+  onPauseToggle,
+  onDelete,
+  onDuplicate,
+  busy,
 }: {
   listing: ListingRow;
   viewMode: "grid" | "list";
+  onPauseToggle: (listing: ListingRow) => void;
+  onDelete: (listing: ListingRow) => void;
+  onDuplicate: (listing: ListingRow) => void;
+  busy: boolean;
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const statusConfig = getStatusConfig(listing.status);
@@ -253,9 +434,9 @@ function ListingCard({
 
   if (viewMode === "grid") {
     return (
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50">
-        {/* Image */}
-        <div className="relative aspect-4/3 overflow-hidden bg-linear-to-br from-slate-100 to-slate-50">
+      <div className="group relative rounded-2xl border border-slate-200 bg-white transition-all duration-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50">
+        {/* Image with overflow hidden */}
+        <div className="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-linear-to-br from-slate-100 to-slate-50">
           {listing.thumbnailUrl ? (
             <Image
               src={listing.thumbnailUrl}
@@ -282,9 +463,7 @@ function ListingCard({
                 statusConfig.border
               )}
             >
-              <span
-                className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)}
-              />
+              <span className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)} />
               {statusConfig.label}
             </div>
           </div>
@@ -326,24 +505,33 @@ function ListingCard({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content - NO overflow hidden here */}
         <div className="p-4">
           {/* Title & menu */}
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-1 text-sm font-semibold text-slate-900">
               {listing.title || "Untitled listing"}
             </h3>
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 type="button"
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                className={cx(
+                  "rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600",
+                  busy && "opacity-60"
+                )}
+                disabled={busy}
+                aria-label="Listing actions"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
               </button>
               {menuOpen && (
                 <ListingMenu
                   listing={listing}
+                  busy={busy}
+                  onPauseToggle={onPauseToggle}
+                  onDelete={onDelete}
+                  onDuplicate={onDuplicate}
                   onClose={() => setMenuOpen(false)}
                 />
               )}
@@ -411,12 +599,7 @@ function ListingCard({
         )}
         {/* Status dot */}
         <div className="absolute bottom-2 left-2">
-          <span
-            className={cx(
-              "inline-flex h-5 w-5 items-center justify-center rounded-full",
-              statusConfig.bg
-            )}
-          >
+          <span className={cx("inline-flex h-5 w-5 items-center justify-center rounded-full", statusConfig.bg)}>
             <StatusIcon className="h-3 w-3 text-white" />
           </span>
         </div>
@@ -460,9 +643,7 @@ function ListingCard({
               statusConfig.border
             )}
           >
-            <span
-              className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)}
-            />
+            <span className={cx("h-1.5 w-1.5 rounded-full", statusConfig.dot)} />
             {statusConfig.label}
           </div>
         </div>
@@ -472,9 +653,7 @@ function ListingCard({
           {(listing.year || listing.lengthM) && (
             <span className="inline-flex items-center gap-1">
               <Anchor className="h-3 w-3" />
-              {[listing.year, listing.lengthM ? `${listing.lengthM}m` : null]
-                .filter(Boolean)
-                .join(" · ")}
+              {[listing.year, listing.lengthM ? `${listing.lengthM}m` : null].filter(Boolean).join(" · ")}
             </span>
           )}
           {(listing.location || listing.country) && (
@@ -526,12 +705,24 @@ function ListingCard({
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-lg border border-slate-200 p-2 text-slate-400 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600"
+            className={cx(
+              "rounded-lg border border-slate-200 p-2 text-slate-400 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600",
+              busy && "opacity-60"
+            )}
+            disabled={busy}
+            aria-label="Listing actions"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
           </button>
           {menuOpen && (
-            <ListingMenu listing={listing} onClose={() => setMenuOpen(false)} />
+            <ListingMenu
+              listing={listing}
+              busy={busy}
+              onPauseToggle={onPauseToggle}
+              onDelete={onDelete}
+              onDuplicate={onDuplicate}
+              onClose={() => setMenuOpen(false)}
+            />
           )}
         </div>
       </div>
@@ -548,18 +739,134 @@ export default function MyListingsClient({
   stats: Stats;
   profileSlug: string;
 }) {
+  // Local state so we can optimistically update status/delete
+  const [rows, setRows] = React.useState<ListingRow[]>(listings);
+  const [localStats, setLocalStats] = React.useState<Stats>(stats);
+
+  // per-listing in-flight flags
+  const [busyById, setBusyById] = React.useState<Record<string, boolean>>({});
+
+  // delete modal
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<ListingRow | null>(null);
+  const [deleteBusy, setDeleteBusy] = React.useState(false);
+
   const [q, setQ] = React.useState("");
-  const [filter, setFilter] = React.useState<
-    "ALL" | "LIVE" | "DRAFT" | "PAUSED" | "SOLD"
-  >("ALL");
+  const [filter, setFilter] = React.useState<"ALL" | "LIVE" | "DRAFT" | "PAUSED" | "SOLD">("ALL");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+
+  // If parent props ever change, keep in sync (rare, but safe)
+  React.useEffect(() => {
+    setRows(listings);
+    setLocalStats(stats);
+  }, [listings, stats]);
+
+  const setBusy = React.useCallback((id: string, val: boolean) => {
+    setBusyById((prev) => ({ ...prev, [id]: val }));
+  }, []);
+
+  const refreshStatsFromRows = React.useCallback((nextRows: ListingRow[]) => {
+    setLocalStats(computeStats(nextRows));
+  }, []);
+
+  const onPauseToggle = React.useCallback(
+    async (listing: ListingRow) => {
+      const current = String(listing.status).toUpperCase();
+      const next = current === "LIVE" ? "PAUSED" : current === "PAUSED" ? "LIVE" : null;
+      if (!next) return;
+
+      setBusy(listing.id, true);
+
+      // optimistic
+      setRows((prev) => {
+        const nextRows = prev.map((r) =>
+          r.id === listing.id ? { ...r, status: next, updatedAt: new Date().toISOString() } : r
+        );
+        refreshStatsFromRows(nextRows);
+        return nextRows;
+      });
+
+      try {
+        const result = await apiPatchListingStatus(listing.id, next);
+
+        // trust server returned status (esp. if server normalizes)
+        setRows((prev) => {
+          const nextRows = prev.map((r) =>
+            r.id === listing.id
+              ? { ...r, status: result.status, updatedAt: new Date().toISOString() }
+              : r
+          );
+          refreshStatsFromRows(nextRows);
+          return nextRows;
+        });
+      } catch (e) {
+        const error = e as Error & { code?: string; missing?: string[] };
+        // revert on error
+        setRows((prev) => {
+          const nextRows = prev.map((r) =>
+            r.id === listing.id ? { ...r, status: listing.status } : r
+          );
+          refreshStatsFromRows(nextRows);
+          return nextRows;
+        });
+
+        // special case: publishing blocked
+        if (error.code === "LISTING_INCOMPLETE" && Array.isArray(error.missing)) {
+          alert(
+            `This listing can't go Live yet.\n\nMissing: ${error.missing.join(", ")}\n\nOpen Edit listing to complete it.`
+          );
+        } else {
+          alert(error.message || "Failed to update listing");
+        }
+      } finally {
+        setBusy(listing.id, false);
+      }
+    },
+    [refreshStatsFromRows, setBusy]
+  );
+
+  const onRequestDelete = React.useCallback((listing: ListingRow) => {
+    setDeleteTarget(listing);
+    setDeleteOpen(true);
+  }, []);
+
+  const onConfirmDelete = React.useCallback(async () => {
+    if (!deleteTarget) return;
+
+    setDeleteBusy(true);
+    setBusy(deleteTarget.id, true);
+
+    try {
+      await apiDeleteListing(deleteTarget.id);
+
+      setRows((prev) => {
+        const nextRows = prev.filter((r) => r.id !== deleteTarget.id);
+        refreshStatsFromRows(nextRows);
+        return nextRows;
+      });
+
+      setDeleteOpen(false);
+      setDeleteTarget(null);
+    } catch (e) {
+      const error = e as Error;
+      alert(error.message || "Failed to delete listing");
+    } finally {
+      setDeleteBusy(false);
+      setBusy(deleteTarget.id, false);
+    }
+  }, [deleteTarget, refreshStatsFromRows, setBusy]);
+
+  const onDuplicate = React.useCallback(() => {
+    // No duplicate endpoint yet — keep it lightweight and honest.
+    // When you want: we can implement POST /api/listings/[id]/duplicate.
+    alert("Duplicate isn't wired yet. If you want it, I'll add a duplicate endpoint + UI.");
+  }, []);
 
   const filtered = React.useMemo(() => {
     const query = q.trim().toLowerCase();
 
-    return listings.filter((l) => {
-      if (filter !== "ALL" && String(l.status).toUpperCase() !== filter)
-        return false;
+    return rows.filter((l) => {
+      if (filter !== "ALL" && String(l.status).toUpperCase() !== filter) return false;
 
       if (!query) return true;
       const hay = [
@@ -578,21 +885,33 @@ export default function MyListingsClient({
 
       return hay.includes(query);
     });
-  }, [listings, q, filter]);
+  }, [rows, q, filter]);
 
   const filterCounts = React.useMemo(
     () => ({
-      ALL: listings.length,
-      LIVE: stats.live,
-      DRAFT: stats.draft,
-      PAUSED: stats.paused,
-      SOLD: stats.sold,
+      ALL: rows.length,
+      LIVE: localStats.live,
+      DRAFT: localStats.draft,
+      PAUSED: localStats.paused,
+      SOLD: localStats.sold,
     }),
-    [listings.length, stats]
+    [rows.length, localStats]
   );
 
   return (
     <main className="min-h-screen bg-[#fafafa]">
+      <ConfirmDeleteModal
+        open={deleteOpen}
+        listing={deleteTarget}
+        busy={deleteBusy}
+        onClose={() => {
+          if (deleteBusy) return;
+          setDeleteOpen(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={onConfirmDelete}
+      />
+
       {/* Header section */}
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -622,9 +941,7 @@ export default function MyListingsClient({
                   <Sailboat className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.total}
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.total}</div>
                   <div className="text-xs font-medium text-slate-500">Total</div>
                 </div>
               </div>
@@ -636,12 +953,8 @@ export default function MyListingsClient({
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.live}
-                  </div>
-                  <div className="text-xs font-medium text-emerald-600">
-                    Live
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.live}</div>
+                  <div className="text-xs font-medium text-emerald-600">Live</div>
                 </div>
               </div>
             </div>
@@ -652,12 +965,8 @@ export default function MyListingsClient({
                   <Clock className="h-5 w-5 text-slate-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.draft}
-                  </div>
-                  <div className="text-xs font-medium text-slate-500">
-                    Drafts
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.draft}</div>
+                  <div className="text-xs font-medium text-slate-500">Drafts</div>
                 </div>
               </div>
             </div>
@@ -668,12 +977,8 @@ export default function MyListingsClient({
                   <Pause className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.paused}
-                  </div>
-                  <div className="text-xs font-medium text-slate-500">
-                    Paused
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.paused}</div>
+                  <div className="text-xs font-medium text-slate-500">Paused</div>
                 </div>
               </div>
             </div>
@@ -684,9 +989,7 @@ export default function MyListingsClient({
                   <Archive className="h-5 w-5 text-rose-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.sold}
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.sold}</div>
                   <div className="text-xs font-medium text-slate-500">Sold</div>
                 </div>
               </div>
@@ -698,12 +1001,8 @@ export default function MyListingsClient({
                   <MessageCircle className="h-5 w-5 text-[#ff6a00]" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {stats.totalInquiries}
-                  </div>
-                  <div className="text-xs font-medium text-[#ff6a00]">
-                    Inquiries
-                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{localStats.totalInquiries}</div>
+                  <div className="text-xs font-medium text-[#ff6a00]">Inquiries</div>
                 </div>
               </div>
             </div>
@@ -800,9 +1099,7 @@ export default function MyListingsClient({
               No listings found
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              {q
-                ? "Try adjusting your search or filters"
-                : "Get started by creating your first listing"}
+              {q ? "Try adjusting your search or filters" : "Get started by creating your first listing"}
             </p>
             <Link
               href="/add-listing"
@@ -815,13 +1112,29 @@ export default function MyListingsClient({
         ) : viewMode === "grid" ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} viewMode="grid" />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                viewMode="grid"
+                onPauseToggle={onPauseToggle}
+                onDelete={onRequestDelete}
+                onDuplicate={onDuplicate}
+                busy={!!busyById[listing.id]}
+              />
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} viewMode="list" />
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                viewMode="list"
+                onPauseToggle={onPauseToggle}
+                onDelete={onRequestDelete}
+                onDuplicate={onDuplicate}
+                busy={!!busyById[listing.id]}
+              />
             ))}
           </div>
         )}
@@ -829,7 +1142,7 @@ export default function MyListingsClient({
         {/* Footer */}
         <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
           <p className="text-sm text-slate-500">
-            Showing {filtered.length} of {listings.length} listings
+            Showing {filtered.length} of {rows.length} listings
           </p>
           <p className="text-xs text-slate-400">
             Signed in as{" "}

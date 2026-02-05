@@ -699,7 +699,7 @@ export default function BuyPageClient({
       )}
 
       {/* Sticky filter bar */}
-      <div className="sticky top-16 z-30 w-full border-b border-slate-200 bg-white">
+      <div className="sticky top-[var(--site-header-h)] z-30 w-full border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           {/* Search bar */}
           <div className="mb-3">

@@ -229,7 +229,7 @@ function validateForPublish(effective: {
  * without writing to DB first. This lets us block publishing before update.
  */
 function effectiveValue<T>(body: Incoming, key: string, fallback: T): T {
-  if (Object.prototype.hasOwnProperty.call(body, key)) return (body as any)[key] as T;
+  if (Object.prototype.hasOwnProperty.call(body, key)) return body[key] as T;
   return fallback;
 }
 
@@ -295,8 +295,8 @@ export async function PATCH(
     // 🔒 Block publishing unless required fields are present
     if (newStatus === "LIVE") {
       const missing = validateForPublish({
-        kind: listing.kind as any,
-        intent: listing.intent as any,
+        kind: listing.kind as "VESSEL" | "PARTS" | "SERVICES",
+        intent: listing.intent as "SALE" | "CHARTER",
         title: listing.title,
         brand: listing.brand,
         model: listing.model,
@@ -386,7 +386,7 @@ export async function PATCH(
         listing.charterPricePeriod ??
         null,
 
-      sellerType: sellerTypeOrNull(effectiveValue(body, "sellerType", (listing.sellerType as any) ?? "private")) ?? listing.sellerType,
+      sellerType: sellerTypeOrNull(effectiveValue(body, "sellerType", listing.sellerType ?? "PRIVATE")) ?? listing.sellerType,
       sellerName: s(effectiveValue(body, "sellerName", listing.sellerName ?? "")) || listing.sellerName || null,
       sellerCompany: s(effectiveValue(body, "sellerCompany", listing.sellerCompany ?? "")) || listing.sellerCompany || null,
       sellerEmail: s(effectiveValue(body, "sellerEmail", listing.sellerEmail ?? "")) || listing.sellerEmail || null,
