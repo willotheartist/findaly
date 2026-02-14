@@ -26,6 +26,22 @@ import {
   Loader2,
 } from "lucide-react";
 
+/* ─── palette (match ListingPageClient) ─── */
+const P = {
+  dark: "#0a211f",
+  accent: "#fff86c",
+  text: "#1a1a1a",
+  sub: "#555",
+  muted: "#999",
+  light: "#ccc",
+  line: "#e5e5e5",
+  faint: "#f5f5f4",
+  white: "#fff",
+  green: "#1a7a5c",
+  rose: "#d94059",
+  blue: "#2196F3",
+} as const;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -146,7 +162,7 @@ function cx(...classes: (string | false | null | undefined)[]) {
 
 function formatPrice(cents: number | null, currency: string = "EUR"): string {
   if (cents === null) return "POA";
-  return new Intl.NumberFormat("en-EU", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
@@ -173,13 +189,24 @@ function getRelativeTime(dateStr: string): string {
 function Badge({ featured }: { featured: boolean }) {
   if (!featured) return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+    <span
+      className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium"
+      style={{
+        borderColor: "rgba(10,33,31,.16)",
+        backgroundColor: P.accent,
+        color: P.dark,
+      }}
+    >
       <Sparkles className="h-3 w-3" />
       Featured
     </span>
   );
 }
 
+/**
+ * Flat, rectangular filter button (no pills, no shadows, no green fills).
+ * Light bg, dark text, simple border. Active = slightly darker border + subtle bg.
+ */
 function FilterPill({
   label,
   active,
@@ -191,19 +218,27 @@ function FilterPill({
   onClick: () => void;
   hasValue?: boolean;
 }) {
+  const on = !!(active || hasValue);
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={cx(
-        "inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
-        active || hasValue
-          ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+        "inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors"
       )}
+      style={{
+        borderColor: on ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+        backgroundColor: on ? "rgba(0,0,0,.03)" : P.white,
+        color: P.text,
+        fontWeight: 400,
+      }}
     >
-      {label}
-      <ChevronDown className={cx("h-4 w-4 transition-transform", active && "rotate-180")} />
+      <span className="truncate">{label}</span>
+      <ChevronDown
+        className={cx("h-4 w-4 transition-transform", active && "rotate-180")}
+        style={{ color: "rgba(0,0,0,.55)" }}
+      />
     </button>
   );
 }
@@ -227,15 +262,25 @@ function FilterDropdown({
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className={cx(
-          "absolute left-0 top-full z-50 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl",
-          width
-        )}
+        className={cx("absolute left-0 top-full z-50 mt-2 rounded-md border p-4", width)}
+        style={{
+          borderColor: "rgba(0,0,0,.14)",
+          backgroundColor: P.white,
+        }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-semibold text-slate-900">{title}</span>
-          <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-slate-100">
-            <X className="h-4 w-4 text-slate-500" />
+          <span className="text-sm" style={{ color: P.text, fontWeight: 500 }}>
+            {title}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 transition-colors"
+            style={{ color: "rgba(0,0,0,.55)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.04)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
         {children}
@@ -252,9 +297,15 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
     return (
       <Link
         href={`/buy/${listing.slug}`}
-        className="group overflow-hidden rounded-xl border border-slate-200 bg-white no-underline transition-all hover:border-slate-300 hover:shadow-lg"
+        className="group overflow-hidden rounded-2xl border bg-white no-underline transition-all hover:shadow-lg"
+        style={{ borderColor: "rgba(0,0,0,.10)" }}
       >
-        <div className="relative aspect-4/3 bg-linear-to-br from-slate-100 to-slate-50">
+        <div
+          className="relative aspect-4/3"
+          style={{
+            background: `linear-gradient(135deg, ${P.faint} 0%, rgba(245,245,244,.6) 100%)`,
+          }}
+        >
           {listing.thumbnailUrl ? (
             <img
               src={listing.thumbnailUrl}
@@ -263,43 +314,56 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Sailboat className="h-12 w-12 text-slate-200" />
+              <Sailboat className="h-12 w-12" style={{ color: "rgba(0,0,0,.12)" }} />
             </div>
           )}
+
           {listing.featured && (
             <div className="absolute left-3 top-3">
               <Badge featured={listing.featured} />
             </div>
           )}
+
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               setIsSaved(!isSaved);
             }}
-            className="absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-white"
+            className="absolute right-3 top-3 rounded-full p-2 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
+            style={{
+              backgroundColor: "rgba(255,255,255,.88)",
+              border: "1px solid rgba(0,0,0,.10)",
+            }}
           >
             <Heart
-              className={cx("h-4 w-4", isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600")}
+              className={cx("h-4 w-4", isSaved ? "fill-current" : "")}
+              style={{ color: isSaved ? P.rose : "rgba(0,0,0,.55)" }}
             />
           </button>
         </div>
+
         <div className="p-4">
-          <div className="line-clamp-2 text-base font-semibold text-slate-900 group-hover:text-[#ff6a00]">
-            {listing.title}
+          <div className="line-clamp-2 text-base font-semibold transition-colors" style={{ color: P.text }}>
+            <span className="group-hover:underline" style={{ textDecorationColor: "rgba(26,122,92,.35)" }}>
+              {listing.title}
+            </span>
           </div>
-          <div className="mt-1 text-sm text-slate-500">
-            {listing.lengthFt ? `${listing.lengthFt} ft` : ""}{" "}
-            {listing.year ? `• ${listing.year}` : ""}{" "}
-            {listing.location ? `• ${listing.location}` : ""}
+
+          <div className="mt-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+            {listing.lengthFt ? `${listing.lengthFt} ft` : ""}
+            {listing.year ? ` • ${listing.year}` : ""}
+            {listing.location ? ` • ${listing.location}` : ""}
           </div>
-          <div className="mt-3 text-lg font-bold text-slate-900">
+
+          <div className="mt-3 text-lg font-semibold" style={{ color: P.text }}>
             {formatPrice(listing.priceCents, listing.currency)}
           </div>
-          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+
+          <div className="mt-2 flex items-center gap-2 text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
             {isPro ? <Building2 className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
             <span className="truncate">{listing.seller.name}</span>
-            {listing.seller.isVerified && <Shield className="h-3.5 w-3.5 text-emerald-500" />}
+            {listing.seller.isVerified && <Shield className="h-3.5 w-3.5" style={{ color: P.green }} />}
           </div>
         </div>
       </Link>
@@ -310,10 +374,17 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
   return (
     <Link
       href={`/buy/${listing.slug}`}
-      className="group flex gap-4 overflow-hidden rounded-xl border border-slate-200 bg-white p-3 no-underline transition-all hover:border-slate-300 hover:shadow-lg sm:gap-5 sm:p-4"
+      className="group flex gap-4 overflow-hidden rounded-2xl border bg-white p-3 no-underline transition-all hover:shadow-lg sm:gap-5 sm:p-4"
+      style={{ borderColor: "rgba(0,0,0,.10)" }}
     >
       {/* Image */}
-      <div className="relative h-32 w-44 shrink-0 overflow-hidden rounded-lg bg-linear-to-br from-slate-100 to-slate-50 sm:h-40 sm:w-56">
+      <div
+        className="relative h-32 w-44 shrink-0 overflow-hidden rounded-xl sm:h-40 sm:w-56"
+        style={{
+          background: `linear-gradient(135deg, ${P.faint} 0%, rgba(245,245,244,.6) 100%)`,
+          border: "1px solid rgba(0,0,0,.08)",
+        }}
+      >
         {listing.thumbnailUrl ? (
           <img
             src={listing.thumbnailUrl}
@@ -322,24 +393,31 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Sailboat className="h-12 w-12 text-slate-200" />
+            <Sailboat className="h-12 w-12" style={{ color: "rgba(0,0,0,.12)" }} />
           </div>
         )}
+
         {listing.featured && (
           <div className="absolute left-2 top-2">
             <Badge featured={listing.featured} />
           </div>
         )}
+
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             setIsSaved(!isSaved);
           }}
-          className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:bg-white"
+          className="absolute right-2 top-2 rounded-full p-1.5 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
+          style={{
+            backgroundColor: "rgba(255,255,255,.88)",
+            border: "1px solid rgba(0,0,0,.10)",
+          }}
         >
           <Heart
-            className={cx("h-4 w-4", isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600")}
+            className={cx("h-4 w-4", isSaved ? "fill-current" : "")}
+            style={{ color: isSaved ? P.rose : "rgba(0,0,0,.55)" }}
           />
         </button>
       </div>
@@ -348,56 +426,82 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
       <div className="flex min-w-0 flex-1 flex-col py-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="line-clamp-1 text-base font-semibold text-slate-900 group-hover:text-[#ff6a00] sm:text-lg">
+            <h3 className="line-clamp-1 text-base font-semibold sm:text-lg" style={{ color: P.text }}>
               {listing.title}
             </h3>
-            <div className="mt-1 flex items-center gap-1 text-base font-bold text-[#ff6a00] sm:text-lg">
-              {formatPrice(listing.priceCents, listing.currency)}
+
+            <div className="mt-1 flex items-center gap-2 text-base sm:text-lg">
+              <span className="font-semibold" style={{ color: P.text }}>
+                {formatPrice(listing.priceCents, listing.currency)}
+              </span>
               {listing.priceType === "NEGOTIABLE" && (
-                <span className="ml-2 text-xs font-medium text-slate-500">Negotiable</span>
+                <span
+                  className="rounded-md px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,.03)",
+                    color: P.text,
+                    border: "1px solid rgba(0,0,0,.14)",
+                    fontWeight: 400,
+                  }}
+                >
+                  Negotiable
+                </span>
               )}
             </div>
           </div>
-          <span className="shrink-0 text-xs text-slate-400">{getRelativeTime(listing.createdAt)}</span>
+
+          <span className="shrink-0 text-xs" style={{ color: "rgba(0,0,0,.35)" }}>
+            {getRelativeTime(listing.createdAt)}
+          </span>
         </div>
 
         {/* Specs row */}
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ color: "rgba(0,0,0,.62)" }}>
           {listing.year && (
             <div className="flex items-center gap-1">
-              <span className="text-slate-400">Year</span>
-              <span className="font-medium text-slate-900">{listing.year}</span>
+              <span style={{ color: "rgba(0,0,0,.38)" }}>Year</span>
+              <span className="font-medium" style={{ color: P.text }}>
+                {listing.year}
+              </span>
             </div>
           )}
           {listing.lengthFt && (
             <div className="flex items-center gap-1">
-              <span className="text-slate-400">Length</span>
-              <span className="font-medium text-slate-900">{listing.lengthFt} ft</span>
+              <span style={{ color: "rgba(0,0,0,.38)" }}>Length</span>
+              <span className="font-medium" style={{ color: P.text }}>
+                {listing.lengthFt} ft
+              </span>
             </div>
           )}
           {listing.boatCategory && (
             <div className="flex items-center gap-1">
-              <span className="text-slate-400">Type</span>
-              <span className="font-medium text-slate-900">{listing.boatCategory}</span>
+              <span style={{ color: "rgba(0,0,0,.38)" }}>Type</span>
+              <span className="font-medium" style={{ color: P.text }}>
+                {listing.boatCategory}
+              </span>
             </div>
           )}
           {listing.cabins && (
             <div className="flex items-center gap-1">
-              <span className="text-slate-400">Cabins</span>
-              <span className="font-medium text-slate-900">{listing.cabins}</span>
+              <span style={{ color: "rgba(0,0,0,.38)" }}>Cabins</span>
+              <span className="font-medium" style={{ color: P.text }}>
+                {listing.cabins}
+              </span>
             </div>
           )}
           {listing.engineHours && (
             <div className="flex items-center gap-1">
-              <span className="text-slate-400">Engine</span>
-              <span className="font-medium text-slate-900">{listing.engineHours} hrs</span>
+              <span style={{ color: "rgba(0,0,0,.38)" }}>Engine</span>
+              <span className="font-medium" style={{ color: P.text }}>
+                {listing.engineHours} hrs
+              </span>
             </div>
           )}
         </div>
 
         {/* Location */}
         {listing.location && (
-          <div className="mt-2 flex items-center gap-1 text-sm text-slate-500">
+          <div className="mt-2 flex items-center gap-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
             <MapPin className="h-3.5 w-3.5" />
             {listing.location}
             {listing.country && `, ${listing.country}`}
@@ -406,27 +510,42 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
 
         {/* Seller info */}
         <div className="mt-auto flex items-center gap-3 pt-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-full"
+            style={{ backgroundColor: P.faint, border: "1px solid rgba(0,0,0,.10)" }}
+          >
             {isPro ? (
-              <Building2 className="h-4 w-4 text-slate-600" />
+              <Building2 className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
             ) : (
-              <User className="h-4 w-4 text-slate-600" />
+              <User className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
             )}
           </div>
+
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-medium text-slate-900">
+              <span className="truncate text-sm font-medium" style={{ color: P.text }}>
                 {listing.seller.name}
               </span>
               {isPro && (
-                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
-                  Pro
+                <span
+                  className="rounded-md px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,.03)",
+                    color: P.text,
+                    border: "1px solid rgba(0,0,0,.14)",
+                    fontWeight: 500,
+                  }}
+                >
+                  PRO
                 </span>
               )}
-              {listing.seller.isVerified && <Shield className="h-3.5 w-3.5 text-emerald-500" />}
+              {listing.seller.isVerified && <Shield className="h-3.5 w-3.5" style={{ color: P.green }} />}
             </div>
+
             {listing.seller.location && (
-              <div className="text-xs text-slate-500">{listing.seller.location}</div>
+              <div className="text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
+                {listing.seller.location}
+              </div>
             )}
           </div>
         </div>
@@ -447,18 +566,18 @@ function Pagination({
   if (totalPages <= 1) return null;
 
   const pages: (number | "...")[] = [];
-  
+
   if (totalPages <= 7) {
     for (let i = 1; i <= totalPages; i++) pages.push(i);
   } else {
     pages.push(1);
     if (currentPage > 3) pages.push("...");
-    
+
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
-    
+
     for (let i = start; i <= end; i++) pages.push(i);
-    
+
     if (currentPage < totalPages - 2) pages.push("...");
     pages.push(totalPages);
   }
@@ -469,14 +588,15 @@ function Pagination({
         type="button"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-10 w-10 items-center justify-center rounded-md border bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        style={{ borderColor: "rgba(0,0,0,.14)", color: "rgba(0,0,0,.65)" }}
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
 
       {pages.map((page, i) =>
         page === "..." ? (
-          <span key={`dots-${i}`} className="px-2 text-slate-400">
+          <span key={`dots-${i}`} className="px-2" style={{ color: "rgba(0,0,0,.35)" }}>
             ...
           </span>
         ) : (
@@ -484,12 +604,12 @@ function Pagination({
             key={page}
             type="button"
             onClick={() => onPageChange(page)}
-            className={cx(
-              "flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium transition-colors",
+            className="flex h-10 w-10 items-center justify-center rounded-md text-sm transition-colors"
+            style={
               page === currentPage
-                ? "bg-[#ff6a00] text-white"
-                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            )}
+                ? { backgroundColor: "rgba(0,0,0,.06)", color: P.text, border: "1px solid rgba(0,0,0,.22)", fontWeight: 500 }
+                : { border: "1px solid rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text, fontWeight: 400 }
+            }
           >
             {page}
           </button>
@@ -500,7 +620,8 @@ function Pagination({
         type="button"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-10 w-10 items-center justify-center rounded-md border bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        style={{ borderColor: "rgba(0,0,0,.14)", color: "rgba(0,0,0,.65)" }}
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -510,21 +631,28 @@ function Pagination({
 
 function EmptyState({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 px-6 py-20 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-        <Sailboat className="h-8 w-8 text-slate-400" />
+    <div
+      className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-20 text-center"
+      style={{ borderColor: "rgba(0,0,0,.16)", backgroundColor: P.faint }}
+    >
+      <div
+        className="flex h-16 w-16 items-center justify-center rounded-full"
+        style={{ backgroundColor: "rgba(0,0,0,.04)", border: "1px solid rgba(0,0,0,.10)" }}
+      >
+        <Sailboat className="h-8 w-8" style={{ color: "rgba(0,0,0,.25)" }} />
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-slate-900">No boats found</h3>
-      <p className="mt-1 text-sm text-slate-500">
-        {hasFilters
-          ? "Try adjusting your filters to see more results."
-          : "There are no boats listed at the moment."}
+      <h3 className="mt-4 text-lg font-semibold" style={{ color: P.text }}>
+        No boats found
+      </h3>
+      <p className="mt-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+        {hasFilters ? "Try adjusting your filters to see more results." : "There are no boats listed at the moment."}
       </p>
       {hasFilters && (
         <button
           type="button"
           onClick={onClear}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#ff6a00] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
+          className="mt-4 inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm transition-colors"
+          style={{ backgroundColor: P.white, color: P.text, border: "1px solid rgba(0,0,0,.18)", fontWeight: 500 }}
         >
           Clear all filters
         </button>
@@ -553,32 +681,34 @@ export default function BuyPageClient({
   const [localFilters, setLocalFilters] = useState(filters);
 
   // Build URL from filters
-  const buildUrl = useCallback((newFilters: Partial<FilterValues>, resetPage = true) => {
-    const params = new URLSearchParams();
+  const buildUrl = useCallback(
+    (newFilters: Partial<FilterValues>, resetPage = true) => {
+      const params = new URLSearchParams();
+      const merged = { ...localFilters, ...newFilters };
 
-    const merged = { ...localFilters, ...newFilters };
+      if (merged.q) params.set("q", merged.q);
+      if (merged.location) params.set("location", merged.location);
+      if (merged.country) params.set("country", merged.country);
+      if (merged.categories.length) params.set("category", merged.categories.join(","));
+      if (merged.brands.length) params.set("brand", merged.brands.join(","));
+      if (merged.priceMin) params.set("priceMin", merged.priceMin.toString());
+      if (merged.priceMax) params.set("priceMax", merged.priceMax.toString());
+      if (merged.yearMin) params.set("yearMin", merged.yearMin.toString());
+      if (merged.yearMax) params.set("yearMax", merged.yearMax.toString());
+      if (merged.lengthMin) params.set("lengthMin", merged.lengthMin.toString());
+      if (merged.lengthMax) params.set("lengthMax", merged.lengthMax.toString());
+      if (merged.cabinsMin) params.set("cabins", merged.cabinsMin.toString());
+      if (merged.fuelTypes.length) params.set("fuel", merged.fuelTypes.join(","));
+      if (merged.condition) params.set("condition", merged.condition);
+      if (merged.sellerType) params.set("seller", merged.sellerType);
+      if (merged.sort !== "newest") params.set("sort", merged.sort);
+      if (merged.view !== "list") params.set("view", merged.view);
+      if (!resetPage && currentPage > 1) params.set("page", currentPage.toString());
 
-    if (merged.q) params.set("q", merged.q);
-    if (merged.location) params.set("location", merged.location);
-    if (merged.country) params.set("country", merged.country);
-    if (merged.categories.length) params.set("category", merged.categories.join(","));
-    if (merged.brands.length) params.set("brand", merged.brands.join(","));
-    if (merged.priceMin) params.set("priceMin", merged.priceMin.toString());
-    if (merged.priceMax) params.set("priceMax", merged.priceMax.toString());
-    if (merged.yearMin) params.set("yearMin", merged.yearMin.toString());
-    if (merged.yearMax) params.set("yearMax", merged.yearMax.toString());
-    if (merged.lengthMin) params.set("lengthMin", merged.lengthMin.toString());
-    if (merged.lengthMax) params.set("lengthMax", merged.lengthMax.toString());
-    if (merged.cabinsMin) params.set("cabins", merged.cabinsMin.toString());
-    if (merged.fuelTypes.length) params.set("fuel", merged.fuelTypes.join(","));
-    if (merged.condition) params.set("condition", merged.condition);
-    if (merged.sellerType) params.set("seller", merged.sellerType);
-    if (merged.sort !== "newest") params.set("sort", merged.sort);
-    if (merged.view !== "list") params.set("view", merged.view);
-    if (!resetPage && currentPage > 1) params.set("page", currentPage.toString());
-
-    return `/buy${params.toString() ? `?${params.toString()}` : ""}`;
-  }, [localFilters, currentPage]);
+      return `/buy${params.toString() ? `?${params.toString()}` : ""}`;
+    },
+    [localFilters, currentPage]
+  );
 
   // Apply filters (navigate)
   const applyFilters = useCallback(
@@ -640,7 +770,7 @@ export default function BuyPageClient({
     applyFilters({ brands: newBrands });
   };
 
-  // Toggle fuel type
+  // Toggle fuel type (staged inside "More filters")
   const toggleFuelType = (fuelId: string) => {
     const newFuels = localFilters.fuelTypes.includes(fuelId)
       ? localFilters.fuelTypes.filter((f) => f !== fuelId)
@@ -679,27 +809,34 @@ export default function BuyPageClient({
       ? aggregations.categories
       : BOAT_CATEGORIES.map((c) => ({ ...c, count: 0 }));
 
-  const brandOptions =
-    aggregations.brands.length > 0
-      ? aggregations.brands
-      : [];
-
+  const brandOptions = aggregations.brands.length > 0 ? aggregations.brands : [];
   const countryOptions = aggregations.countries;
 
   return (
-    <main className="min-h-screen w-full bg-slate-50">
+    <main className="min-h-screen w-full" style={{ backgroundColor: P.white }}>
       {/* Loading overlay */}
       {isPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-          <div className="flex items-center gap-3 rounded-xl bg-white px-6 py-4 shadow-xl">
-            <Loader2 className="h-5 w-5 animate-spin text-[#ff6a00]" />
-            <span className="text-sm font-medium text-slate-700">Loading...</span>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+          style={{ backgroundColor: "rgba(255,255,255,.60)" }}
+        >
+          <div
+            className="flex items-center gap-3 rounded-md bg-white px-6 py-4"
+            style={{ border: "1px solid rgba(0,0,0,.14)" }}
+          >
+            <Loader2 className="h-5 w-5 animate-spin" style={{ color: "rgba(0,0,0,.55)" }} />
+            <span className="text-sm" style={{ color: "rgba(0,0,0,.65)", fontWeight: 400 }}>
+              Loading...
+            </span>
           </div>
         </div>
       )}
 
       {/* Sticky filter bar */}
-      <div className="sticky top-[var(--site-header-h)] z-30 w-full border-b border-slate-200 bg-white">
+      <div
+        className="sticky top-[var(--site-header-offset)] z-30 w-full border-b bg-white"
+        style={{ borderColor: "rgba(0,0,0,.10)" }}
+      >
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
           {/* Search bar */}
           <div className="mb-3">
@@ -712,24 +849,38 @@ export default function BuyPageClient({
               }}
               className="relative"
             >
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Search
+                className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2"
+                style={{ color: "rgba(0,0,0,.35)" }}
+              />
               <input
                 type="text"
                 name="q"
                 defaultValue={localFilters.q}
                 placeholder="Search boats, brands, models..."
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm outline-none transition-colors focus:border-slate-300 focus:bg-white"
+                className="h-12 w-full rounded-md border pl-12 pr-28 text-sm outline-none transition-colors"
+                style={{
+                  borderColor: "rgba(0,0,0,.14)",
+                  backgroundColor: P.white,
+                  color: P.text,
+                }}
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-[#ff6a00] px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border px-4 py-2 text-sm transition-colors"
+                style={{
+                  backgroundColor: P.white,
+                  color: P.text,
+                  borderColor: "rgba(0,0,0,.18)",
+                  fontWeight: 500,
+                }}
               >
                 Search
               </button>
             </form>
           </div>
 
-          {/* Filter pills row */}
+          {/* Filter row */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Location */}
             <div className="relative">
@@ -746,15 +897,17 @@ export default function BuyPageClient({
               >
                 <div className="mb-3">
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <MapPin
+                      className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                      style={{ color: "rgba(0,0,0,.35)" }}
+                    />
                     <input
                       type="text"
                       placeholder="Search location..."
                       value={localFilters.location}
-                      onChange={(e) =>
-                        setLocalFilters((prev) => ({ ...prev, location: e.target.value }))
-                      }
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm outline-none focus:border-slate-300"
+                      onChange={(e) => setLocalFilters((prev) => ({ ...prev, location: e.target.value }))}
+                      className="w-full rounded-md border py-2 pl-10 pr-4 text-sm outline-none"
+                      style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                     />
                   </div>
                 </div>
@@ -767,10 +920,13 @@ export default function BuyPageClient({
                         applyFilters({ location: loc.label });
                         setActiveDropdown(null);
                       }}
-                      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm"
+                      style={{ color: P.text, fontWeight: 400 }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                     >
-                      <span className="text-slate-900">{loc.label}</span>
-                      <span className="text-slate-400">{loc.count.toLocaleString()}</span>
+                      <span>{loc.label}</span>
+                      <span style={{ color: "rgba(0,0,0,.35)" }}>{loc.count.toLocaleString()}</span>
                     </button>
                   ))}
                 </div>
@@ -780,7 +936,13 @@ export default function BuyPageClient({
                     applyFilters({ location: localFilters.location });
                     setActiveDropdown(null);
                   }}
-                  className="mt-3 w-full rounded-lg bg-[#ff6a00] py-2 text-sm font-semibold text-white hover:brightness-110"
+                  className="mt-3 w-full rounded-md border py-2 text-sm transition-colors"
+                  style={{
+                    backgroundColor: P.white,
+                    color: P.text,
+                    borderColor: "rgba(0,0,0,.18)",
+                    fontWeight: 500,
+                  }}
                 >
                   Apply
                 </button>
@@ -806,7 +968,9 @@ export default function BuyPageClient({
               >
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs text-slate-500">Min (€)</label>
+                    <label className="mb-1 block text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
+                      Min (€)
+                    </label>
                     <input
                       type="number"
                       placeholder="0"
@@ -817,12 +981,17 @@ export default function BuyPageClient({
                           priceMin: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                      className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                      style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                     />
                   </div>
-                  <span className="mt-5 text-slate-300">—</span>
+                  <span className="mt-5" style={{ color: "rgba(0,0,0,.25)" }}>
+                    —
+                  </span>
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs text-slate-500">Max (€)</label>
+                    <label className="mb-1 block text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
+                      Max (€)
+                    </label>
                     <input
                       type="number"
                       placeholder="No max"
@@ -833,32 +1002,44 @@ export default function BuyPageClient({
                           priceMax: e.target.value ? parseInt(e.target.value) : undefined,
                         }))
                       }
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                      className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                      style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                     />
                   </div>
                 </div>
+
                 <div className="mt-3 flex flex-wrap gap-2">
                   {[50000, 100000, 250000, 500000, 1000000].map((val) => (
                     <button
                       key={val}
                       type="button"
                       onClick={() => setLocalFilters((prev) => ({ ...prev, priceMax: val }))}
-                      className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
+                      className="rounded-md border px-3 py-1 text-xs transition-colors"
+                      style={{
+                        backgroundColor: P.white,
+                        borderColor: "rgba(0,0,0,.14)",
+                        color: P.text,
+                        fontWeight: 400,
+                      }}
                     >
                       &lt; €{val.toLocaleString()}
                     </button>
                   ))}
                 </div>
+
                 <button
                   type="button"
                   onClick={() => {
-                    applyFilters({
-                      priceMin: localFilters.priceMin,
-                      priceMax: localFilters.priceMax,
-                    });
+                    applyFilters({ priceMin: localFilters.priceMin, priceMax: localFilters.priceMax });
                     setActiveDropdown(null);
                   }}
-                  className="mt-4 w-full rounded-lg bg-[#ff6a00] py-2 text-sm font-semibold text-white hover:brightness-110"
+                  className="mt-4 w-full rounded-md border py-2 text-sm transition-colors"
+                  style={{
+                    backgroundColor: P.white,
+                    color: P.text,
+                    borderColor: "rgba(0,0,0,.18)",
+                    fontWeight: 500,
+                  }}
                 >
                   Apply
                 </button>
@@ -868,44 +1049,35 @@ export default function BuyPageClient({
             {/* Boat Type */}
             <div className="relative">
               <FilterPill
-                label={
-                  localFilters.categories.length
-                    ? `Type (${localFilters.categories.length})`
-                    : "Boat type"
-                }
+                label={localFilters.categories.length ? `Type (${localFilters.categories.length})` : "Boat type"}
                 active={activeDropdown === "type"}
                 onClick={() => toggleDropdown("type")}
                 hasValue={localFilters.categories.length > 0}
               />
-              <FilterDropdown
-                title="Boat type"
-                isOpen={activeDropdown === "type"}
-                onClose={() => setActiveDropdown(null)}
-              >
+              <FilterDropdown title="Boat type" isOpen={activeDropdown === "type"} onClose={() => setActiveDropdown(null)}>
                 <div className="space-y-1">
                   {categoryOptions.map((type) => (
                     <button
                       key={type.id}
                       type="button"
                       onClick={() => toggleCategory(type.id)}
-                      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm"
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={cx(
-                            "flex h-5 w-5 items-center justify-center rounded border",
-                            localFilters.categories.includes(type.id)
-                              ? "border-[#ff6a00] bg-[#ff6a00]"
-                              : "border-slate-300"
-                          )}
+                          className="flex h-5 w-5 items-center justify-center rounded border"
+                          style={{
+                            borderColor: "rgba(0,0,0,.22)",
+                            backgroundColor: localFilters.categories.includes(type.id) ? "rgba(0,0,0,.06)" : "transparent",
+                          }}
                         >
-                          {localFilters.categories.includes(type.id) && (
-                            <Check className="h-3 w-3 text-white" />
-                          )}
+                          {localFilters.categories.includes(type.id) && <Check className="h-3 w-3" style={{ color: P.text }} />}
                         </div>
-                        <span className="text-slate-900">{type.label}</span>
+                        <span style={{ color: P.text, fontWeight: 400 }}>{type.label}</span>
                       </div>
-                      <span className="text-slate-400">{type.count.toLocaleString()}</span>
+                      <span style={{ color: "rgba(0,0,0,.35)" }}>{type.count.toLocaleString()}</span>
                     </button>
                   ))}
                 </div>
@@ -916,9 +1088,7 @@ export default function BuyPageClient({
             {brandOptions.length > 0 && (
               <div className="relative hidden sm:block">
                 <FilterPill
-                  label={
-                    localFilters.brands.length ? `Brand (${localFilters.brands.length})` : "Brand"
-                  }
+                  label={localFilters.brands.length ? `Brand (${localFilters.brands.length})` : "Brand"}
                   active={activeDropdown === "brand"}
                   onClick={() => toggleDropdown("brand")}
                   hasValue={localFilters.brands.length > 0}
@@ -935,22 +1105,25 @@ export default function BuyPageClient({
                         key={brand.id}
                         type="button"
                         onClick={() => toggleBrand(brand.id)}
-                        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-slate-50"
+                        className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm"
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <div
-                          className={cx(
-                            "flex h-4 w-4 items-center justify-center rounded border",
-                            localFilters.brands.includes(brand.id)
-                              ? "border-[#ff6a00] bg-[#ff6a00]"
-                              : "border-slate-300"
-                          )}
+                          className="flex h-4 w-4 items-center justify-center rounded border"
+                          style={{
+                            borderColor: "rgba(0,0,0,.22)",
+                            backgroundColor: localFilters.brands.includes(brand.id) ? "rgba(0,0,0,.06)" : "transparent",
+                          }}
                         >
-                          {localFilters.brands.includes(brand.id) && (
-                            <Check className="h-2.5 w-2.5 text-white" />
-                          )}
+                          {localFilters.brands.includes(brand.id) && <Check className="h-2.5 w-2.5" style={{ color: P.text }} />}
                         </div>
-                        <span className="truncate text-slate-900">{brand.label}</span>
-                        <span className="ml-auto text-xs text-slate-400">{brand.count}</span>
+                        <span className="truncate" style={{ color: P.text, fontWeight: 400 }}>
+                          {brand.label}
+                        </span>
+                        <span className="ml-auto text-xs" style={{ color: "rgba(0,0,0,.35)" }}>
+                          {brand.count}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -963,21 +1136,26 @@ export default function BuyPageClient({
               <button
                 type="button"
                 onClick={() => toggleDropdown("more")}
-                className={cx(
-                  "inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all",
-                  activeFiltersCount > 0
-                    ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                )}
+                className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors"
+                style={{
+                  borderColor: activeFiltersCount > 0 ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+                  backgroundColor: activeFiltersCount > 0 ? "rgba(0,0,0,.03)" : P.white,
+                  color: P.text,
+                  fontWeight: 400,
+                }}
               >
-                <SlidersHorizontal className="h-4 w-4" />
+                <SlidersHorizontal className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
                 More filters
                 {activeFiltersCount > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#ff6a00] text-xs text-white">
+                  <span
+                    className="flex h-5 min-w-[20px] items-center justify-center rounded-md border px-1 text-xs"
+                    style={{ backgroundColor: P.white, color: P.text, borderColor: "rgba(0,0,0,.18)", fontWeight: 500 }}
+                  >
                     {activeFiltersCount}
                   </span>
                 )}
               </button>
+
               <FilterDropdown
                 title="More filters"
                 isOpen={activeDropdown === "more"}
@@ -987,7 +1165,7 @@ export default function BuyPageClient({
                 <div className="space-y-5">
                   {/* Length */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       Length (meters)
                     </label>
                     <div className="flex items-center gap-3">
@@ -1001,9 +1179,10 @@ export default function BuyPageClient({
                             lengthMin: e.target.value ? parseFloat(e.target.value) : undefined,
                           }))
                         }
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                        className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                        style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                       />
-                      <span className="text-slate-300">—</span>
+                      <span style={{ color: "rgba(0,0,0,.25)" }}>—</span>
                       <input
                         type="number"
                         placeholder="Max"
@@ -1014,14 +1193,17 @@ export default function BuyPageClient({
                             lengthMax: e.target.value ? parseFloat(e.target.value) : undefined,
                           }))
                         }
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                        className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                        style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                       />
                     </div>
                   </div>
 
                   {/* Year */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">Year</label>
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
+                      Year
+                    </label>
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
@@ -1033,9 +1215,10 @@ export default function BuyPageClient({
                             yearMin: e.target.value ? parseInt(e.target.value) : undefined,
                           }))
                         }
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                        className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                        style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                       />
-                      <span className="text-slate-300">—</span>
+                      <span style={{ color: "rgba(0,0,0,.25)" }}>—</span>
                       <input
                         type="number"
                         placeholder="To"
@@ -1046,68 +1229,77 @@ export default function BuyPageClient({
                             yearMax: e.target.value ? parseInt(e.target.value) : undefined,
                           }))
                         }
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-slate-300"
+                        className="w-full rounded-md border px-3 py-2 text-sm outline-none"
+                        style={{ borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text }}
                       />
                     </div>
                   </div>
 
                   {/* Cabins */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       Minimum cabins
                     </label>
                     <div className="flex gap-2">
-                      {["1", "2", "3", "4", "5"].map((val) => (
-                        <button
-                          key={val}
-                          type="button"
-                          onClick={() =>
-                            setLocalFilters((prev) => ({
-                              ...prev,
-                              cabinsMin:
-                                prev.cabinsMin === parseInt(val) ? undefined : parseInt(val),
-                            }))
-                          }
-                          className={cx(
-                            "flex-1 rounded-lg border py-2 text-sm font-medium transition-all",
-                            localFilters.cabinsMin === parseInt(val)
-                              ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-                              : "border-slate-200 text-slate-600 hover:border-slate-300"
-                          )}
-                        >
-                          {val}+
-                        </button>
-                      ))}
+                      {["1", "2", "3", "4", "5"].map((val) => {
+                        const n = parseInt(val);
+                        const on = localFilters.cabinsMin === n;
+                        return (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() =>
+                              setLocalFilters((prev) => ({
+                                ...prev,
+                                cabinsMin: prev.cabinsMin === n ? undefined : n,
+                              }))
+                            }
+                            className="flex-1 rounded-md border py-2 text-sm transition-colors"
+                            style={{
+                              borderColor: on ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+                              backgroundColor: on ? "rgba(0,0,0,.03)" : P.white,
+                              color: P.text,
+                              fontWeight: 400,
+                            }}
+                          >
+                            {val}+
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Fuel Type */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       Fuel type
                     </label>
                     <div className="flex flex-wrap gap-2">
-                      {FUEL_TYPES.map((fuel) => (
-                        <button
-                          key={fuel.id}
-                          type="button"
-                          onClick={() => toggleFuelType(fuel.id)}
-                          className={cx(
-                            "rounded-lg border px-3 py-1.5 text-sm font-medium transition-all",
-                            localFilters.fuelTypes.includes(fuel.id)
-                              ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-                              : "border-slate-200 text-slate-600 hover:border-slate-300"
-                          )}
-                        >
-                          {fuel.label}
-                        </button>
-                      ))}
+                      {FUEL_TYPES.map((fuel) => {
+                        const on = localFilters.fuelTypes.includes(fuel.id);
+                        return (
+                          <button
+                            key={fuel.id}
+                            type="button"
+                            onClick={() => toggleFuelType(fuel.id)}
+                            className="rounded-md border px-3 py-1.5 text-sm transition-colors"
+                            style={{
+                              borderColor: on ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+                              backgroundColor: on ? "rgba(0,0,0,.03)" : P.white,
+                              color: P.text,
+                              fontWeight: 400,
+                            }}
+                          >
+                            {fuel.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Condition */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       Condition
                     </label>
                     <div className="flex gap-2">
@@ -1115,29 +1307,31 @@ export default function BuyPageClient({
                         { id: "", label: "All" },
                         { id: "new", label: "New" },
                         { id: "used", label: "Used" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() =>
-                            setLocalFilters((prev) => ({ ...prev, condition: opt.id }))
-                          }
-                          className={cx(
-                            "flex-1 rounded-lg border py-2 text-sm font-medium transition-all",
-                            localFilters.condition === opt.id
-                              ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-                              : "border-slate-200 text-slate-600 hover:border-slate-300"
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                      ].map((opt) => {
+                        const on = localFilters.condition === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setLocalFilters((prev) => ({ ...prev, condition: opt.id }))}
+                            className="flex-1 rounded-md border py-2 text-sm transition-colors"
+                            style={{
+                              borderColor: on ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+                              backgroundColor: on ? "rgba(0,0,0,.03)" : P.white,
+                              color: P.text,
+                              fontWeight: 400,
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Seller Type */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                    <label className="mb-2 block text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       Seller type
                     </label>
                     <div className="flex gap-2">
@@ -1145,23 +1339,25 @@ export default function BuyPageClient({
                         { id: "", label: "All" },
                         { id: "pro", label: "Professional" },
                         { id: "private", label: "Private" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() =>
-                            setLocalFilters((prev) => ({ ...prev, sellerType: opt.id }))
-                          }
-                          className={cx(
-                            "flex-1 rounded-lg border py-2 text-sm font-medium transition-all",
-                            localFilters.sellerType === opt.id
-                              ? "border-[#ff6a00] bg-orange-50 text-[#ff6a00]"
-                              : "border-slate-200 text-slate-600 hover:border-slate-300"
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                      ].map((opt) => {
+                        const on = localFilters.sellerType === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setLocalFilters((prev) => ({ ...prev, sellerType: opt.id }))}
+                            className="flex-1 rounded-md border py-2 text-sm transition-colors"
+                            style={{
+                              borderColor: on ? "rgba(0,0,0,.28)" : "rgba(0,0,0,.14)",
+                              backgroundColor: on ? "rgba(0,0,0,.03)" : P.white,
+                              color: P.text,
+                              fontWeight: 400,
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1170,7 +1366,13 @@ export default function BuyPageClient({
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="flex-1 rounded-md border py-2.5 text-sm transition-colors"
+                    style={{
+                      borderColor: "rgba(0,0,0,.14)",
+                      color: P.text,
+                      backgroundColor: P.white,
+                      fontWeight: 500,
+                    }}
                   >
                     Clear all
                   </button>
@@ -1180,7 +1382,13 @@ export default function BuyPageClient({
                       applyFilters(localFilters);
                       setActiveDropdown(null);
                     }}
-                    className="flex-1 rounded-lg bg-[#ff6a00] py-2.5 text-sm font-semibold text-white hover:brightness-110"
+                    className="flex-1 rounded-md border py-2.5 text-sm transition-colors"
+                    style={{
+                      borderColor: "rgba(0,0,0,.18)",
+                      backgroundColor: P.white,
+                      color: P.text,
+                      fontWeight: 500,
+                    }}
                   >
                     Show results
                   </button>
@@ -1191,36 +1399,38 @@ export default function BuyPageClient({
 
           {/* Sort & View row */}
           <div className="mt-3 flex items-center justify-between gap-4">
-            {/* Category quick links */}
+            {/* Category quick links (rectangles, not pills) */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               <Link
                 href="/buy"
-                className={cx(
-                  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium no-underline",
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm no-underline transition-colors"
+                style={
                   localFilters.categories.length === 0
-                    ? "bg-slate-900 text-white"
-                    : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                )}
+                    ? { backgroundColor: "rgba(0,0,0,.03)", color: P.text, borderColor: "rgba(0,0,0,.22)", fontWeight: 500 }
+                    : { borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text, fontWeight: 400 }
+                }
               >
                 All boats
               </Link>
-              {BOAT_CATEGORIES.slice(0, 5).map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => {
-                    applyFilters({ categories: [cat.id] });
-                  }}
-                  className={cx(
-                    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                    localFilters.categories.includes(cat.id)
-                      ? "bg-slate-900 text-white"
-                      : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                  )}
-                >
-                  {cat.label}
-                </button>
-              ))}
+
+              {BOAT_CATEGORIES.slice(0, 5).map((cat) => {
+                const on = localFilters.categories.includes(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => applyFilters({ categories: [cat.id] })}
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors"
+                    style={
+                      on
+                        ? { backgroundColor: "rgba(0,0,0,.03)", color: P.text, borderColor: "rgba(0,0,0,.22)", fontWeight: 500 }
+                        : { borderColor: "rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text, fontWeight: 400 }
+                    }
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Sort & View */}
@@ -1229,16 +1439,21 @@ export default function BuyPageClient({
                 <button
                   type="button"
                   onClick={() => toggleDropdown("sort")}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-300"
+                  className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm transition-colors"
+                  style={{ borderColor: "rgba(0,0,0,.14)", color: P.text, fontWeight: 400 }}
                 >
-                  <ArrowUpDown className="h-4 w-4" />
+                  <ArrowUpDown className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
                   {SORT_OPTIONS.find((s) => s.id === localFilters.sort)?.label || "Sort"}
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
                 </button>
+
                 {activeDropdown === "sort" && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                    <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+                    <div
+                      className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border bg-white py-1"
+                      style={{ borderColor: "rgba(0,0,0,.14)" }}
+                    >
                       {SORT_OPTIONS.map((option) => (
                         <button
                           key={option.id}
@@ -1247,13 +1462,16 @@ export default function BuyPageClient({
                             applyFilters({ sort: option.id });
                             setActiveDropdown(null);
                           }}
-                          className={cx(
-                            "flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50",
-                            localFilters.sort === option.id ? "text-[#ff6a00]" : "text-slate-700"
-                          )}
+                          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm"
+                          style={{
+                            color: P.text,
+                            fontWeight: localFilters.sort === option.id ? 500 : 400,
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
                           {option.label}
-                          {localFilters.sort === option.id && <Check className="h-4 w-4" />}
+                          {localFilters.sort === option.id && <Check className="h-4 w-4" style={{ color: P.text }} />}
                         </button>
                       ))}
                     </div>
@@ -1261,28 +1479,20 @@ export default function BuyPageClient({
                 )}
               </div>
 
-              <div className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 sm:flex">
+              <div className="hidden items-center gap-1 rounded-md border bg-white p-1 sm:flex" style={{ borderColor: "rgba(0,0,0,.14)" }}>
                 <button
                   type="button"
                   onClick={() => applyFilters({ view: "list" }, false)}
-                  className={cx(
-                    "rounded-md p-1.5",
-                    localFilters.view === "list"
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-500 hover:text-slate-700"
-                  )}
+                  className="rounded-md p-1.5 transition-colors"
+                  style={localFilters.view === "list" ? { backgroundColor: "rgba(0,0,0,.05)", color: P.text } : { color: "rgba(0,0,0,.55)" }}
                 >
                   <List className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => applyFilters({ view: "grid" }, false)}
-                  className={cx(
-                    "rounded-md p-1.5",
-                    localFilters.view === "grid"
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-500 hover:text-slate-700"
-                  )}
+                  className="rounded-md p-1.5 transition-colors"
+                  style={localFilters.view === "grid" ? { backgroundColor: "rgba(0,0,0,.05)", color: P.text } : { color: "rgba(0,0,0,.55)" }}
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </button>
@@ -1297,64 +1507,100 @@ export default function BuyPageClient({
         {/* Results header */}
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Boats for sale</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              <span className="font-semibold text-slate-700">{totalCount.toLocaleString()}</span>{" "}
+            <h1 className="text-2xl font-semibold" style={{ color: P.text }}>
+              Boats for sale
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+              <span className="font-semibold" style={{ color: P.text }}>
+                {totalCount.toLocaleString()}
+              </span>{" "}
               boats available
             </p>
           </div>
 
           <Link
             href={`/searches/save?${searchParams.toString()}`}
-            className="hidden items-center gap-2 rounded-lg bg-[#ff6a00] px-4 py-2.5 text-sm font-semibold text-white no-underline hover:brightness-110 sm:inline-flex"
+            className="hidden items-center gap-2 rounded-md border px-4 py-2.5 text-sm no-underline transition-colors sm:inline-flex"
+            style={{ backgroundColor: P.white, color: P.text, borderColor: "rgba(0,0,0,.18)", fontWeight: 500 }}
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
             Save search
           </Link>
         </div>
 
-        {/* Active filters chips */}
+        {/* Active filters (rectangles, no green) */}
         {hasFilters && (
           <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="text-sm text-slate-500">Active filters:</span>
+            <span className="text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+              Active filters:
+            </span>
 
             {localFilters.q && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#ff6a00]">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
+                style={{
+                  backgroundColor: "rgba(0,0,0,.03)",
+                  borderColor: "rgba(0,0,0,.18)",
+                  color: P.text,
+                  fontWeight: 400,
+                }}
+              >
                 &quot;{localFilters.q}&quot;
                 <button
                   type="button"
                   onClick={() => applyFilters({ q: "" })}
-                  className="ml-1 rounded-full hover:bg-orange-200"
+                  className="ml-1 rounded-md p-0.5"
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
                 </button>
               </span>
             )}
 
             {localFilters.location && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#ff6a00]">
-                <MapPin className="h-3.5 w-3.5" />
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
+                style={{
+                  backgroundColor: "rgba(0,0,0,.03)",
+                  borderColor: "rgba(0,0,0,.18)",
+                  color: P.text,
+                  fontWeight: 400,
+                }}
+              >
+                <MapPin className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.55)" }} />
                 {localFilters.location}
                 <button
                   type="button"
                   onClick={() => applyFilters({ location: "" })}
-                  className="ml-1 rounded-full hover:bg-orange-200"
+                  className="ml-1 rounded-md p-0.5"
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
                 </button>
               </span>
             )}
 
             {(localFilters.priceMin || localFilters.priceMax) && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#ff6a00]">
-                €{localFilters.priceMin?.toLocaleString() || "0"} - €
-                {localFilters.priceMax?.toLocaleString() || "∞"}
+              <span
+                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
+                style={{
+                  backgroundColor: "rgba(0,0,0,.03)",
+                  borderColor: "rgba(0,0,0,.18)",
+                  color: P.text,
+                  fontWeight: 400,
+                }}
+              >
+                €{localFilters.priceMin?.toLocaleString() || "0"} - €{localFilters.priceMax?.toLocaleString() || "∞"}
                 <button
                   type="button"
                   onClick={() => applyFilters({ priceMin: undefined, priceMax: undefined })}
-                  className="ml-1 rounded-full hover:bg-orange-200"
+                  className="ml-1 rounded-md p-0.5"
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
                 </button>
               </span>
             )}
@@ -1364,15 +1610,23 @@ export default function BuyPageClient({
               return (
                 <span
                   key={catId}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#ff6a00]"
+                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,.03)",
+                    borderColor: "rgba(0,0,0,.18)",
+                    color: P.text,
+                    fontWeight: 400,
+                  }}
                 >
                   {cat?.label || catId}
                   <button
                     type="button"
                     onClick={() => toggleCategory(catId)}
-                    className="ml-1 rounded-full hover:bg-orange-200"
+                    className="ml-1 rounded-md p-0.5"
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
                   </button>
                 </span>
               );
@@ -1383,15 +1637,23 @@ export default function BuyPageClient({
               return (
                 <span
                   key={brandId}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-[#ff6a00]"
+                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,.03)",
+                    borderColor: "rgba(0,0,0,.18)",
+                    color: P.text,
+                    fontWeight: 400,
+                  }}
                 >
                   {brand?.label || brandId}
                   <button
                     type="button"
                     onClick={() => toggleBrand(brandId)}
-                    className="ml-1 rounded-full hover:bg-orange-200"
+                    className="ml-1 rounded-md p-0.5"
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
                   </button>
                 </span>
               );
@@ -1400,7 +1662,8 @@ export default function BuyPageClient({
             <button
               type="button"
               onClick={clearFilters}
-              className="text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="text-sm transition-colors"
+              style={{ color: "rgba(0,0,0,.62)", fontWeight: 500 }}
             >
               Clear all
             </button>
@@ -1427,23 +1690,20 @@ export default function BuyPageClient({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-8">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-            <div className="mt-4 text-center text-sm text-slate-500">
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            <div className="mt-4 text-center text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
               Page {currentPage} of {totalPages} • {totalCount.toLocaleString()} boats total
             </div>
           </div>
         )}
       </div>
 
-      {/* Mobile: Floating save search button */}
+      {/* Mobile: Floating save search button (left as-is, not part of filter system) */}
       <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 sm:hidden">
         <Link
           href={`/searches/save?${searchParams.toString()}`}
-          className="inline-flex items-center gap-2 rounded-full bg-[#ff6a00] px-6 py-3 text-sm font-semibold text-white shadow-lg no-underline hover:brightness-110"
+          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-lg no-underline transition-all"
+          style={{ backgroundColor: P.dark, color: P.accent }}
         >
           <Bell className="h-4 w-4" />
           Save search

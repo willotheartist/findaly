@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter_Tight } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SiteHeaderOffsetClient from "@/components/SiteHeaderOffsetClient";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en" className={interTight.variable}>
       <body className="min-h-screen">
         <Header />
+        <SiteHeaderOffsetClient />
         {children}
         <Footer />
       </body>

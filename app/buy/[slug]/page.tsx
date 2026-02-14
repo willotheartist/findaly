@@ -42,6 +42,92 @@ export default async function BoatListingPage({ params }: PageProps) {
 
   const isAdmin = user?.role === "ADMIN";
 
+  // ─────────────────────────────────────────────────────────────
+  // Similar boats (Green-Acres style: exactly 4, curated)
+  // Strategy:
+  // 1) Try same brand OR same category (LIVE SALE VESSEL)
+  // 2) Fill with same country as fallback
+  // 3) Always exclude current listing + de-dupe
+  // ─────────────────────────────────────────────────────────────
+  const take = 4;
+
+  const baseWhere = {
+    kind: "VESSEL" as const,
+    intent: "SALE" as const,
+    status: "LIVE" as const,
+    id: { not: listing.id },
+  };
+
+  const primaryWhere = {
+    ...baseWhere,
+    OR: [
+      listing.brand ? { brand: listing.brand } : undefined,
+      listing.boatCategory ? { boatCategory: listing.boatCategory } : undefined,
+      listing.model ? { model: listing.model } : undefined,
+    ].filter(Boolean) as any[],
+  };
+
+  const primary = await prisma.listing.findMany({
+    where: primaryWhere.OR?.length ? (primaryWhere as any) : (baseWhere as any),
+    include: {
+      profile: { select: { id: true, name: true, isVerified: true } },
+      media: { orderBy: { sort: "asc" }, take: 1 },
+    },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take,
+  });
+
+  const primaryIds = new Set(primary.map((x) => x.id));
+  const remaining = Math.max(0, take - primary.length);
+
+  const fallback =
+    remaining > 0
+      ? await prisma.listing.findMany({
+          where: {
+            ...baseWhere,
+            id: { notIn: [listing.id, ...Array.from(primaryIds)] },
+            ...(listing.country ? { country: listing.country } : {}),
+          } as any,
+          include: {
+            profile: { select: { id: true, name: true, isVerified: true } },
+            media: { orderBy: { sort: "asc" }, take: 1 },
+          },
+          orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+          take: remaining,
+        })
+      : [];
+
+  const similar = [...primary, ...fallback].slice(0, take);
+
+  const transformedSimilar = similar.map((l) => {
+    const price = l.priceCents ? l.priceCents / 100 : 0;
+    const img = l.media?.[0]?.url || "";
+
+    const badge =
+      l.featured
+        ? ("Featured" as const)
+        : l.profile?.isVerified
+          ? ("Verified" as const)
+          : l.urgent
+            ? ("Hot" as const)
+            : undefined;
+
+    return {
+      id: l.id,
+      slug: l.slug,
+      title: l.title,
+      price,
+      currency: l.currency,
+      location: l.location || "",
+      country: l.country || "",
+      year: l.year || 0,
+      lengthFt: l.lengthFt || 0,
+      image: img,
+      badge,
+      sellerName: l.profile?.name || "Findaly",
+    };
+  });
+
   const transformedListing = {
     id: listing.id,
     slug: listing.slug,
@@ -114,5 +200,11 @@ export default async function BoatListingPage({ params }: PageProps) {
     },
   };
 
-  return <ListingPageClient listing={transformedListing} isAdmin={isAdmin} />;
+  return (
+    <ListingPageClient
+      listing={transformedListing}
+      isAdmin={isAdmin}
+      similar={transformedSimilar}
+    />
+  );
 }

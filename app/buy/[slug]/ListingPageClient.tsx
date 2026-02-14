@@ -1,13 +1,11 @@
-//·/app/buy/[slug]/ListingPageClient.tsx
+// app/buy/[slug]/ListingPageClient.tsx
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  ArrowLeft,
   Heart,
   Share2,
-  Flag,
   ChevronLeft,
   ChevronRight,
   MapPin,
@@ -15,7 +13,6 @@ import {
   Ruler,
   Anchor,
   Bed,
-  Gauge,
   Ship,
   Shield,
   MessageCircle,
@@ -27,16 +24,46 @@ import {
   ChevronDown,
   Sailboat,
   Navigation,
-  Settings,
-  Info,
-  FileText,
   Camera,
-  Star,
   BadgeCheck,
   CircleDot,
   Pencil,
+  X,
+  Trash2,
+  FileText,
+  Settings,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 
+/* ─── palette ─── */
+const P = {
+  dark: "#0a211f",
+  accent: "#fff86c",
+  text: "#1a1a1a",
+  sub: "#555",
+  muted: "#999",
+  light: "#ccc",
+  line: "#e5e5e5",
+  faint: "#f5f5f4",
+  white: "#fff",
+  green: "#1a7a5c",
+  rose: "#d94059",
+  blue: "#2196F3",
+} as const;
+
+/* ─── font shortcut ─── */
+const f = (
+  w: 300 | 400 | 500 | 600 = 400,
+  s = 14,
+  lh?: number
+): React.CSSProperties => ({
+  fontWeight: w,
+  fontSize: s,
+  ...(lh ? { lineHeight: `${lh}px` } : {}),
+});
+
+/* ─── types ─── */
 type BoatListing = {
   id: string;
   slug: string;
@@ -46,7 +73,6 @@ type BoatListing = {
   currency: string;
   location: string;
   country: string;
-
   year: number;
   length: number;
   lengthM: number;
@@ -55,7 +81,6 @@ type BoatListing = {
   draft: number;
   draftM: number;
   displacement?: string;
-
   type: string;
   category: string;
   brand: string;
@@ -63,25 +88,20 @@ type BoatListing = {
   hullMaterial: string;
   hullType: string;
   hullColor?: string;
-
   engineMake?: string;
   engineModel?: string;
   enginePower?: number;
   engineHours?: number;
   fuelType: string;
   fuelCapacity?: number;
-
   cabins?: number;
   berths?: number;
   heads?: number;
-
   features: string[];
   electronics: string[];
   safetyEquipment: string[];
-
   images: string[];
   videoUrl?: string;
-
   seller: {
     id: string;
     name: string;
@@ -95,781 +115,1125 @@ type BoatListing = {
     verified?: boolean;
     website?: string;
   };
-
   description: string;
   condition: string;
   taxStatus?: string;
   lying?: string;
-
   badge?: "featured" | "verified" | "hot" | "new" | "price-drop";
   createdAt: string;
   updatedAt: string;
 };
 
-function formatPrice(price: number, currency: string = "EUR"): string {
-  return new Intl.NumberFormat("en-EU", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(price);
-}
-
-function Badge({ type }: { type: BoatListing["badge"] }) {
-  if (!type) return null;
-
-  const config = {
-    featured: { label: "Featured", bg: "bg-amber-500", Icon: Star },
-    verified: { label: "Verified", bg: "bg-emerald-500", Icon: Shield },
-    hot: { label: "Hot", bg: "bg-rose-500", Icon: Star },
-    new: { label: "New", bg: "bg-sky-500", Icon: Star },
-    "price-drop": { label: "Price drop", bg: "bg-violet-500", Icon: Star },
-  };
-
-  const c = config[type];
-  const IconComponent = c.Icon;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full ${c.bg} px-3 py-1.5 text-sm font-semibold text-white`}
-    >
-      <IconComponent className="h-3.5 w-3.5" />
-      {c.label}
-    </span>
-  );
-}
-
-function SpecItem({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Calendar;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
-        <Icon className="h-5 w-5 text-slate-600" />
-      </div>
-      <div>
-        <div className="text-xs text-slate-500">{label}</div>
-        <div className="font-semibold text-slate-900">{value}</div>
-      </div>
-    </div>
-  );
-}
-
-function FeatureList({
-  title,
-  items,
-  icon: Icon,
-}: {
+type SimilarCard = {
+  id: string;
+  slug: string;
   title: string;
-  items: string[];
-  icon: typeof Anchor;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const displayItems = expanded ? items : items.slice(0, 6);
-  const hasMore = items.length > 6;
+  price: number;
+  currency: string;
+  location: string;
+  country: string;
+  year: number;
+  lengthFt: number;
+  image?: string;
+  badge?: "Featured" | "Verified" | "Hot";
+  sellerName?: string;
+};
 
-  if (items.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <Icon className="h-5 w-5 text-slate-600" />
-        <h3 className="font-semibold text-slate-900">{title}</h3>
-        <span className="ml-auto text-sm text-slate-500">{items.length} items</span>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {displayItems.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
-            <Check className="h-4 w-4 shrink-0 text-emerald-500" />
-            {item}
-          </div>
-        ))}
-      </div>
-      {hasMore && (
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#ff6a00] hover:underline"
-        >
-          {expanded ? "Show less" : `Show all ${items.length}`}
-          <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </button>
-      )}
-    </div>
-  );
+function fmtPrice(price: number, cur = "EUR") {
+  if (!price) return "Price on application";
+  const s = cur === "GBP" ? "£" : cur === "USD" ? "$" : "€";
+  return `${s}${price.toLocaleString("en")}`;
 }
 
-function ImageGallery({ images }: { images: string[] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+/* ═══════════════════════════════════════════════════════
+   PHOTO MOSAIC
+═══════════════════════════════════════════════════════ */
+function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
+  const [lb, setLb] = useState<number | null>(null);
+  if (!images.length)
+    return (
+      <div
+        style={{
+          height: 480,
+          borderRadius: 16,
+          backgroundColor: P.faint,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Sailboat style={{ width: 64, height: 64, color: P.light }} />
+      </div>
+    );
 
-  const displayImages = images.length > 0 ? images : [""];
-
-  const prev = () => setCurrentIndex((i) => (i === 0 ? displayImages.length - 1 : i - 1));
-  const next = () => setCurrentIndex((i) => (i === displayImages.length - 1 ? 0 : i + 1));
+  const side = images.slice(1, 7);
+  const extra = Math.max(0, images.length - 7);
 
   return (
     <>
-      <div className="relative w-full aspect-video max-h-[70vh] overflow-hidden rounded-2xl bg-linear-to-br from-slate-100 to-slate-50">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "3fr 2fr",
+          gap: 6,
+          height: 480,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setLb(0)}
+          style={{
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            overflow: "hidden",
+            borderRadius: "12px 0 0 12px",
+            position: "relative",
+          }}
+        >
+          <img
+            src={images[0]}
+            alt={title}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              top: 14,
+              left: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: "rgba(0,0,0,.55)",
+              color: "#fff",
+              borderRadius: 16,
+              padding: "5px 12px",
+              ...f(500, 12),
+              backdropFilter: "blur(4px)",
+            }}
+          >
+            <Camera style={{ width: 14, height: 14 }} /> {images.length}
+          </span>
+        </button>
 
-        {displayImages[currentIndex] ? (
-          <img src={displayImages[currentIndex]} alt="Listing photo" className="h-full w-full object-contain bg-black" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Sailboat className="h-24 w-24 text-slate-200" />
-          </div>
-        )}
-
-        {displayImages.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={prev}
-              className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white"
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: side.length > 0 ? "1fr 1fr" : "1fr",
+            gridAutoRows: "1fr",
+            gap: 6,
+          }}
+        >
+          {side.length === 0 && (
+            <div
+              style={{
+                borderRadius: "0 12px 12px 0",
+                backgroundColor: P.faint,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <ChevronLeft className="h-5 w-5 text-slate-700" />
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-white"
-            >
-              <ChevronRight className="h-5 w-5 text-slate-700" />
-            </button>
-          </>
-        )}
+              <Camera style={{ width: 28, height: 28, color: P.light }} />
+            </div>
+          )}
 
-        <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm">
-          <Camera className="h-4 w-4" />
-          {currentIndex + 1} / {displayImages.length}
+          {side.map((img, i) => {
+            const last = i === side.length - 1;
+            let br = "0";
+            if (side.length <= 3) {
+              if (i === side.length - 1) br = "0 12px 12px 0";
+            } else {
+              if (i === 1) br = "0 12px 0 0";
+              if (last && side.length % 2 === 0) br = "0 0 12px 0";
+              if (last && side.length % 2 !== 0) br = "0 0 12px 0";
+            }
+            if (side.length === 1) br = "0 12px 12px 0";
+            if (side.length === 2 && i === 1) br = "0 0 12px 0";
+
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setLb(i + 1)}
+                style={{
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  overflow: "hidden",
+                  borderRadius: br,
+                  position: "relative",
+                }}
+              >
+                <img
+                  src={img}
+                  alt={`${title} ${i + 2}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+                {last && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      backgroundColor: P.white,
+                      borderRadius: 20,
+                      padding: "7px 14px",
+                      boxShadow: "0 1px 6px rgba(0,0,0,.1)",
+                      ...f(500, 13),
+                      color: P.text,
+                    }}
+                  >
+                    <Camera style={{ width: 15, height: 15 }} />
+                    {extra > 0 ? `+${extra} more` : "Display all photos"}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {displayImages.length > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
-          {displayImages.map((img, i) => (
+      {lb !== null && (
+        <div
+          onClick={() => setLb(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            backgroundColor: "rgba(0,0,0,.92)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLb(null)}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              background: "rgba(255,255,255,.15)",
+              border: "none",
+              borderRadius: "50%",
+              width: 44,
+              height: 44,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "#fff",
+            }}
+          >
+            <X style={{ width: 22, height: 22 }} />
+          </button>
+
+          <span
+            style={{
+              position: "absolute",
+              top: 24,
+              left: 24,
+              ...f(400, 14),
+              color: "rgba(255,255,255,.6)",
+            }}
+          >
+            {lb + 1} / {images.length}
+          </span>
+
+          {images.length > 1 && (
             <button
               type="button"
-              key={i}
-              onClick={() => setCurrentIndex(i)}
-              className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-linear-to-br from-slate-100 to-slate-50 transition-all ${
-                i === currentIndex ? "ring-2 ring-[#ff6a00] ring-offset-2" : "opacity-70 hover:opacity-100"
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLb(lb === 0 ? images.length - 1 : lb - 1);
+              }}
+              style={{
+                position: "absolute",
+                left: 20,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "rgba(255,255,255,.12)",
+                border: "none",
+                borderRadius: "50%",
+                width: 48,
+                height: 48,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#fff",
+              }}
             >
-              {img ? (
-                <img src={img} alt="" className="h-full w-full object-contain bg-black" />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Sailboat className="h-6 w-6 text-slate-300" />
-                </div>
-              )}
+              <ChevronLeft style={{ width: 24, height: 24 }} />
             </button>
-          ))}
+          )}
+
+          <img
+            src={images[lb]}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "88vw",
+              maxHeight: "85vh",
+              objectFit: "contain",
+              borderRadius: 8,
+            }}
+          />
+
+          {images.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLb(lb === images.length - 1 ? 0 : lb + 1);
+              }}
+              style={{
+                position: "absolute",
+                right: 20,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "rgba(255,255,255,.12)",
+                border: "none",
+                borderRadius: "50%",
+                width: 48,
+                height: 48,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#fff",
+              }}
+            >
+              <ChevronRight style={{ width: 24, height: 24 }} />
+            </button>
+          )}
         </div>
       )}
     </>
   );
 }
 
-function SellerCard({ seller, listing }: { seller: BoatListing["seller"]; listing: BoatListing }) {
-  const [showPhone, setShowPhone] = useState(false);
-  const [messageText, setMessageText] = useState(
-    `Hi, I'm interested in the ${listing.title} listed at ${formatPrice(listing.price, listing.currency)}. Is it still available?`
-  );
-
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSend = async () => {
-    const msg = messageText.trim();
-    if (!msg || sending) return;
-
-    setSending(true);
-    setSent(false);
-    setError(null);
-
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      setSent(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setSending(false);
-    }
-  };
-
+/* ─── Circle button ─── */
+function CircleBtn({
+  icon: I,
+  active,
+  onClick,
+  label,
+}: {
+  icon: typeof Heart;
+  active?: boolean;
+  onClick?: () => void;
+  label: string;
+}) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="border-b border-slate-100 p-5">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-            {seller.type === "pro" ? <Building2 className="h-6 w-6 text-slate-600" /> : <User className="h-6 w-6 text-slate-600" />}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900">{seller.company || seller.name}</span>
-              {seller.verified && <BadgeCheck className="h-5 w-5 text-sky-500" />}
-            </div>
-            {seller.company && <div className="text-sm text-slate-500">{seller.name}</div>}
-            <div className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-              <MapPin className="h-3.5 w-3.5" />
-              {seller.location}
-            </div>
-          </div>
-          {seller.type === "pro" && (
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Pro</span>
-          )}
-        </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: "50%",
+        border: `1.5px solid ${active ? P.rose : P.line}`,
+        backgroundColor: P.white,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        color: active ? P.rose : P.muted,
+        transition: "all .15s",
+      }}
+    >
+      <I style={{ width: 18, height: 18 }} fill={active ? P.rose : "none"} />
+    </button>
+  );
+}
 
-        <div className="mt-4 flex items-center gap-4 text-sm">
-          {seller.listingsCount !== undefined && seller.listingsCount > 0 && (
-            <div className="text-slate-500">
-              <span className="font-medium text-slate-700">{seller.listingsCount}</span> listings
-            </div>
-          )}
-        </div>
-
-        {seller.responseTime && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
-            <Clock className="h-4 w-4" />
-            {seller.responseTime}
-          </div>
-        )}
+/* ─── Key spec ─── */
+function KeySpec({
+  icon: I,
+  label,
+  value,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          backgroundColor: P.dark,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <I style={{ width: 18, height: 18, color: P.accent }} />
       </div>
-
-      <div className="p-5">
-        <div className="mb-4">
-          <label className="mb-2 block text-sm font-medium text-slate-700">Your message</label>
-          <textarea
-            value={messageText}
-            onChange={(e) => {
-              setMessageText(e.target.value);
-              if (sent) setSent(false);
-              if (error) setError(null);
-            }}
-            id="contact-message"
-            rows={4}
-            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm outline-none focus:border-slate-300 focus:bg-white"
-          />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ ...f(400, 12), color: P.muted, letterSpacing: "0.02em" }}>
+          {label}
         </div>
-
-        <button
-          type="button"
-          disabled={sending || !messageText.trim()}
-          onClick={handleSend}
-          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all ${
-            sending || !messageText.trim() ? "cursor-not-allowed bg-[#ff6a00]/60" : "bg-[#ff6a00] hover:brightness-110"
-          }`}
+        <div
+          style={{
+            ...f(500, 15),
+            color: P.text,
+            marginTop: 1,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
         >
-          <MessageCircle className="h-4 w-4" />
-          {sending ? "Sending…" : sent ? "Sent ✓" : "Send message"}
-        </button>
-
-        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
-
-        {seller.phone && (
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => setShowPhone(!showPhone)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50"
-            >
-              <Phone className="h-4 w-4" />
-              {showPhone ? seller.phone : "Show phone"}
-            </button>
-          </div>
-        )}
-
-        <p className="mt-4 text-center text-xs text-slate-500">
-          Member since {seller.memberSince} ·{" "}
-          <Link href={`/profile/${seller.id}`} className="text-[#ff6a00] hover:underline">
-            View profile
-          </Link>
-        </p>
+          {value}
+        </div>
       </div>
     </div>
   );
 }
 
+/* ─── Spec chip ─── */
+function SpecChip({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "10px 16px",
+        borderRadius: 10,
+        backgroundColor: P.faint,
+        border: `1px solid ${P.line}`,
+        minWidth: 0,
+      }}
+    >
+      <span style={{ ...f(400, 13), color: P.muted }}>{label}</span>
+      <span style={{ ...f(600, 14), color: P.text }}>{value}</span>
+    </div>
+  );
+}
+
+/* ─── Spec group ─── */
+function SpecGroup({
+  title,
+  icon: I,
+  children,
+}: {
+  title: string;
+  icon: typeof Ruler;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <I style={{ width: 20, height: 20, color: P.muted }} />
+        <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>{title}</h3>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Feature list ─── */
+function Features({ title, items, icon: I }: { title: string; items: string[]; icon: typeof Anchor }) {
+  const [open, setOpen] = useState(false);
+  const show = open ? items : items.slice(0, 8);
+  if (!items.length) return null;
+
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <I style={{ width: 17, height: 17, color: P.muted }} />
+        <span style={{ ...f(500, 15), color: P.text }}>{title}</span>
+        <span style={{ ...f(400, 13), color: P.light, marginLeft: "auto" }}>
+          {items.length}
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px" }}>
+        {show.map((it, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              ...f(400, 14),
+              color: P.sub,
+              padding: "7px 0",
+            }}
+          >
+            <Check style={{ width: 15, height: 15, color: P.green, flexShrink: 0 }} />
+            {it}
+          </div>
+        ))}
+      </div>
+
+      {items.length > 8 && (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          style={{
+            marginTop: 10,
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            ...f(500, 14),
+            color: P.green,
+          }}
+        >
+          {open ? "Show less" : `Show all ${items.length}`}
+          <ChevronDown
+            style={{
+              width: 15,
+              height: 15,
+              transform: open ? "rotate(180deg)" : "none",
+              transition: "transform .2s",
+            }}
+          />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ─── Seller card ─── */
+function Sidebar({ listing }: { listing: BoatListing }) {
+  const s = listing.seller;
+  const [showPhone, setShowPhone] = useState(false);
+  const [sent, setSent] = useState(false);
+  const isPro = s.type === "pro";
+
+  const inp: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 14px",
+    border: `1px solid ${P.line}`,
+    borderRadius: 8,
+    ...f(400, 14),
+    color: P.text,
+    outline: "none",
+    backgroundColor: P.white,
+  };
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${P.line}`,
+        borderRadius: 16,
+        backgroundColor: P.white,
+        position: "sticky",
+        top: 24,
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ padding: "28px 28px 20px" }}>
+        <div style={{ ...f(300, 38, 42), color: P.text, letterSpacing: "-0.025em" }}>
+          {fmtPrice(listing.price, listing.currency)}
+        </div>
+        {listing.priceNegotiable && (
+          <div style={{ ...f(400, 13), color: P.muted, marginTop: 4 }}>Price negotiable</div>
+        )}
+      </div>
+
+      <div style={{ padding: "0 28px 20px", borderBottom: `1px solid ${P.faint}` }}>
+        <Link
+          href={`/profile/${s.id}`}
+          style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}
+        >
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "50%",
+              backgroundColor: P.faint,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              border: `2px solid ${P.line}`,
+            }}
+          >
+            {isPro ? (
+              <Building2 style={{ width: 22, height: 22, color: P.muted }} />
+            ) : (
+              <User style={{ width: 22, height: 22, color: P.muted }} />
+            )}
+          </div>
+
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ ...f(500, 15), color: P.text }}>{s.company || s.name}</span>
+              {s.verified && <BadgeCheck style={{ width: 16, height: 16, color: P.blue }} />}
+              {isPro && (
+                <span
+                  style={{
+                    ...f(600, 11),
+                    color: P.dark,
+                    backgroundColor: P.accent,
+                    padding: "2px 8px",
+                    borderRadius: 10,
+                  }}
+                >
+                  PRO
+                </span>
+              )}
+            </div>
+
+            {s.company && s.name && s.company !== s.name && (
+              <div style={{ ...f(400, 12), color: P.muted, marginTop: 2 }}>{s.name}</div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 4, ...f(400, 12), color: P.muted, marginTop: 3 }}>
+              <MapPin style={{ width: 12, height: 12 }} />
+              {s.location}
+            </div>
+          </div>
+
+          <ChevronRight style={{ width: 18, height: 18, color: P.light, flexShrink: 0 }} />
+        </Link>
+
+        <div style={{ display: "flex", gap: 16, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${P.faint}` }}>
+          {s.listingsCount !== undefined && s.listingsCount > 0 && (
+            <div style={{ ...f(400, 13), color: P.sub }}>
+              <span style={{ ...f(600, 13), color: P.text }}>{s.listingsCount}</span> listings
+            </div>
+          )}
+          {s.responseTime && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, ...f(400, 13), color: P.green }}>
+              <Clock style={{ width: 13, height: 13 }} />
+              {s.responseTime}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ padding: 28, display: "flex", flexDirection: "column", gap: 12 }}>
+        <input type="text" placeholder="Your name" style={inp} />
+        <input type="tel" placeholder="Your telephone no." style={inp} />
+        <input type="email" placeholder="Your email" style={inp} />
+        <textarea
+          id="contact-message"
+          placeholder="Your message..."
+          rows={4}
+          style={{ ...inp, resize: "vertical" }}
+          defaultValue={`Hi, I'm interested in the ${listing.title}. Is it still available?`}
+        />
+
+        <button
+          type="button"
+          onClick={() => setSent(true)}
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            backgroundColor: P.dark,
+            color: P.accent,
+            border: "none",
+            borderRadius: 10,
+            ...f(500, 15),
+            cursor: "pointer",
+            marginTop: 4,
+          }}
+        >
+          {sent ? "Enquiry sent ✓" : "Send enquiry"}
+        </button>
+
+        {s.phone && (
+          <button
+            type="button"
+            onClick={() => setShowPhone(!showPhone)}
+            style={{
+              width: "100%",
+              padding: "13px 0",
+              backgroundColor: P.white,
+              color: P.text,
+              border: `1px solid ${P.line}`,
+              borderRadius: 10,
+              ...f(500, 14),
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <Phone style={{ width: 16, height: 16 }} />
+            {showPhone ? s.phone : "Show phone number"}
+          </button>
+        )}
+
+        {s.website && (
+          <a
+            href={s.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "12px 0",
+              ...f(400, 13),
+              color: P.green,
+              textDecoration: "none",
+            }}
+          >
+            <ExternalLink style={{ width: 14, height: 14 }} /> Visit website
+          </a>
+        )}
+
+        <div style={{ ...f(400, 12), color: P.light, textAlign: "center", marginTop: 4 }}>
+          Member since {s.memberSince} ·{" "}
+          <Link href={`/profile/${s.id}`} style={{ color: P.green, textDecoration: "none", ...f(500, 12) }}>
+            View all listings →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Similar boats — FULL WIDTH ROW (Greenacres-style)
+   - spans both columns
+   - real 4-col grid on lg+
+═══════════════════════════════════════════════════════ */
+function SimilarBoats({
+  items,
+  current,
+}: {
+  items: SimilarCard[];
+  current: BoatListing;
+}) {
+  const viewMoreHref = useMemo(() => {
+    const qs = new URLSearchParams();
+    if (current.brand) qs.set("brand", current.brand);
+    if (current.category) qs.set("category", current.category);
+    if (current.country) qs.set("country", current.country);
+    return `/buy?${qs.toString()}`;
+  }, [current.brand, current.category, current.country]);
+
+  if (!items?.length) return null;
+
+  function Card({ it }: { it: SimilarCard }) {
+    const price = it.price ? fmtPrice(it.price, it.currency) : "POA";
+    const meta = `${it.lengthFt ? `${Math.round(it.lengthFt)} ft` : "—"} • ${it.year || "—"} • ${
+      it.location || it.country || "Location"
+    }`;
+
+    const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
+    const location = parts.length ? parts[parts.length - 1] : "";
+    const specs = parts.length > 1 ? parts.slice(0, -1).join(" • ") : meta;
+
+    return (
+      <Link
+        href={`/buy/${it.slug}`}
+        className="group overflow-hidden rounded-2xl bg-white no-underline shadow-sm ring-1 ring-slate-200/70 transition-all duration-300 hover:shadow-md hover:ring-slate-300"
+      >
+        <div className="relative aspect-16/10 overflow-hidden bg-slate-100">
+          {it.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={it.image}
+              alt={it.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-50">
+              <div className="absolute inset-0 bg-[radial-gradient(600px_300px_at_30%_40%,rgba(0,0,0,0.06),transparent)]" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sailboat className="h-16 w-16 text-slate-200 transition-transform duration-500 group-hover:scale-110" />
+              </div>
+            </div>
+          )}
+
+          {it.badge ? (
+            <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
+              <Sparkles className="h-3 w-3 text-[#ff6a00]" />
+              {it.badge}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="px-4 pt-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="text-[22px] font-semibold tracking-tight text-slate-900">
+              {price}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+                <Trash2 className="h-4 w-4 text-slate-500" />
+              </div>
+              <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+                <Heart className="h-4 w-4 text-slate-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-1.5 text-sm text-slate-700">
+            {location || <span className="text-slate-500">Location</span>}
+          </div>
+
+          <div className="mt-2 text-sm text-slate-500">{specs}</div>
+
+          <div className="mt-3 line-clamp-1 text-[15px] font-medium text-slate-900">
+            {it.title}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
+              F
+            </div>
+            <div className="truncate text-sm text-slate-500">{it.sellerName || "Findaly"}</div>
+          </div>
+
+          <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
+            <MessageCircle className="h-4 w-4 text-slate-600" />
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <section style={{ paddingTop: 34 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+        <h3 style={{ ...f(500, 18), color: P.text, margin: 0 }}>Similar boats for sale</h3>
+        <Link href={viewMoreHref} className="text-sm font-medium text-slate-600 no-underline hover:text-slate-900">
+          View more →
+        </Link>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {items.slice(0, 4).map((it) => (
+          <Card key={it.id} it={it} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════════ */
 export default function ListingPageClient({
   listing,
   isAdmin,
+  similar,
 }: {
   listing: BoatListing;
   isAdmin: boolean;
+  similar: SimilarCard[];
 }) {
-  const [isSaved, setIsSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<"description" | "specs" | "features">("description");
+  const [saved, setSaved] = useState(false);
+  const [tab, setTab] = useState<"description" | "specs" | "features">("description");
+
+  const tabConfig = [
+    { id: "description" as const, label: "Description", icon: FileText },
+    { id: "specs" as const, label: "Specifications", icon: Settings },
+    { id: "features" as const, label: "Features", icon: Check },
+  ];
 
   return (
-    <main className="min-h-screen w-full bg-slate-50">
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/buy" className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to results</span>
+    <main style={{ minHeight: "100vh", backgroundColor: P.white }}>
+      {/* Breadcrumb */}
+      <div style={{ borderBottom: `1px solid ${P.faint}` }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/buy" style={{ display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", ...f(400, 14), color: P.sub }}>
+            <ChevronLeft style={{ width: 18, height: 18 }} /> Back to results
+          </Link>
+          {isAdmin && (
+            <Link
+              href={`/my-listings/${listing.id}/edit`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                textDecoration: "none",
+                ...f(500, 13),
+                color: P.white,
+                backgroundColor: P.dark,
+                padding: "8px 16px",
+                borderRadius: 8,
+              }}
+            >
+              <Pencil style={{ width: 14, height: 14 }} /> Edit listing
             </Link>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-500">{listing.type}</span>
-            <span className="text-slate-300">/</span>
-            <span className="font-medium text-slate-900">{listing.brand}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Photos */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 24px 0" }}>
+        <PhotoMosaic images={listing.images} title={listing.title} />
+      </div>
+
+      {/* Title + actions */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 0" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ ...f(400, 26, 34), color: P.text, margin: 0, letterSpacing: "-0.01em" }}>
+              {listing.title}
+            </h1>
+            <div style={{ width: 80, height: 3, backgroundColor: P.green, borderRadius: 2, marginTop: 16 }} />
           </div>
-
-          <div className="flex items-center gap-2">
-            {/* ADMIN EDIT BUTTON */}
-            {isAdmin && (
-              <Link
-                href={`/my-listings/${listing.id}/edit`}
-                className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                <Pencil className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit</span>
-              </Link>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setIsSaved(!isSaved)}
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-                isSaved
-                  ? "border-rose-200 bg-rose-50 text-rose-600"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-              <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
-            </button>
-
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              <Share2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Share</span>
-            </button>
-
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              <Flag className="h-4 w-4" />
-              <span className="hidden sm:inline">Report</span>
-            </button>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0, paddingTop: 2 }}>
+            <CircleBtn icon={Trash2} label="Remove" />
+            <CircleBtn icon={Heart} active={saved} onClick={() => setSaved(!saved)} label="Save" />
+            <CircleBtn icon={Share2} label="Share" />
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="min-w-0 space-y-6">
-            <ImageGallery images={listing.images} />
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ borderBottom: `1px solid ${P.faint}`, margin: "24px 0 0" }} />
+      </div>
 
-            <div className="lg:hidden">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  {listing.badge && (
-                    <div className="mb-2">
-                      <Badge type={listing.badge} />
-                    </div>
-                  )}
-                  <h1 className="text-2xl font-bold text-slate-900">{listing.title}</h1>
-                  <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-                    <MapPin className="h-4 w-4" />
+      {/* Main grid */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 40px" }}>
+        <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
+          {/* LEFT */}
+          <div style={{ minWidth: 0 }}>
+            {/* Key specs */}
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4" style={{ paddingBottom: 32 }}>
+              <KeySpec icon={MapPin} label={listing.country || "Location"} value={listing.location || "—"} />
+              <KeySpec icon={Ruler} label="Length" value={listing.length ? `${listing.length} ft` : "—"} />
+              <KeySpec icon={Bed} label="Cabins" value={listing.cabins || "—"} />
+              <KeySpec icon={Calendar} label="Year" value={listing.year || "—"} />
+            </div>
+
+            {/* Tabbed content */}
+            <div style={{ border: `1px solid ${P.line}`, borderRadius: 16, overflow: "hidden", backgroundColor: P.white }}>
+              <div style={{ display: "flex", borderBottom: `1px solid ${P.line}` }}>
+                {tabConfig.map((t) => {
+                  const active = tab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTab(t.id)}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                        padding: "16px 12px",
+                        background: "none",
+                        border: "none",
+                        borderBottom: active ? `3px solid ${P.green}` : "3px solid transparent",
+                        cursor: "pointer",
+                        ...f(active ? 500 : 400, 14),
+                        color: active ? P.green : P.muted,
+                        transition: "all .15s",
+                      }}
+                    >
+                      <t.icon style={{ width: 16, height: 16 }} />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div style={{ padding: "28px 28px 32px" }}>
+                {tab === "description" && (
+                  <div>
+                    {listing.description ? (
+                      listing.description.split("\n\n").map((p, i) => (
+                        <p key={i} style={{ ...f(400, 15, 26), color: P.sub, margin: "0 0 20px", whiteSpace: "pre-wrap" }}>
+                          {p}
+                        </p>
+                      ))
+                    ) : (
+                      <p style={{ ...f(400, 15), color: P.light }}>No description provided.</p>
+                    )}
+                  </div>
+                )}
+
+                {tab === "specs" && (
+                  <div>
+                    {(listing.length > 0 || listing.beam > 0 || listing.draft > 0) && (
+                      <SpecGroup title="Dimensions" icon={Ruler}>
+                        {listing.length > 0 && <SpecChip label="Length" value={`${listing.length} ft${listing.lengthM > 0 ? ` (${listing.lengthM}m)` : ""}`} />}
+                        {listing.beam > 0 && <SpecChip label="Beam" value={`${listing.beam} ft${listing.beamM > 0 ? ` (${listing.beamM}m)` : ""}`} />}
+                        {listing.draft > 0 && <SpecChip label="Draft" value={`${listing.draft} ft${listing.draftM > 0 ? ` (${listing.draftM}m)` : ""}`} />}
+                        {listing.displacement && <SpecChip label="Displacement" value={listing.displacement} />}
+                      </SpecGroup>
+                    )}
+
+                    {(listing.hullMaterial || listing.hullType) && (
+                      <SpecGroup title="Hull & Construction" icon={Ship}>
+                        {listing.hullMaterial && <SpecChip label="Material" value={listing.hullMaterial} />}
+                        {listing.hullType && <SpecChip label="Hull type" value={listing.hullType} />}
+                        {listing.hullColor && <SpecChip label="Colour" value={listing.hullColor} />}
+                      </SpecGroup>
+                    )}
+
+                    {(listing.engineMake || listing.enginePower) && (
+                      <SpecGroup title="Propulsion" icon={Navigation}>
+                        {listing.engineMake && <SpecChip label="Engine" value={`${listing.engineMake}${listing.engineModel ? ` ${listing.engineModel}` : ""}`} />}
+                        {listing.enginePower && <SpecChip label="Power" value={`${listing.enginePower} HP`} />}
+                        {listing.engineHours && <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />}
+                        {listing.fuelType && <SpecChip label="Fuel" value={listing.fuelType} />}
+                      </SpecGroup>
+                    )}
+
+                    {(listing.cabins || listing.berths || listing.heads) && (
+                      <SpecGroup title="Accommodation" icon={Bed}>
+                        {listing.cabins && <SpecChip label="Cabins" value={listing.cabins} />}
+                        {listing.berths && <SpecChip label="Berths" value={listing.berths} />}
+                        {listing.heads && <SpecChip label="Heads" value={listing.heads} />}
+                      </SpecGroup>
+                    )}
+                  </div>
+                )}
+
+                {tab === "features" && (
+                  <div>
+                    <Features title="Equipment & Features" items={listing.features} icon={Anchor} />
+                    <Features title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
+                    <Features title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
+                    {!listing.features.length && !listing.electronics.length && !listing.safetyEquipment.length && (
+                      <p style={{ ...f(400, 15), color: P.light }}>No features listed.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Listing details */}
+            <div style={{ border: `1px solid ${P.line}`, borderRadius: 16, padding: 28, marginTop: 24, backgroundColor: P.white }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <CircleDot style={{ width: 18, height: 18, color: P.muted }} />
+                <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>Listing details</h3>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+                <SpecChip label="Condition" value={listing.condition || "—"} />
+                {listing.taxStatus && <SpecChip label="Tax status" value={listing.taxStatus} />}
+                {listing.lying && <SpecChip label="Lying" value={listing.lying} />}
+                <SpecChip label="Listed" value={new Date(listing.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} />
+              </div>
+            </div>
+
+            {/* Location */}
+            <div style={{ marginTop: 24 }}>
+              <h3 style={{ ...f(500, 16), color: P.text, margin: "0 0 16px" }}>Location</h3>
+              <div style={{ height: 200, borderRadius: 12, backgroundColor: P.faint, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${P.line}` }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ width: 46, height: 46, borderRadius: "50%", backgroundColor: P.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+                    <MapPin style={{ width: 20, height: 20, color: P.accent }} />
+                  </div>
+                  <div style={{ ...f(400, 14), color: P.sub, marginTop: 12 }}>
                     {listing.location}, {listing.country}
                   </div>
                 </div>
               </div>
-              <div className="mt-4">
-                <div className="text-3xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
-                {listing.priceNegotiable && <div className="mt-1 text-sm text-slate-500">Price negotiable</div>}
-              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <SpecItem icon={Calendar} label="Year" value={listing.year || "—"} />
-              <SpecItem icon={Ruler} label="Length" value={listing.length ? `${listing.length} ft` : "—"} />
-              <SpecItem icon={Bed} label="Cabins" value={listing.cabins || "—"} />
-              <SpecItem icon={Gauge} label="Engine hours" value={listing.engineHours ? `${listing.engineHours} hrs` : "—"} />
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white">
-              <div className="flex border-b border-slate-200">
-                {[
-                  { id: "description", label: "Description", icon: FileText },
-                  { id: "specs", label: "Specifications", icon: Settings },
-                  { id: "features", label: "Features", icon: Check },
-                ].map((tab) => (
-                  <button
-                    type="button"
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-4 text-sm font-medium transition-all ${
-                      activeTab === tab.id
-                        ? "border-[#ff6a00] text-[#ff6a00]"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    <tab.icon className="h-4 w-4" />
-                    {tab.label}
-                  </button>
-                ))}
+            {/* Safety tips */}
+            <div style={{ marginTop: 24, padding: 24, borderRadius: 12, backgroundColor: "#fefce8", border: "1px solid #fef08a" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <Shield style={{ width: 17, height: 17, color: "#a16207" }} />
+                <span style={{ ...f(500, 14), color: "#854d0e" }}>Safety tips</span>
               </div>
-
-              <div className="p-5 sm:p-6">
-                {activeTab === "description" && (
-                  <div className="prose prose-slate max-w-none wrap-break-word">
-                    {listing.description ? (
-                      listing.description.split("\n\n").map((paragraph, i) => (
-                        <p key={i} className="whitespace-pre-wrap wrap-break-word">
-                          {paragraph}
-                        </p>
-                      ))
-                    ) : (
-                      <p className="text-slate-500">No description provided.</p>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "specs" && (
-                  <div className="min-w-0 space-y-6">
-                    <div>
-                      <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
-                        <Ruler className="h-5 w-5 text-slate-400" />
-                        Dimensions
-                      </h3>
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {listing.length > 0 && (
-                          <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                            <span className="text-sm text-slate-500">Length</span>
-                            <span className="text-sm font-medium text-slate-900">
-                              {listing.length} ft {listing.lengthM > 0 && `(${listing.lengthM}m)`}
-                            </span>
-                          </div>
-                        )}
-                        {listing.beam > 0 && (
-                          <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                            <span className="text-sm text-slate-500">Beam</span>
-                            <span className="text-sm font-medium text-slate-900">
-                              {listing.beam} ft {listing.beamM > 0 && `(${listing.beamM}m)`}
-                            </span>
-                          </div>
-                        )}
-                        {listing.draft > 0 && (
-                          <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                            <span className="text-sm text-slate-500">Draft</span>
-                            <span className="text-sm font-medium text-slate-900">
-                              {listing.draft} ft {listing.draftM > 0 && `(${listing.draftM}m)`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {(listing.hullMaterial || listing.hullType) && (
-                      <div>
-                        <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
-                          <Ship className="h-5 w-5 text-slate-400" />
-                          Hull & Construction
-                        </h3>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          {listing.hullMaterial && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Material</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.hullMaterial}</span>
-                            </div>
-                          )}
-                          {listing.hullType && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Hull type</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.hullType}</span>
-                            </div>
-                          )}
-                          {listing.hullColor && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Colour</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.hullColor}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {(listing.engineMake || listing.enginePower) && (
-                      <div>
-                        <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
-                          <Navigation className="h-5 w-5 text-slate-400" />
-                          Propulsion
-                        </h3>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          {listing.engineMake && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Engine</span>
-                              <span className="text-sm font-medium text-slate-900">
-                                {listing.engineMake} {listing.engineModel}
-                              </span>
-                            </div>
-                          )}
-                          {listing.enginePower && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Power</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.enginePower} HP</span>
-                            </div>
-                          )}
-                          {listing.engineHours && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Engine hours</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.engineHours} hrs</span>
-                            </div>
-                          )}
-                          {listing.fuelType && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Fuel</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.fuelType}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {(listing.cabins || listing.berths || listing.heads) && (
-                      <div>
-                        <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
-                          <Bed className="h-5 w-5 text-slate-400" />
-                          Accommodation
-                        </h3>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                          {listing.cabins && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Cabins</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.cabins}</span>
-                            </div>
-                          )}
-                          {listing.berths && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Berths</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.berths}</span>
-                            </div>
-                          )}
-                          {listing.heads && (
-                            <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                              <span className="text-sm text-slate-500">Heads</span>
-                              <span className="text-sm font-medium text-slate-900">{listing.heads}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "features" && (
-                  <div className="space-y-4">
-                    <FeatureList title="Equipment & Features" items={listing.features} icon={Anchor} />
-                    <FeatureList title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
-                    <FeatureList title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
-                    {listing.features.length === 0 && listing.electronics.length === 0 && listing.safetyEquipment.length === 0 && (
-                      <p className="text-slate-500">No features listed.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-              <h3 className="mb-4 flex items-center gap-2 font-semibold text-slate-900">
-                <Info className="h-5 w-5 text-slate-400" />
-                Listing details
-              </h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                  <span className="text-sm text-slate-500">Condition</span>
-                  <span className="text-sm font-medium text-slate-900">{listing.condition || "—"}</span>
+              {["Always inspect the boat in person before purchase", "Use a marine surveyor for pre-purchase inspection", "Never transfer money before seeing documentation"].map((t, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, ...f(400, 13), color: "#92400e", marginBottom: 6 }}>
+                  <CircleDot style={{ width: 13, height: 13, marginTop: 3, flexShrink: 0 }} />
+                  {t}
                 </div>
-                {listing.taxStatus && (
-                  <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-500">Tax status</span>
-                    <span className="text-sm font-medium text-emerald-600">{listing.taxStatus}</span>
-                  </div>
-                )}
-                {listing.lying && (
-                  <div className="flex justify-between rounded-lg bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-500">Lying</span>
-                    <span className="text-sm font-medium text-slate-900">{listing.lying}</span>
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  Listed{" "}
-                  {new Date(listing.createdAt).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-200 p-5">
-                <h3 className="flex items-center gap-2 font-semibold text-slate-900">
-                  <MapPin className="h-5 w-5 text-slate-400" />
-                  Location
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  {listing.location}, {listing.country}
-                </p>
-              </div>
-              <div className="relative h-64 bg-linear-to-br from-sky-50 to-slate-100">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="mx-auto h-10 w-10 text-[#ff6a00]" />
-                    <p className="mt-2 text-sm font-medium text-slate-700">
-                      {listing.location}, {listing.country}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="min-w-0 space-y-6">
-            <div className="hidden rounded-2xl border border-slate-200 bg-white p-5 lg:block">
-              {listing.badge && (
-                <div className="mb-3">
-                  <Badge type={listing.badge} />
-                </div>
-              )}
-              <h1 className="text-xl font-bold text-slate-900">{listing.title}</h1>
-              <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
-                <MapPin className="h-4 w-4" />
-                {listing.location}, {listing.country}
-              </div>
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <div className="text-3xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
-                {listing.priceNegotiable && <div className="mt-1 text-sm text-slate-500">Price negotiable</div>}
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-center text-sm">
-                <div className="rounded-lg bg-slate-50 py-2">
-                  <div className="font-semibold text-slate-900">{listing.year || "—"}</div>
-                  <div className="text-slate-500">Year</div>
-                </div>
-                <div className="rounded-lg bg-slate-50 py-2">
-                  <div className="font-semibold text-slate-900">{listing.length ? `${listing.length} ft` : "—"}</div>
-                  <div className="text-slate-500">Length</div>
-                </div>
-              </div>
-
-              {/* ADMIN EDIT (Desktop side card) */}
-              {isAdmin && (
-                <div className="mt-4">
-                  <Link
-                    href={`/my-listings/${listing.id}/edit`}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit listing
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            <SellerCard seller={listing.seller} listing={listing} />
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setIsSaved(!isSaved)}
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                    isSaved ? "border-rose-200 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <Heart className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-                  {isSaved ? "Saved to favorites" : "Save to favorites"}
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share this listing
-                </button>
-
-                {/* ADMIN EDIT (Mobile-ish utility card area) */}
-                {isAdmin && (
-                  <Link
-                    href={`/my-listings/${listing.id}/edit`}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit listing
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <h4 className="flex items-center gap-2 font-semibold text-amber-900">
-                <Shield className="h-5 w-5" />
-                Safety tips
-              </h4>
-              <ul className="mt-3 space-y-2 text-sm text-amber-800">
-                <li className="flex items-start gap-2">
-                  <CircleDot className="mt-0.5 h-4 w-4 shrink-0" />
-                  Always inspect the boat in person before purchase
-                </li>
-                <li className="flex items-start gap-2">
-                  <CircleDot className="mt-0.5 h-4 w-4 shrink-0" />
-                  Use a marine surveyor for pre-purchase inspection
-                </li>
-                <li className="flex items-start gap-2">
-                  <CircleDot className="mt-0.5 h-4 w-4 shrink-0" />
-                  Never transfer money before seeing documentation
-                </li>
-              </ul>
-            </div>
+          {/* RIGHT */}
+          <div className="hidden lg:block" style={{ minWidth: 0 }}>
+            <Sidebar listing={listing} />
           </div>
+        </div>
+
+        {/* ✅ FULL-WIDTH Similar section (spans both cols) */}
+        <div style={{ marginTop: 36, borderTop: `1px solid ${P.faint}`, paddingTop: 10 }}>
+          <SimilarBoats items={similar} current={listing} />
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white p-4 lg:hidden">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <div className="text-xl font-bold text-[#ff6a00]">{formatPrice(listing.price, listing.currency)}</div>
-            <div className="text-sm text-slate-500">{listing.title}</div>
+      {/* Mobile bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden" style={{ backgroundColor: P.white, borderTop: `1px solid ${P.line}`, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...f(300, 22, 26), color: P.text }}>{fmtPrice(listing.price, listing.currency)}</div>
+            <div style={{ ...f(400, 13), color: P.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {listing.title}
+            </div>
           </div>
-
-          {/* ADMIN EDIT (mobile bottom bar) */}
           {isAdmin && (
             <Link
               href={`/my-listings/${listing.id}/edit`}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-slate-800"
+              style={{
+                padding: "12px 16px",
+                backgroundColor: P.dark,
+                color: P.white,
+                borderRadius: 10,
+                ...f(500, 14),
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
             >
-              <Pencil className="h-4 w-4" />
-              Edit
+              <Pencil style={{ width: 14, height: 14 }} /> Edit
             </Link>
           )}
-
           <button
             type="button"
             onClick={() => {
               const el = document.getElementById("contact-message") as HTMLTextAreaElement | null;
-              if (!el) return;
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-              el.focus();
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.focus();
+              }
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#ff6a00] px-6 py-3 text-sm font-semibold text-white hover:brightness-110"
+            style={{
+              padding: "12px 20px",
+              backgroundColor: P.dark,
+              color: P.accent,
+              border: "none",
+              borderRadius: 10,
+              ...f(500, 15),
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexShrink: 0,
+            }}
           >
-            <MessageCircle className="h-4 w-4" />
-            Contact
+            <MessageCircle style={{ width: 18, height: 18 }} /> Contact
           </button>
         </div>
       </div>

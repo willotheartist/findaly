@@ -1,4 +1,4 @@
-//·components/Header.tsx
+// components/Header.tsx
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -46,7 +46,7 @@ function Row2Link({
   return (
     <Link
       href={href}
-      className="px-2 py-2 text-sm text-slate-700 no-underline hover:text-slate-900"
+      className="px-2.5 py-2 text-[13px] font-normal text-[#555] no-underline transition-colors hover:text-[#0a211f]"
     >
       {children}
     </Link>
@@ -66,7 +66,7 @@ function IconLink({
     <Link
       href={href}
       aria-label={label}
-      className="flex flex-col items-center justify-center gap-1 rounded-md px-2 py-1 text-slate-700 no-underline hover:bg-slate-100"
+      className="flex flex-col items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-[#555] no-underline transition-colors hover:bg-[#f5f5f4] hover:text-[#0a211f]"
     >
       {children}
     </Link>
@@ -113,26 +113,26 @@ function MenuItem({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#E9FF63]/60"
+      className="group flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-colors hover:bg-[#f5f5f4] focus:outline-none focus:ring-2 focus:ring-[#fff86c]/60"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555]">
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-slate-900">
+        <div className="truncate text-sm font-medium text-[#1a1a1a]">
           {title}
         </div>
         {subtitle ? (
-          <div className="truncate text-xs text-slate-500">{subtitle}</div>
+          <div className="truncate text-xs text-[#999]">{subtitle}</div>
         ) : null}
       </div>
-      <ExternalLink className="h-4 w-4 text-slate-300 transition-colors group-hover:text-slate-500" />
+      <ExternalLink className="h-4 w-4 text-[#ccc] transition-colors group-hover:text-[#999]" />
     </Link>
   );
 }
 
 export default async function Header() {
-  const dropdownPanel = "bg-white border border-slate-200";
+  const dropdownPanel = "bg-white border border-[#e5e5e5]";
 
   const user = await getCurrentUser().catch(() => null);
   const isAuthed = Boolean(user?.id);
@@ -148,19 +148,20 @@ export default async function Header() {
   return (
     <header
       data-site-header="true"
-      className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white"
+      className="sticky top-0 z-50 w-full border-b border-[#e5e5e5] bg-white"
     >
-      <div className="h-px w-full bg-[#E9FF63]" />
+      {/* Accent line — yellow instead of old yellow-green */}
+      <div className="h-px w-full bg-[#fff86c]" />
 
       {/* Row 1 */}
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
         {/* Logo */}
         <Link
           href="/"
-          className="mr-1 inline-flex items-center gap-2 rounded-md px-2 py-1 no-underline hover:bg-slate-100"
+          className="mr-1 inline-flex items-center gap-2 rounded-lg px-2 py-1 no-underline hover:bg-[#f5f5f4]"
           aria-label="Findaly home"
         >
-          <span className="text-2xl font-extrabold tracking-tight text-[#F56462]">
+          <span className="text-2xl font-extrabold tracking-tight text-[#0a211f]">
             findaly
           </span>
         </Link>
@@ -168,7 +169,7 @@ export default async function Header() {
         {/* CTA */}
         <Link
           href="/add-listing"
-          className="hidden items-center gap-2 rounded-md border border-[#F56462] bg-white px-4 py-2 text-sm font-semibold text-[#F56462] no-underline hover:bg-[#F56462] hover:text-white md:inline-flex"
+          className="hidden items-center gap-2 rounded-full bg-[#0a211f] px-5 py-2 text-sm font-medium text-[#fff86c] no-underline transition-opacity hover:opacity-90 md:inline-flex"
         >
           <Plus className="h-4 w-4" />
           List a yacht
@@ -181,11 +182,11 @@ export default async function Header() {
               <input
                 name="q"
                 placeholder="Search yachts, parts, services…"
-                className="h-11 w-full rounded-md border border-slate-200 bg-slate-100 px-4 pr-12 text-sm text-slate-900 outline-none placeholder:text-slate-500 focus:border-slate-300 focus:bg-white"
+                className="h-11 w-full rounded-full border border-[#e5e5e5] bg-[#f5f5f4] px-5 pr-12 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] transition-colors focus:border-[#ccc] focus:bg-white"
               />
               <button
                 type="submit"
-                className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-[#F56462] text-white hover:brightness-95"
+                className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#0a211f] text-[#fff86c] transition-opacity hover:opacity-90"
                 aria-label="Search"
               >
                 <Search className="h-4 w-4" />
@@ -195,7 +196,7 @@ export default async function Header() {
         </div>
 
         {/* Right icons (desktop) */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-1 md:flex">
           <IconLink href="/searches" label="My searches">
             <Search className="h-5 w-5" />
             <span className="text-[11px] leading-none">Searches</span>
@@ -219,7 +220,7 @@ export default async function Header() {
           {!isAuthed ? (
             <Link
               href="/login"
-              className="ml-1 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
+              className="ml-1 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-[#0a211f] no-underline transition-colors hover:bg-[#f5f5f4]"
             >
               <User className="h-4 w-4" />
               Sign in
@@ -227,11 +228,11 @@ export default async function Header() {
           ) : (
             <HeaderDropdownClient
               align="right"
-              triggerClassName="ml-1 rounded-full p-0.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[#E9FF63]/60"
+              triggerClassName="ml-1 rounded-full p-0.5 transition-colors hover:bg-[#f5f5f4] focus:outline-none focus:ring-2 focus:ring-[#fff86c]/60"
               panelClassName={dropdownPanel}
               label={
                 <span className="inline-flex items-center gap-2">
-                  <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
+                  <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#e5e5e5] bg-[#0a211f]">
                     {avatarUrl ? (
                       <Image
                         src={avatarUrl}
@@ -241,7 +242,7 @@ export default async function Header() {
                         className="object-cover"
                       />
                     ) : (
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-bold text-[#fff86c]">
                         {initials(profile?.name ?? null, user?.email ?? null)}
                       </span>
                     )}
@@ -251,8 +252,8 @@ export default async function Header() {
             >
               <div className="p-3">
                 {/* Top identity block */}
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full border border-slate-200 bg-slate-50">
+                <div className="flex items-center gap-3 rounded-2xl border border-[#e5e5e5] bg-white p-3">
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full border border-[#e5e5e5] bg-[#0a211f]">
                     {avatarUrl ? (
                       <Image
                         src={avatarUrl}
@@ -262,17 +263,17 @@ export default async function Header() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-sm font-extrabold text-slate-700">
+                      <div className="flex h-full w-full items-center justify-center text-sm font-extrabold text-[#fff86c]">
                         {initials(profile?.name ?? null, user?.email ?? null)}
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-slate-900">
+                    <div className="truncate text-sm font-semibold text-[#1a1a1a]">
                       {displayName}
                     </div>
-                    <div className="mt-0.5 truncate text-xs text-slate-500">
+                    <div className="mt-0.5 truncate text-xs text-[#999]">
                       {displayAccount}{displayEmail ? ` • ${displayEmail}` : ""}
                     </div>
                   </div>
@@ -282,21 +283,21 @@ export default async function Header() {
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Link
                     href={myProfileHref}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 no-underline hover:bg-slate-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2 text-sm font-medium text-[#1a1a1a] no-underline transition-colors hover:bg-[#f5f5f4]"
                   >
-                    <User className="h-4 w-4 text-slate-600" />
+                    <User className="h-4 w-4 text-[#555]" />
                     View profile
                   </Link>
                   <Link
                     href="/add-listing"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#F56462] bg-white px-3 py-2 text-sm font-semibold text-[#F56462] no-underline hover:bg-[#F56462] hover:text-white"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0a211f] px-3 py-2 text-sm font-medium text-[#fff86c] no-underline transition-opacity hover:opacity-90"
                   >
                     <Plus className="h-4 w-4" />
                     List a yacht
                   </Link>
                 </div>
 
-                <div className="my-3 h-px w-full bg-slate-200" />
+                <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
                 {/* Menu items */}
                 <div className="grid gap-1">
@@ -332,7 +333,7 @@ export default async function Header() {
                   />
                 </div>
 
-                <div className="my-3 h-px w-full bg-slate-200" />
+                <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
                 {/* Secondary */}
                 <div className="grid gap-1">
@@ -350,14 +351,14 @@ export default async function Header() {
                   />
                 </div>
 
-                <div className="my-3 h-px w-full bg-slate-200" />
+                <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
                 {/* Logout */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-1">
+                <div className="rounded-2xl border border-[#e5e5e5] bg-white p-1">
                   <LogoutButtonClient
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#1a1a1a] transition-colors hover:bg-[#f5f5f4]"
                   />
-                  <div className="pointer-events-none -mt-[34px] ml-3 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700">
+                  <div className="pointer-events-none -mt-[34px] ml-3 flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555]">
                     <LogOut className="h-4 w-4" />
                   </div>
                 </div>
@@ -365,47 +366,44 @@ export default async function Header() {
             </HeaderDropdownClient>
           )}
         </div>
-
-        {/* Mobile menu stays as-is in your current build.
-            If you want, next we can apply the same avatar dropdown on mobile too. */}
       </div>
 
       {/* Row 2 */}
-      <div className="hidden border-t border-slate-200 md:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 px-4 sm:px-6">
+      <div className="hidden border-t border-[#f5f5f4] md:block">
+        <div className="mx-auto flex max-w-7xl items-center gap-0.5 px-4 sm:px-6">
           {TOP_NAV.map((i, idx) => (
             <div key={i.href} className="flex items-center">
               <Row2Link href={i.href}>{i.label}</Row2Link>
               {idx !== TOP_NAV.length - 1 ? (
-                <span className="mx-1 text-slate-300">•</span>
+                <span className="mx-0.5 text-[#e5e5e5]">·</span>
               ) : null}
             </div>
           ))}
 
           <div className="ml-auto flex items-center gap-2 py-2">
             <HeaderDropdownClient
-              label={<span className="text-sm text-slate-700">More</span>}
+              label={<span className="text-[13px] text-[#555]">More</span>}
               align="right"
-              triggerClassName="inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm text-slate-700 hover:bg-slate-100"
+              triggerClassName="inline-flex items-center gap-1 rounded-lg px-2.5 py-2 text-[13px] text-[#555] transition-colors hover:bg-[#f5f5f4]"
               panelClassName={dropdownPanel}
             >
               <div className="p-2">
                 <div className="grid gap-1">
                   <Link
                     href="/support"
-                    className="rounded-xl px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
+                    className="rounded-xl px-3 py-2 text-sm text-[#1a1a1a] no-underline transition-colors hover:bg-[#f5f5f4]"
                   >
                     Support
                   </Link>
                   <Link
                     href="/about"
-                    className="rounded-xl px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
+                    className="rounded-xl px-3 py-2 text-sm text-[#1a1a1a] no-underline transition-colors hover:bg-[#f5f5f4]"
                   >
                     About
                   </Link>
                   <Link
                     href="/contact"
-                    className="rounded-xl px-3 py-2 text-sm text-slate-800 no-underline hover:bg-slate-100"
+                    className="rounded-xl px-3 py-2 text-sm text-[#1a1a1a] no-underline transition-colors hover:bg-[#f5f5f4]"
                   >
                     Contact
                   </Link>
