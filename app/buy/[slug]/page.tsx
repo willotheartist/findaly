@@ -3,10 +3,23 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import ListingPageClient from "./ListingPageClient";
+import { absoluteUrl, getSiteUrl } from "@/lib/site";
+import type { Prisma } from "@prisma/client";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+type JsonLdObject = Record<string, unknown>;
+
+function jsonLd(obj: JsonLdObject) {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
+    />
+  );
+}
 
 export default async function BoatListingPage({ params }: PageProps) {
   const { slug } = await params;
@@ -47,24 +60,23 @@ export default async function BoatListingPage({ params }: PageProps) {
   // ─────────────────────────────────────────────────────────────
   const take = 4;
 
-  const baseWhere = {
-    kind: "VESSEL" as const,
-    intent: "SALE" as const,
-    status: "LIVE" as const,
+  const baseWhere: Prisma.ListingWhereInput = {
+    kind: "VESSEL",
+    intent: "SALE",
+    status: "LIVE",
     id: { not: listing.id },
   };
 
-  const primaryWhere = {
-    ...baseWhere,
-    OR: [
-      listing.brand ? { brand: listing.brand } : undefined,
-      listing.boatCategory ? { boatCategory: listing.boatCategory } : undefined,
-      listing.model ? { model: listing.model } : undefined,
-    ].filter(Boolean) as any[],
-  };
+  const orClauses: Prisma.ListingWhereInput[] = [];
+  if (listing.brand) orClauses.push({ brand: listing.brand });
+  if (listing.boatCategory) orClauses.push({ boatCategory: listing.boatCategory });
+  if (listing.model) orClauses.push({ model: listing.model });
+
+  const primaryWhere: Prisma.ListingWhereInput =
+    orClauses.length > 0 ? { ...baseWhere, OR: orClauses } : baseWhere;
 
   const primary = await prisma.listing.findMany({
-    where: primaryWhere.OR?.length ? (primaryWhere as any) : (baseWhere as any),
+    where: primaryWhere,
     include: {
       profile: { select: { id: true, name: true, isVerified: true } },
       media: { orderBy: { sort: "asc" }, take: 1 },
@@ -83,7 +95,7 @@ export default async function BoatListingPage({ params }: PageProps) {
             ...baseWhere,
             id: { notIn: [listing.id, ...Array.from(primaryIds)] },
             ...(listing.country ? { country: listing.country } : {}),
-          } as any,
+          },
           include: {
             profile: { select: { id: true, name: true, isVerified: true } },
             media: { orderBy: { sort: "asc" }, take: 1 },
@@ -124,6 +136,15 @@ export default async function BoatListingPage({ params }: PageProps) {
     };
   });
 
+  const features =
+    Array.isArray(listing.features) ? listing.features.filter((x): x is string => typeof x === "string") : [];
+  const electronics =
+    Array.isArray(listing.electronics) ? listing.electronics.filter((x): x is string => typeof x === "string") : [];
+  const safetyEquipment =
+    Array.isArray(listing.safetyEquipment)
+      ? listing.safetyEquipment.filter((x): x is string => typeof x === "string")
+      : [];
+
   const transformedListing = {
     id: listing.id,
     slug: listing.slug,
@@ -162,9 +183,9 @@ export default async function BoatListingPage({ params }: PageProps) {
     berths: listing.berths || undefined,
     heads: listing.heads || undefined,
 
-    features: (listing.features as string[]) || [],
-    electronics: (listing.electronics as string[]) || [],
-    safetyEquipment: (listing.safetyEquipment as string[]) || [],
+    features,
+    electronics,
+    safetyEquipment,
 
     images: listing.media.map((m) => m.url),
     videoUrl: listing.videoUrl || undefined,
@@ -180,12 +201,9 @@ export default async function BoatListingPage({ params }: PageProps) {
 
     seller: {
       id: listing.profile.id,
-      slug: listing.profile.slug, // ✅ needed for /profile/[slug]
+      slug: listing.profile.slug,
       name: listing.sellerName || listing.profile.name,
-      type:
-        listing.sellerType === "PROFESSIONAL"
-          ? ("pro" as const)
-          : ("private" as const),
+      type: listing.sellerType === "PROFESSIONAL" ? ("pro" as const) : ("private" as const),
       company: listing.sellerCompany || undefined,
       location: listing.sellerLocation || listing.profile.location || "",
       phone: listing.sellerPhone || listing.profile.phone || undefined,
@@ -197,11 +215,72 @@ export default async function BoatListingPage({ params }: PageProps) {
     },
   };
 
+  // ─────────────────────────────────────────────────────────────
+  // ✅ Structured Data for /buy/[slug]
+  // ─────────────────────────────────────────────────────────────
+  const base = getSiteUrl();
+  const url = `${base}/buy/${transformedListing.slug}`;
+  const primaryImage = transformedListing.images?.[0]
+    ? absoluteUrl(transformedListing.images[0])
+    : absoluteUrl("/hero-buy.jpg");
+
+  const breadcrumb: JsonLdObject = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
+      { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
+      { "@type": "ListItem", position: 3, name: transformedListing.title, item: url },
+    ],
+  };
+
+  const hasPrice = !!listing.priceCents && listing.priceType !== "POA";
+
+  const offer: JsonLdObject = {
+    "@type": "Offer",
+    url,
+    priceCurrency: String(transformedListing.currency),
+    availability: "https://schema.org/InStock",
+    itemCondition:
+      transformedListing.condition === "NEW"
+        ? "https://schema.org/NewCondition"
+        : "https://schema.org/UsedCondition",
+    ...(hasPrice ? { price: Number(transformedListing.price) } : {}),
+  };
+
+  const product: JsonLdObject = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: transformedListing.title,
+    url,
+    image: [primaryImage],
+    description: transformedListing.description
+      ? transformedListing.description.slice(0, 500)
+      : undefined,
+    brand: transformedListing.brand
+      ? { "@type": "Brand", name: transformedListing.brand }
+      : undefined,
+    offers: offer,
+    seller: transformedListing.seller?.name
+      ? {
+          "@type": "Organization",
+          name: transformedListing.seller.name,
+          url: transformedListing.seller.website ? transformedListing.seller.website : undefined,
+          telephone: transformedListing.seller.phone ? transformedListing.seller.phone : undefined,
+        }
+      : undefined,
+  };
+
   return (
-    <ListingPageClient
-      listing={transformedListing}
-      isAdmin={isAdmin}
-      similar={transformedSimilar}
-    />
+    <>
+      {jsonLd(breadcrumb)}
+      {jsonLd(product)}
+
+      <ListingPageClient
+        listing={transformedListing}
+        isAdmin={isAdmin}
+        similar={transformedSimilar}
+      />
+    </>
   );
 }

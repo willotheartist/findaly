@@ -1,6 +1,13 @@
+// components/SiteHeaderOffsetClient.tsx
 "use client";
 
 import * as React from "react";
+
+type FontsApi = { ready?: Promise<unknown> };
+
+function getFonts(): FontsApi | undefined {
+  return (document as unknown as { fonts?: FontsApi }).fonts;
+}
 
 export default function SiteHeaderOffsetClient() {
   React.useEffect(() => {
@@ -30,11 +37,11 @@ export default function SiteHeaderOffsetClient() {
     window.addEventListener("scroll", requestTick, { passive: true });
     window.addEventListener("resize", requestTick);
 
-    // also update if layout/fonts shift
-    // @ts-ignore
-    if (document.fonts?.ready) {
-      // @ts-ignore
-      document.fonts.ready.then(() => set()).catch(() => {});
+    // also update if layout/fonts shift (guarded + typed)
+    const fonts = getFonts();
+    const ready = fonts?.ready;
+    if (ready) {
+      ready.then(() => set()).catch(() => {});
     }
 
     const ro = new ResizeObserver(() => requestTick());

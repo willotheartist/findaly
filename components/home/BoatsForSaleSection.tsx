@@ -174,6 +174,12 @@ function CardRail({ items }: { items: Card[] }) {
   );
 }
 
+type FontsReady = Promise<unknown>;
+function getFontsReady(): FontsReady | undefined {
+  const maybe = document as unknown as { fonts?: { ready?: Promise<unknown> } };
+  return maybe.fonts?.ready;
+}
+
 export default async function BoatsForSaleSection() {
   const listings = await prisma.listing.findMany({
     orderBy: { createdAt: "desc" },
@@ -190,19 +196,19 @@ export default async function BoatsForSaleSection() {
   });
 
   const items: Card[] = listings.map((l) => {
-    const media0 = (l.media?.[0] as any) ?? null;
-    const image = (media0?.url as string | undefined) ?? (media0?.src as string | undefined);
+    const media0 = l.media?.[0] ?? null;
+    const image = media0?.url ?? undefined;
 
     return {
-      title: (l as any).title ?? "Untitled listing",
-      href: `/buy/${(l as any).slug}`,
+      title: l.title ?? "Untitled listing",
+      href: `/buy/${l.slug}`,
       meta: formatMeta({
-        lengthFt: (l as any).lengthFt ?? null,
-        year: (l as any).year ?? null,
-        location: (l as any).location ?? null,
-        country: (l as any).country ?? null,
+        lengthFt: l.lengthFt ?? null,
+        year: l.year ?? null,
+        location: l.location ?? null,
+        country: l.country ?? null,
       }),
-      price: formatMoney((l as any).priceCents ?? null, (l as any).currency ?? null),
+      price: formatMoney(l.priceCents ?? null, l.currency ?? null),
       badge: l.profile?.isVerified ? "Verified" : undefined,
       image,
     };

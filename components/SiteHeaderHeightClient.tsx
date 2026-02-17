@@ -1,6 +1,13 @@
+// components/SiteHeaderHeightClient.tsx
 "use client";
 
 import * as React from "react";
+
+type FontsApi = { ready?: Promise<unknown> };
+
+function getFonts(): FontsApi | undefined {
+  return (document as unknown as { fonts?: FontsApi }).fonts;
+}
 
 export default function SiteHeaderHeightClient() {
   React.useLayoutEffect(() => {
@@ -22,11 +29,11 @@ export default function SiteHeaderHeightClient() {
     const onResize = () => set();
     window.addEventListener("resize", onResize);
 
-    // fonts can change header height after load
-    // @ts-ignore
-    if (document.fonts?.ready) {
-      // @ts-ignore
-      document.fonts.ready.then(() => set()).catch(() => {});
+    // fonts can change header height after load (guarded + typed)
+    const fonts = getFonts();
+    const ready = fonts?.ready;
+    if (ready) {
+      ready.then(() => set()).catch(() => {});
     }
 
     return () => {

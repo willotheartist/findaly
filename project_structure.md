@@ -1,14 +1,14 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 15/02/2026, 11:11:12*
+*Generated on: 17/02/2026, 18:39:56*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 156 |
-| 📁 Total Folders | 78 |
-| 🌳 Max Depth | 5 levels |
+| 📄 Total Files | 174 |
+| 📁 Total Folders | 107 |
+| 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
 ## ⭐ Important Files
@@ -24,15 +24,15 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 74 files (47.4%)
-- 🔷 **.ts** (TypeScript files): 36 files (23.1%)
-- 🖼️ **.png** (PNG images): 11 files (7.1%)
-- 🖼️ **.jpg** (JPEG images): 8 files (5.1%)
-- 🎨 **.svg** (SVG images): 5 files (3.2%)
-- ⚙️ **.json** (JSON files): 4 files (2.6%)
-- 📄 **.sql** (Other files): 4 files (2.6%)
-- 📄 **.mjs** (Other files): 3 files (1.9%)
-- 📖 **.md** (Markdown files): 2 files (1.3%)
+- ⚛️ **.tsx** (React TypeScript files): 89 files (51.1%)
+- 🔷 **.ts** (TypeScript files): 39 files (22.4%)
+- 🖼️ **.png** (PNG images): 11 files (6.3%)
+- 🖼️ **.jpg** (JPEG images): 8 files (4.6%)
+- 🎨 **.svg** (SVG images): 5 files (2.9%)
+- ⚙️ **.json** (JSON files): 4 files (2.3%)
+- 📄 **.sql** (Other files): 4 files (2.3%)
+- 📄 **.mjs** (Other files): 3 files (1.7%)
+- 📖 **.md** (Markdown files): 2 files (1.1%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.6%)
 - 📄 **.txt** (Text files): 1 files (0.6%)
 - 🖼️ **.ico** (Icon files): 1 files (0.6%)
@@ -45,20 +45,20 @@
 
 ### By Category
 
-- **React**: 74 files (47.4%)
-- **TypeScript**: 36 files (23.1%)
-- **Assets**: 25 files (16.0%)
-- **Other**: 10 files (6.4%)
-- **Config**: 6 files (3.8%)
-- **Docs**: 3 files (1.9%)
+- **React**: 89 files (51.1%)
+- **TypeScript**: 39 files (22.4%)
+- **Assets**: 25 files (14.4%)
+- **Other**: 10 files (5.7%)
+- **Config**: 6 files (3.4%)
+- **Docs**: 3 files (1.7%)
 - **DevOps**: 1 files (0.6%)
 - **Styles**: 1 files (0.6%)
 
 ### 📁 Largest Directories
 
-- **root**: 156 files
-- **app**: 65 files
-- **components**: 24 files
+- **root**: 174 files
+- **app**: 81 files
+- **components**: 25 files
 - **public**: 24 files
 - **app/add-listing**: 21 files
 
@@ -136,8 +136,50 @@ findaly/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
 │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 brand/
+│   │   │   └── 📂 [brand]/
+│   │   │   │   ├── 📂 country/
+│   │   │   │   │   └── 📂 [country]/
+│   │   │   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   │   │   └── 📂 year/
+│   │   │   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   ├── 📂 model/
+│   │   │   │   │   └── 📂 [model]/
+│   │   │   │   │   │   ├── 📂 country/
+│   │   │   │   │   │   │   └── 📂 [country]/
+│   │   │   │   │   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   │   │   │   │   └── 📂 year/
+│   │   │   │   │   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   │   │   └── 📂 year/
+│   │   │   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   └── 📂 year/
+│   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ BuyPageClient.tsx
-│   │   └── ⚛️ page.tsx
+│   │   ├── 📂 country/
+│   │   │   └── 📂 [country]/
+│   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   └── 📂 year/
+│   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 model/
+│   │   │   └── 📂 [model]/
+│   │   │   │   ├── 📂 country/
+│   │   │   │   │   └── 📂 [country]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   ├── ⚛️ page.tsx
+│   │   │   │   └── 📂 year/
+│   │   │   │   │   └── 📂 [year]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   ├── ⚛️ page.tsx
+│   │   └── 📂 year/
+│   │   │   └── 📂 [year]/
+│   │   │   │   └── ⚛️ page.tsx
 │   ├── 📂 destinations/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── 🔷 _data.ts
@@ -169,6 +211,7 @@ findaly/
 │   │   └── 📂 [slug]/
 │   │   │   ├── ⚛️ page.tsx
 │   │   │   └── ⚛️ ProfilePageClient.tsx
+│   ├── 🔷 robots.ts
 │   ├── 📂 searches/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 settings/
@@ -177,6 +220,7 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 signup/
 │   │   └── ⚛️ page.tsx
+│   ├── 🔷 sitemap.ts
 │   ├── 📂 upgrade/
 │   │   └── ⚛️ page.tsx
 │   └── 📂 use-cases/
@@ -203,6 +247,8 @@ findaly/
 │   ├── ⚛️ LogoutButtonClient.tsx
 │   ├── 📂 maps/
 │   │   └── ⚛️ ListingMap.tsx
+│   ├── 📂 seo/
+│   │   └── ⚛️ SeoLinkBlock.tsx
 │   ├── ⚛️ SiteHeaderHeightClient.tsx
 │   ├── ⚛️ SiteHeaderOffsetClient.tsx
 │   ├── 📂 stack/
@@ -235,7 +281,8 @@ findaly/
 │   ├── 📂 auth/
 │   │   ├── 🔷 profile.ts
 │   │   └── 🔷 session.ts
-│   └── 🔷 db.ts
+│   ├── 🔷 db.ts
+│   └── 🔷 site.ts
 ├── 🔷 middleware.ts
 ├── 🔷 next-env.d.ts
 ├── 🟡 ▲ **next.config.ts**

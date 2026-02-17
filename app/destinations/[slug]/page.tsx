@@ -1,12 +1,55 @@
 // app/destinations/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { getDestinationBySlug } from "./_data";
 import DestinationSlugHero from "@/components/destinations/DestinationSlugHero";
 import DestinationQuickFacts from "@/components/destinations/DestinationQuickFacts";
 import DestinationHighlights from "@/components/destinations/DestinationHighlights";
+import { absoluteUrl, truncate } from "@/lib/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const data = getDestinationBySlug(slug);
+
+  if (!data) {
+    return { title: "Destination Not Found | Findaly" };
+  }
+
+  const title = `${data.title} Boating Guide`;
+  const description =
+    truncate(data.subtitle, 160) ||
+    `Discover ${data.title}: marinas, routes, and where to go by boat.`;
+
+  const ogImage = absoluteUrl(data.heroImage || "/hero-charter.jpg");
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/destinations/${slug}`,
+    },
+    openGraph: {
+      type: "article",
+      title: `${data.title} | Findaly`,
+      description,
+      url: `/destinations/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${data.title} | Findaly`,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function DestinationSlugPage({
   params,
@@ -30,9 +73,8 @@ export default async function DestinationSlugPage({
       <section className="w-full pb-16 sm:pb-24">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <div className="relative overflow-hidden rounded-2xl bg-slate-900">
-            {/* Subtle gradient overlay */}
             <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-slate-800/50 via-transparent to-slate-950/50" />
-            
+
             <div className="relative px-8 py-12 sm:px-12 sm:py-16">
               <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
                 <div className="max-w-lg">

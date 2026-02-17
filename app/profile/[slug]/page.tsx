@@ -1,8 +1,10 @@
-// /app/profile/[slug]/page.tsx
+// app/profile/[slug]/page.tsx
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
 import ProfilePageClient from "./ProfilePageClient";
+import { absoluteUrl, truncate } from "@/lib/site";
 
 type PageProps = {
   params: Promise<{ slug: string }> | { slug: string };
@@ -11,7 +13,6 @@ type PageProps = {
 export default async function PublicProfilePage({ params }: PageProps) {
   const { slug } = await Promise.resolve(params);
 
-  // Fetch the profile with all related data
   const profile = await prisma.profile.findUnique({
     where: { slug },
     include: {
@@ -35,19 +36,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   if (!profile) return notFound();
 
-  // Check if current user is the owner
   const currentUser = await getCurrentUser().catch(() => null);
   const isOwner = currentUser?.id === profile.userId;
 
-  // Calculate stats
   const liveListings = profile.listings.filter((l) => l.status === "LIVE");
   const soldListings = profile.listings.filter((l) => l.status === "SOLD");
 
-  // Placeholder-ish values for now
   const responseRate = profile.isVerified ? 95 : 75;
   const avgResponseTime = profile.isVerified ? "Within 2 hours" : "Within 24 hours";
 
-  // Transform listings for the client
   const transformedListings = profile.listings.map((listing) => ({
     id: listing.id,
     slug: listing.slug,
@@ -68,7 +65,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
     thumbnailUrl: listing.media[0]?.url ?? null,
   }));
 
-  // Build the profile data object
   const profileData = {
     id: profile.id,
     slug: profile.slug,
@@ -80,7 +76,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
     email: profile.email,
     phone: profile.phone,
 
-    // ✅ NEW
     avatarUrl: profile.avatarUrl ?? null,
     companyLogoUrl: profile.companyLogoUrl ?? null,
 
@@ -101,9 +96,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
   return <ProfilePageClient profile={profileData} isOwner={isOwner} />;
 }
 
-// Generate metadata for SEO
-export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await Promise.resolve(params);
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params;
 
   const profile = await prisma.profile.findUnique({
     where: { slug },
@@ -111,29 +105,43 @@ export async function generateMetadata({ params }: PageProps) {
       name: true,
       tagline: true,
       location: true,
-      _count: {
-        select: { listings: true },
-      },
+      avatarUrl: true,
+      companyLogoUrl: true,
+      _count: { select: { listings: true } },
     },
   });
 
   if (!profile) {
-    return {
-      title: "Profile Not Found | Findaly",
-    };
+    return { title: "Profile Not Found | Findaly" };
   }
 
-  const description = profile.tagline
-    ? `${profile.name} - ${profile.tagline}. Browse ${profile._count.listings} listings on Findaly.`
-    : `${profile.name} on Findaly. Browse ${profile._count.listings} maritime listings.`;
+  const title = `${profile.name}`;
+  const description = truncate(
+    profile.tagline
+      ? `${profile.tagline} · ${profile.location || "Yacht broker"} · ${profile._count.listings} listings on Findaly.`
+      : `${profile.name} · ${profile.location || "Yacht broker"} · ${profile._count.listings} listings on Findaly.`,
+    160
+  );
+
+  const image = profile.companyLogoUrl || profile.avatarUrl || "/hero-pros.jpg";
+  const ogImage = absoluteUrl(image);
 
   return {
-    title: `${profile.name} | Findaly`,
+    title,
     description,
+    alternates: { canonical: `/profile/${slug}` },
     openGraph: {
-      title: `${profile.name} | Findaly`,
-      description,
       type: "profile",
+      title: `${title} | Findaly`,
+      description,
+      url: `/profile/${slug}`,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Findaly`,
+      description,
+      images: [ogImage],
     },
   };
 }
