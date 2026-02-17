@@ -1,5 +1,4 @@
-//·app/page.tsx 
-"use client";
+// app/page.tsx
 
 import Link from "next/link";
 import Image from "next/image";
@@ -16,6 +15,8 @@ import {
 
 import HomeHero from "@/components/home/HomeHero";
 import ThingsToDo from "@/components/home/ThingsToDo";
+import BoatsForSaleSection from "@/components/home/BoatsForSaleSection";
+import HomeSplitCtas from "@/components/home/HomeSplitCtas";
 
 type Tile = { title: string; href: string; subtitle?: string; emoji?: string };
 type DestinationTile = { title: string; href: string; subtitle?: string; image: string };
@@ -37,15 +38,6 @@ const CATEGORY_TILES: Tile[] = [
   { title: "New Boats", subtitle: "From builders", href: "/buy/new", emoji: "✨" },
   { title: "Charter", subtitle: "Weekly & day", href: "/charter", emoji: "🏝️" },
   { title: "Services", subtitle: "Survey, finance", href: "/services", emoji: "🧰" },
-];
-
-const FOR_SALE: Card[] = [
-  { title: "Beneteau Oceanis 46.1", meta: "46 ft • 2019 • Palma, ES", price: "€285,000", href: "/buy/beneteau-oceanis-46-1", badge: "Verified" },
-  { title: "Sunseeker Predator 50", meta: "50 ft • 2016 • Cannes, FR", price: "€590,000", href: "/buy/sunseeker-predator-50", badge: "Featured" },
-  { title: "Lagoon 42 Catamaran", meta: "42 ft • 2020 • Split, HR", price: "€420,000", href: "/buy/lagoon-42", badge: "Hot" },
-  { title: "Princess V40", meta: "40 ft • 2018 • Antibes, FR", price: "€345,000", href: "/buy/princess-v40" },
-  { title: "Jeanneau Sun Odyssey 409", meta: "41 ft • 2015 • Athens, GR", price: "€165,000", href: "/buy/jeanneau-409" },
-  { title: "Azimut 55", meta: "55 ft • 2017 • Ibiza, ES", price: "€780,000", href: "/buy/azimut-55", badge: "Featured" },
 ];
 
 const CHARTER: Card[] = [
@@ -228,7 +220,9 @@ export default function Home() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-slate-900">{t.title}</div>
-                  {t.subtitle ? <div className="truncate text-sm text-slate-500">{t.subtitle}</div> : null}
+                  {t.subtitle ? (
+                    <div className="truncate text-sm text-slate-500">{t.subtitle}</div>
+                  ) : null}
                 </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-slate-500" />
               </Link>
@@ -237,26 +231,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Boats for sale */}
-      <section className="w-full">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <SectionHeader title="Boats for sale" subtitle="Fresh listings from brokers and private sellers" href="/buy" />
-          <CardRail items={FOR_SALE} />
-          <div className="mt-6 text-center sm:hidden">
-            <Link
-              href="/buy"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 no-underline hover:text-slate-900"
-            >
-              View all boats <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* ✅ Boats for sale (moved into component) */}
+      <BoatsForSaleSection />
 
       {/* Charter available */}
       <section className="w-full bg-linear-to-b from-slate-50 to-white">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <SectionHeader title="Charter boats available" subtitle="Day charters, weekly charters, crewed options" href="/charter" />
+          <SectionHeader
+            title="Charter boats available"
+            subtitle="Day charters, weekly charters, crewed options"
+            href="/charter"
+          />
           <CardRail items={CHARTER} />
         </div>
       </section>
@@ -276,7 +261,11 @@ export default function Home() {
       {/* Popular destinations — Airbnb-style image cards */}
       <section className="w-full bg-linear-to-b from-white to-slate-50">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <SectionHeader title="Popular destinations" subtitle="Where people are boating right now" href="/destinations" />
+          <SectionHeader
+            title="Popular destinations"
+            subtitle="Where people are boating right now"
+            href="/destinations"
+          />
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {DESTINATIONS.map((d, idx) => (
@@ -336,6 +325,26 @@ export default function Home() {
 
       {/* ✅ Things to do (new section) */}
       <ThingsToDo />
+
+      {/* ✅ New split CTAs (button-only) */}
+      <HomeSplitCtas
+        items={[
+          {
+            title: "Looking for a Charter?",
+            body: "Find day charters, weekly charters, and crewed options — all in one place.",
+            cta: "Book a Charter",
+            href: "/charter",
+            imageSrc: "/Charter.png",
+          },
+          {
+            title: "Looking for Holiday Ideas?",
+            body: "Browse destinations, routes and things to do — then match boats to the plan.",
+            cta: "Search for Holidays",
+            href: "/destinations",
+            imageSrc: "/Holiday.png",
+          },
+        ]}
+      />
 
       {/* Bottom CTA */}
       <section className="w-full bg-slate-50">

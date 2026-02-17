@@ -1,7 +1,6 @@
-//·app/add-listing/_components/steps/Step2Category.tsx
+// app/add-listing/_components/steps/Step2Category.tsx
 "use client";
 
-import * as React from "react";
 import FormSection from "../FormSection";
 import Input from "../fields/Input";
 import Select from "../fields/Select";
@@ -20,11 +19,14 @@ export default function Step2Category({
   if (listingType === "sale" || listingType === "charter") {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">
+        <div className="mb-10 text-center">
+          <h1 className="text-[28px] font-normal tracking-[-0.02em] text-[#1a1a1a]">
             {listingType === "sale" ? "What type of boat?" : "What are you offering for charter?"}
           </h1>
-          <p className="mt-2 text-slate-600">Select the category that best describes your vessel</p>
+          <p className="mt-2 text-[15px] text-[#999]">
+            Select the category that best describes your vessel
+          </p>
+          <div className="mx-auto mt-4 h-0.5 w-12 rounded-full bg-[#1a7a5c]" />
         </div>
 
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
@@ -35,20 +37,31 @@ export default function Step2Category({
               <button
                 key={cat.id}
                 onClick={() => updateForm({ boatCategory: cat.id as BoatCategory })}
-                className={`flex flex-col items-center rounded-xl border-2 p-4 transition-all ${
-                  isSelected ? "border-[#ff6a00] bg-orange-50" : "border-slate-200 bg-white hover:border-slate-300"
+                className={`flex flex-col items-center rounded-xl border p-4 transition-all ${
+                  isSelected
+                    ? "border-[#0a211f] bg-[#0a211f]/3 ring-1 ring-[#0a211f]/15"
+                    : "border-[#e5e5e5] bg-white hover:border-[#ccc] hover:shadow-sm"
                 }`}
               >
-                <span className="mb-2 text-3xl">{cat.icon}</span>
-                <span className="text-center text-sm font-medium text-slate-900">{cat.label}</span>
+                <span className="mb-2.5 text-3xl">{cat.icon}</span>
+                <span
+                  className={`text-center text-[13px] font-medium transition-colors ${
+                    isSelected ? "text-[#0a211f]" : "text-[#555]"
+                  }`}
+                >
+                  {cat.label}
+                </span>
               </button>
             );
           })}
         </div>
 
         {listingType === "charter" && (
-          <div className="mt-8">
-            <h3 className="mb-4 text-lg font-semibold text-slate-900">Charter type</h3>
+          <div className="mt-10">
+            <h3 className="mb-1 text-[17px] font-medium tracking-[-0.01em] text-[#1a1a1a]">
+              Charter type
+            </h3>
+            <div className="mb-4 h-0.5 w-8 rounded-full bg-[#1a7a5c]" />
             <div className="grid gap-3 sm:grid-cols-2">
               {CHARTER_TYPES.map((type) => {
                 const isSelected = formData.charterType === type.id;
@@ -57,12 +70,22 @@ export default function Step2Category({
                   <button
                     key={type.id}
                     onClick={() => updateForm({ charterType: type.id as CharterType })}
-                    className={`flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all ${
-                      isSelected ? "border-[#ff6a00] bg-orange-50" : "border-slate-200 bg-white hover:border-slate-300"
+                    className={`flex flex-col items-start rounded-xl border p-5 text-left transition-all ${
+                      isSelected
+                        ? "border-[#0a211f] bg-[#0a211f]/3 ring-1 ring-[#0a211f]/15"
+                        : "border-[#e5e5e5] bg-white hover:border-[#ccc] hover:shadow-sm"
                     }`}
                   >
-                    <span className="font-semibold text-slate-900">{type.label}</span>
-                    <span className="mt-1 text-sm text-slate-500">{type.description}</span>
+                    <span
+                      className={`font-medium transition-colors ${
+                        isSelected ? "text-[#0a211f]" : "text-[#1a1a1a]"
+                      }`}
+                    >
+                      {type.label}
+                    </span>
+                    <span className="mt-1.5 text-[13px] leading-relaxed text-[#999]">
+                      {type.description}
+                    </span>
                   </button>
                 );
               })}
@@ -76,9 +99,14 @@ export default function Step2Category({
   if (listingType === "service") {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">What service do you offer?</h1>
-          <p className="mt-2 text-slate-600">Select your professional category</p>
+        <div className="mb-10 text-center">
+          <h1 className="text-[28px] font-normal tracking-[-0.02em] text-[#1a1a1a]">
+            What service do you offer?
+          </h1>
+          <p className="mt-2 text-[15px] text-[#999]">
+            Select your professional category
+          </p>
+          <div className="mx-auto mt-4 h-0.5 w-12 rounded-full bg-[#1a7a5c]" />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -90,18 +118,32 @@ export default function Step2Category({
               <button
                 key={cat.id}
                 onClick={() => updateForm({ serviceCategory: cat.id as ServiceCategory })}
-                className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-                  isSelected ? "border-[#ff6a00] bg-orange-50" : "border-slate-200 bg-white hover:border-slate-300"
+                className={`flex items-center gap-3.5 rounded-xl border p-4 text-left transition-all ${
+                  isSelected
+                    ? "border-[#0a211f] bg-[#0a211f]/3 ring-1 ring-[#0a211f]/15"
+                    : "border-[#e5e5e5] bg-white hover:border-[#ccc] hover:shadow-sm"
                 }`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    isSelected ? "bg-[#ff6a00] text-white" : "bg-slate-100 text-slate-600"
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all ${
+                    isSelected
+                      ? "bg-[#0a211f] shadow-sm"
+                      : "bg-[#f5f5f4]"
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon
+                    className={`h-5 w-5 transition-colors ${
+                      isSelected ? "text-[#fff86c]" : "text-[#999]"
+                    }`}
+                  />
                 </div>
-                <span className="font-medium text-slate-900">{cat.label}</span>
+                <span
+                  className={`text-[14px] font-medium transition-colors ${
+                    isSelected ? "text-[#0a211f]" : "text-[#1a1a1a]"
+                  }`}
+                >
+                  {cat.label}
+                </span>
               </button>
             );
           })}
@@ -113,9 +155,14 @@ export default function Step2Category({
   if (listingType === "parts") {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">Parts &amp; Equipment</h1>
-          <p className="mt-2 text-slate-600">Tell us about what you&apos;re selling</p>
+        <div className="mb-10 text-center">
+          <h1 className="text-[28px] font-normal tracking-[-0.02em] text-[#1a1a1a]">
+            Parts &amp; Equipment
+          </h1>
+          <p className="mt-2 text-[15px] text-[#999]">
+            Tell us about what you&apos;re selling
+          </p>
+          <div className="mx-auto mt-4 h-0.5 w-12 rounded-full bg-[#1a7a5c]" />
         </div>
 
         <FormSection title="Item Details">

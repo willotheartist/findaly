@@ -514,15 +514,15 @@ export default function ListingWizard({
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
             <div className="border-b border-[#e5e5e5] px-6 py-5">
-              <div className="text-lg font-semibold text-[#1a1a1a]">Unfinished listing</div>
-              <div className="mt-1 text-sm text-[#555]">
+              <div className="text-[17px] font-medium text-[#1a1a1a]">Unfinished listing</div>
+              <div className="mt-1 text-[14px] text-[#999]">
                 This listing is missing required details. You can keep it as a draft, or continue editing.
               </div>
             </div>
 
             <div className="px-6 py-5">
               {missingKeys.length > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-900">
                   <div className="font-medium">Missing required fields:</div>
                   <ul className="mt-2 list-disc pl-5 text-amber-800">
                     {missingKeys.slice(0, 8).map((k) => (
@@ -539,7 +539,7 @@ export default function ListingWizard({
                     setShowUnfinishedModal(false);
                     jumpToStep(missingJumpStep || 1);
                   }}
-                  className="inline-flex items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-2.5 text-sm font-medium text-[#1a1a1a] hover:bg-[#f5f5f4]"
+                  className="inline-flex items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-2.5 text-[14px] font-medium text-[#1a1a1a] hover:bg-[#f5f5f4]"
                 >
                   Continue editing
                 </button>
@@ -547,7 +547,7 @@ export default function ListingWizard({
                 <button
                   onClick={saveAsDraft}
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-lg bg-[#0a211f] px-5 py-2.5 text-sm font-medium text-[#fff86c] hover:opacity-90 disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg bg-[#0a211f] px-5 py-2.5 text-[14px] font-medium text-[#fff86c] hover:opacity-90 disabled:opacity-60"
                 >
                   Save as draft
                 </button>
@@ -559,39 +559,35 @@ export default function ListingWizard({
 
       {/* Main layout */}
       <main className="flex min-h-screen flex-col bg-[#f5f5f4]">
-        {/* Top header bar */}
-        <header className="sticky top-0 z-40 border-b border-[#e5e5e5] bg-white/80 backdrop-blur-lg">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555] transition-colors hover:bg-[#f5f5f4] hover:text-[#1a1a1a]"
-                aria-label="Back to home"
-              >
-                <X className="h-4 w-4" />
-              </Link>
-              <div>
-                <h1 className="text-base font-semibold text-[#1a1a1a] sm:text-lg">
-                  {mode === "edit" ? "Edit listing" : "Create listing"}
-                </h1>
-                <p className="hidden text-xs text-[#999] sm:block">
-                  {steps.find((s) => s.id === currentStep)?.label} · Step {currentStep} of {totalSteps}
-                </p>
-              </div>
+        {/* ── Compact header: close + steps + publish all in one row ── */}
+        <header className="sticky top-0 z-40 border-b border-[#e5e5e5] bg-white/90 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-2.5 sm:px-6">
+            {/* Close */}
+            <Link
+              href="/"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555] transition-colors hover:bg-[#f5f5f4] hover:text-[#1a1a1a]"
+              aria-label="Back to home"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Link>
+
+            {/* Step indicator (fills the middle) */}
+            <div className="min-w-0 flex-1">
+              <StepIndicator steps={steps} currentStep={currentStep} onStepClick={goToStep} />
             </div>
 
-            {/* Quick publish button (desktop) */}
+            {/* Publish button (desktop) */}
             <button
               onClick={requestPublish}
               disabled={isSubmitting}
-              className="hidden items-center gap-2 rounded-lg bg-[#0a211f] px-5 py-2 text-sm font-medium text-[#fff86c] shadow-sm transition-all hover:opacity-90 disabled:opacity-60 sm:inline-flex"
+              className="hidden shrink-0 items-center gap-2 rounded-lg bg-[#0a211f] px-4 py-2 text-[13px] font-medium text-[#fff86c] shadow-sm transition-all hover:opacity-90 disabled:opacity-60 sm:inline-flex"
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : mode === "edit" ? (
-                <Save className="h-4 w-4" />
+                <Save className="h-3.5 w-3.5" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-3.5 w-3.5" />
               )}
               {mode === "edit" ? "Save" : "Publish"}
             </button>
@@ -601,12 +597,8 @@ export default function ListingWizard({
         {/* Content */}
         <div className="flex-1 pb-24">
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-            <div className="mb-6 sm:mb-8">
-              <StepIndicator steps={steps} currentStep={currentStep} onStepClick={goToStep} />
-            </div>
-
             {submitError && (
-              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-800">
                 <p className="font-medium">Something went wrong</p>
                 <p className="mt-1 text-red-600">{submitError}</p>
               </div>
@@ -624,7 +616,7 @@ export default function ListingWizard({
             <button
               onClick={prevStep}
               disabled={isFirstStep}
-              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all sm:px-5 ${
+              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[14px] font-medium transition-all sm:px-5 ${
                 isFirstStep
                   ? "border-[#f5f5f4] bg-[#f5f5f4] text-[#ccc] cursor-not-allowed"
                   : "border-[#e5e5e5] bg-white text-[#555] hover:bg-[#f5f5f4] hover:border-[#ccc]"
@@ -634,6 +626,7 @@ export default function ListingWizard({
               <span className="hidden sm:inline">Back</span>
             </button>
 
+            {/* Mobile step dots */}
             <div className="flex items-center gap-1 sm:hidden">
               {steps.map((step) => (
                 <span
@@ -654,7 +647,7 @@ export default function ListingWizard({
                 <button
                   onClick={requestPublish}
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#0a211f] px-5 py-2.5 text-sm font-medium text-[#fff86c] shadow-sm transition-all hover:opacity-90 disabled:opacity-60 sm:px-6"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0a211f] px-5 py-2.5 text-[14px] font-medium text-[#fff86c] shadow-sm transition-all hover:opacity-90 disabled:opacity-60 sm:px-6"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -669,7 +662,7 @@ export default function ListingWizard({
                 <button
                   onClick={nextStep}
                   disabled={!canProceed()}
-                  className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all sm:px-6 ${
+                  className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-[14px] font-medium transition-all sm:px-6 ${
                     canProceed()
                       ? "bg-[#0a211f] text-white hover:opacity-90"
                       : "bg-[#f5f5f4] text-[#ccc] cursor-not-allowed"

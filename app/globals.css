@@ -26,3 +26,26 @@ html[data-header="compact"] {
   --site-header-h: 64px;
 }
 
+.waaza-embed {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+.waaza-embed #waaza-widget {
+  background: transparent !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 20px;
+  overflow: hidden; /* makes iframe corners look premium */
+}
+
+.waaza-embed #waaza-widget iframe {
+  display: block;
+  width: 100%;
+  max-width: 440px; /* or remove if you want full-width */
+  border: 0 !important;
+  background: transparent !important;
+}
+

@@ -44,10 +44,6 @@ export default async function BoatListingPage({ params }: PageProps) {
 
   // ─────────────────────────────────────────────────────────────
   // Similar boats (Green-Acres style: exactly 4, curated)
-  // Strategy:
-  // 1) Try same brand OR same category (LIVE SALE VESSEL)
-  // 2) Fill with same country as fallback
-  // 3) Always exclude current listing + de-dupe
   // ─────────────────────────────────────────────────────────────
   const take = 4;
 
@@ -184,6 +180,7 @@ export default async function BoatListingPage({ params }: PageProps) {
 
     seller: {
       id: listing.profile.id,
+      slug: listing.profile.slug, // ✅ needed for /profile/[slug]
       name: listing.sellerName || listing.profile.name,
       type:
         listing.sellerType === "PROFESSIONAL"

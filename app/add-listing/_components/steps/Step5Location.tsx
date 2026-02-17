@@ -1,4 +1,4 @@
-//·app/add-listing/_components/steps/Step5Location.tsx
+// app/add-listing/_components/steps/Step5Location.tsx
 "use client";
 
 import * as React from "react";
@@ -8,10 +8,6 @@ import Select from "../fields/Select";
 import { COUNTRIES, CURRENCIES, TAX_STATUSES } from "../../_data/options";
 import type { FormData, ListingType } from "../../_types/listing";
 
-/**
- * Keep raw numeric string in state (e.g. "1000000"),
- * but display it formatted (e.g. "1,000,000").
- */
 function onlyDigits(s: string) {
   return (s || "").replace(/[^\d]/g, "");
 }
@@ -19,8 +15,31 @@ function onlyDigits(s: string) {
 function formatThousands(rawDigits: string) {
   const d = onlyDigits(rawDigits);
   if (!d) return "";
-  // String-based grouping (no Number() -> avoids precision issues for big values)
   return d.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/* ─── Styled radio ─── */
+function RadioOption({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5">
+      <span
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+          checked ? "border-[#0a211f]" : "border-[#ccc]"
+        }`}
+      >
+        {checked && <span className="h-2 w-2 rounded-full bg-[#0a211f]" />}
+      </span>
+      <span className="text-[14px] text-[#555]">{label}</span>
+    </label>
+  );
 }
 
 export default function Step5Location({
@@ -64,30 +83,20 @@ export default function Step5Location({
 
           {(listingType === "sale" || listingType === "charter") && (
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2.5 block text-[13px] font-medium tracking-wide text-[#555]">
                 Currently lying
               </label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="lying"
-                    checked={formData.lying === "afloat"}
-                    onChange={() => updateForm({ lying: "afloat" })}
-                    className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
-                  />
-                  <span className="text-sm text-slate-700">Afloat</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="lying"
-                    checked={formData.lying === "ashore"}
-                    onChange={() => updateForm({ lying: "ashore" })}
-                    className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
-                  />
-                  <span className="text-sm text-slate-700">Ashore</span>
-                </label>
+              <div className="flex gap-5">
+                <RadioOption
+                  label="Afloat"
+                  checked={formData.lying === "afloat"}
+                  onChange={() => updateForm({ lying: "afloat" })}
+                />
+                <RadioOption
+                  label="Ashore"
+                  checked={formData.lying === "ashore"}
+                  onChange={() => updateForm({ lying: "ashore" })}
+                />
               </div>
             </div>
           )}
@@ -138,29 +147,25 @@ export default function Step5Location({
           {listingType === "sale" && (
             <>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-2.5 block text-[13px] font-medium tracking-wide text-[#555]">
                   Price type
                 </label>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-4">
                   {[
                     { id: "fixed", label: "Fixed price" },
                     { id: "negotiable", label: "Negotiable" },
                     { id: "poa", label: "POA (Price on application)" },
                   ].map((opt) => (
-                    <label key={opt.id} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="priceType"
-                        checked={formData.priceType === opt.id}
-                        onChange={() =>
-                          updateForm({
-                            priceType: opt.id as FormData["priceType"],
-                          })
-                        }
-                        className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
-                      />
-                      <span className="text-sm text-slate-700">{opt.label}</span>
-                    </label>
+                    <RadioOption
+                      key={opt.id}
+                      label={opt.label}
+                      checked={formData.priceType === opt.id}
+                      onChange={() =>
+                        updateForm({
+                          priceType: opt.id as FormData["priceType"],
+                        })
+                      }
+                    />
                   ))}
                 </div>
               </div>

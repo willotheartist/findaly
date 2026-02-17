@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { Camera, Sailboat, X } from "lucide-react";
+import { Camera, ImagePlus, Sailboat, X } from "lucide-react";
 
 type Props = {
   photoUrls: string[];
@@ -43,10 +43,7 @@ export default function PhotoUploader({
 
     if (!picked.length) return;
 
-    // NOTE: Do not revoke object URLs here (wizard/edit can rerender).
-    // Parent replaces blob URLs with uploaded URLs after upload completes.
     const previews = picked.map((f) => URL.createObjectURL(f));
-
     onAddFiles(picked, previews);
   };
 
@@ -57,7 +54,6 @@ export default function PhotoUploader({
     e.target.value = "";
   };
 
-  // Drop zone handlers
   const onDragEnter: React.DragEventHandler<HTMLDivElement> = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -90,7 +86,6 @@ export default function PhotoUploader({
     }
   };
 
-  // Reorder handlers
   const onTileDragStart = (index: number) => (e: React.DragEvent) => {
     dragIndexRef.current = index;
     e.dataTransfer.effectAllowed = "move";
@@ -106,7 +101,6 @@ export default function PhotoUploader({
   };
 
   const onTileDrop = (dropIndex: number) => (e: React.DragEvent) => {
-    // If user drops files onto a tile, treat as add
     if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
       e.preventDefault();
       addFiles(Array.from(e.dataTransfer.files));
@@ -136,10 +130,10 @@ export default function PhotoUploader({
 
   return (
     <div>
-      <label className="mb-3 block text-sm font-medium text-slate-700">
-        Photos <span className="text-rose-500">*</span>
-        <span className="ml-2 font-normal text-slate-500">
-          (Add up to {max} photos{remaining ? ` · ${remaining} remaining` : ""})
+      <label className="mb-3 block text-[13px] font-medium tracking-wide text-[#555]">
+        Photos <span className="text-[#d94059]">*</span>
+        <span className="ml-2 font-normal text-[#999]">
+          (Up to {max} photos{remaining < max ? ` · ${remaining} remaining` : ""})
         </span>
       </label>
 
@@ -160,11 +154,12 @@ export default function PhotoUploader({
         className={cx(
           "rounded-2xl border-2 border-dashed p-3 transition-all",
           isDropActive
-            ? "border-[#ff6a00] bg-orange-50/60"
+            ? "border-[#1a7a5c] bg-[#1a7a5c]/[0.04]"
             : "border-transparent"
         )}
       >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {/* Add button */}
           <button
             type="button"
             onClick={openPicker}
@@ -172,17 +167,20 @@ export default function PhotoUploader({
             className={cx(
               "group flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all",
               remaining
-                ? "border-slate-300 bg-slate-50 hover:border-[#ff6a00] hover:bg-orange-50"
-                : "cursor-not-allowed border-slate-200 bg-slate-50 opacity-60"
+                ? "border-[#e5e5e5] bg-[#f5f5f4] hover:border-[#0a211f] hover:bg-[#0a211f]/[0.03]"
+                : "cursor-not-allowed border-[#e5e5e5] bg-[#f5f5f4] opacity-50"
             )}
           >
-            <Camera className="mb-2 h-8 w-8 text-slate-400 group-hover:text-[#ff6a00]" />
-            <span className="text-sm font-medium text-slate-600 group-hover:text-[#ff6a00]">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm transition-all group-hover:bg-[#0a211f] group-hover:shadow-md">
+              <ImagePlus className="h-5 w-5 text-[#999] transition-colors group-hover:text-[#fff86c]" />
+            </div>
+            <span className="text-[13px] font-medium text-[#555] transition-colors group-hover:text-[#0a211f]">
               Add photos
             </span>
-            <span className="mt-1 text-[11px] text-slate-400">or drop here</span>
+            <span className="mt-0.5 text-[11px] text-[#ccc]">or drop here</span>
           </button>
 
+          {/* Photo tiles */}
           {(photoUrls ?? []).map((url, index) => (
             <div
               key={`${url}-${index}`}
@@ -192,13 +190,12 @@ export default function PhotoUploader({
               onDrop={onTileDrop(index)}
               onDragEnd={onTileDragEnd}
               className={cx(
-                "group relative aspect-square overflow-hidden rounded-xl bg-slate-100",
+                "group relative aspect-square overflow-hidden rounded-xl bg-[#f5f5f4]",
                 onReorder ? "cursor-move" : ""
               )}
               title={onReorder ? "Drag to reorder" : undefined}
             >
               {url ? (
-                // ✅ Always use <img> so remote domains can never break tiles
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={url}
@@ -208,27 +205,31 @@ export default function PhotoUploader({
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Sailboat className="h-8 w-8 text-slate-300" />
+                  <Sailboat className="h-8 w-8 text-[#e5e5e5]" />
                 </div>
               )}
 
+              {/* Cover badge */}
               {index === 0 && (
-                <div className="absolute left-2 top-2 rounded bg-[#ff6a00] px-2 py-0.5 text-xs font-semibold text-white">
+                <div className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-[#0a211f] px-2 py-0.5 text-[11px] font-semibold text-[#fff86c]">
+                  <Camera className="h-3 w-3" />
                   Cover
                 </div>
               )}
 
+              {/* Remove button */}
               <button
                 type="button"
                 onClick={() => onRemove(index)}
-                className="absolute right-2 top-2 rounded-full bg-black/50 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
                 aria-label="Remove photo"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
 
+              {/* Reorder hint */}
               {Boolean(onReorder) && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-black/30 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent px-2 py-1.5 text-[11px] text-white opacity-0 transition-opacity group-hover:opacity-100">
                   Drag to reorder
                 </div>
               )}
@@ -237,14 +238,15 @@ export default function PhotoUploader({
         </div>
 
         {isDropActive && (
-          <div className="mt-3 rounded-xl border border-[#ff6a00]/30 bg-white/70 px-4 py-3 text-sm text-slate-700 backdrop-blur-sm">
+          <div className="mt-3 flex items-center justify-center rounded-xl border border-[#1a7a5c]/30 bg-[#1a7a5c]/[0.04] px-4 py-3 text-[13px] text-[#1a7a5c]">
+            <ImagePlus className="mr-2 h-4 w-4" />
             Drop images to upload
           </div>
         )}
       </div>
 
-      <p className="mt-3 text-xs text-slate-500">
-        Tip: High-quality photos get 3x more inquiries. Include interior,
+      <p className="mt-3 text-[12px] text-[#999]">
+        Tip: High-quality photos get 3× more inquiries. Include interior,
         exterior, engine, and detail shots.
       </p>
     </div>

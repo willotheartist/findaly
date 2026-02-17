@@ -24,12 +24,6 @@ export default function Step6Photos({
   formData: FormData;
   updateForm: (updates: PartialFormUpdate | ((prev: FormData) => PartialFormUpdate)) => void;
 }) {
-  /**
-   * FIX: Use functional updater to avoid stale closure.
-   * When multiple files are added at once (drag & drop), React batches updates.
-   * Without functional updater, each update uses the same stale `formData` reference,
-   * causing only the last file to be added.
-   */
   const handleAddFiles = React.useCallback(
     (files: File[], previewUrls: string[]) => {
       updateForm((prev) => ({
@@ -44,8 +38,6 @@ export default function Step6Photos({
     (index: number) => {
       const currentUrls = formData.photoUrls ?? [];
       const urlToRemove = currentUrls[index] || "";
-
-      // Revoke blob URL when user explicitly removes a photo
       safeRevoke(urlToRemove);
 
       updateForm((prev) => ({

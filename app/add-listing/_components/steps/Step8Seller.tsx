@@ -1,4 +1,4 @@
-//·app/add-listing/_components/steps/Step8Seller.tsx
+// app/add-listing/_components/steps/Step8Seller.tsx
 "use client";
 
 import * as React from "react";
@@ -21,32 +21,56 @@ export default function Step8Seller({
           <button
             type="button"
             onClick={() => updateForm({ sellerType: "private" })}
-            className={`flex items-center gap-4 rounded-xl border-2 p-5 text-left transition-all ${
+            className={`flex items-center gap-4 rounded-xl border p-5 text-left transition-all ${
               formData.sellerType === "private"
-                ? "border-[#ff6a00] bg-orange-50"
-                : "border-slate-200 hover:border-slate-300"
+                ? "border-[#0a211f] bg-[#0a211f]/[0.03] ring-1 ring-[#0a211f]/15"
+                : "border-[#e5e5e5] hover:border-[#ccc] hover:shadow-sm"
             }`}
           >
-            <User className="h-8 w-8 text-slate-600" />
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
+                formData.sellerType === "private"
+                  ? "bg-[#0a211f] shadow-sm"
+                  : "bg-[#f5f5f4]"
+              }`}
+            >
+              <User
+                className={`h-5 w-5 transition-colors ${
+                  formData.sellerType === "private" ? "text-[#fff86c]" : "text-[#999]"
+                }`}
+              />
+            </div>
             <div>
-              <div className="font-semibold text-slate-900">Private Seller</div>
-              <div className="text-sm text-slate-500">Individual selling their own boat</div>
+              <div className="text-[15px] font-medium text-[#1a1a1a]">Private Seller</div>
+              <div className="mt-0.5 text-[13px] text-[#999]">Individual selling their own boat</div>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => updateForm({ sellerType: "professional" })}
-            className={`flex items-center gap-4 rounded-xl border-2 p-5 text-left transition-all ${
+            className={`flex items-center gap-4 rounded-xl border p-5 text-left transition-all ${
               formData.sellerType === "professional"
-                ? "border-[#ff6a00] bg-orange-50"
-                : "border-slate-200 hover:border-slate-300"
+                ? "border-[#0a211f] bg-[#0a211f]/[0.03] ring-1 ring-[#0a211f]/15"
+                : "border-[#e5e5e5] hover:border-[#ccc] hover:shadow-sm"
             }`}
           >
-            <Building2 className="h-8 w-8 text-slate-600" />
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-all ${
+                formData.sellerType === "professional"
+                  ? "bg-[#0a211f] shadow-sm"
+                  : "bg-[#f5f5f4]"
+              }`}
+            >
+              <Building2
+                className={`h-5 w-5 transition-colors ${
+                  formData.sellerType === "professional" ? "text-[#fff86c]" : "text-[#999]"
+                }`}
+              />
+            </div>
             <div>
-              <div className="font-semibold text-slate-900">Professional</div>
-              <div className="text-sm text-slate-500">Broker, dealer, or charter company</div>
+              <div className="text-[15px] font-medium text-[#1a1a1a]">Professional</div>
+              <div className="mt-0.5 text-[13px] text-[#999]">Broker, dealer, or charter company</div>
             </div>
           </button>
         </div>
@@ -96,14 +120,27 @@ export default function Step8Seller({
                 required
               />
 
-              <label className="mt-2 flex items-center gap-2">
+              <label className="mt-2.5 flex cursor-pointer items-center gap-2.5">
+                <span
+                  className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition-all ${
+                    formData.sellerWhatsapp
+                      ? "border-[#0a211f] bg-[#0a211f]"
+                      : "border-[#ccc]"
+                  }`}
+                >
+                  {formData.sellerWhatsapp && (
+                    <svg className="h-3 w-3 text-[#fff86c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
                 <input
                   type="checkbox"
                   checked={formData.sellerWhatsapp}
                   onChange={(e) => updateForm({ sellerWhatsapp: e.target.checked })}
-                  className="h-4 w-4 rounded text-[#ff6a00] focus:ring-[#ff6a00]"
+                  className="sr-only"
                 />
-                <span className="text-sm text-slate-600">Available on WhatsApp</span>
+                <span className="text-[13px] text-[#555]">Available on WhatsApp</span>
               </label>
             </div>
           </div>
@@ -130,48 +167,90 @@ export default function Step8Seller({
 
       <FormSection title="Listing Options">
         <div className="space-y-3">
-          <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-4">
+          {/* Accept offers */}
+          <label className="flex cursor-pointer items-start gap-3.5 rounded-xl border border-[#e5e5e5] p-4 transition-all hover:border-[#ccc]">
+            <span
+              className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition-all ${
+                formData.acceptOffers
+                  ? "border-[#0a211f] bg-[#0a211f]"
+                  : "border-[#ccc]"
+              }`}
+            >
+              {formData.acceptOffers && (
+                <svg className="h-3 w-3 text-[#fff86c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
             <input
               type="checkbox"
               checked={formData.acceptOffers}
               onChange={(e) => updateForm({ acceptOffers: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded text-[#ff6a00] focus:ring-[#ff6a00]"
+              className="sr-only"
             />
             <div>
-              <div className="font-medium text-slate-900">Accept offers</div>
-              <div className="text-sm text-slate-500">Allow buyers to submit offers through the platform</div>
+              <div className="text-[14px] font-medium text-[#1a1a1a]">Accept offers</div>
+              <div className="mt-0.5 text-[13px] text-[#999]">Allow buyers to submit offers through the platform</div>
             </div>
           </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          {/* Featured */}
+          <label className="flex cursor-pointer items-start gap-3.5 rounded-xl border border-[#fff86c]/60 bg-[#fff86c]/[0.08] p-4 transition-all hover:bg-[#fff86c]/[0.12]">
+            <span
+              className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition-all ${
+                formData.featured
+                  ? "border-[#0a211f] bg-[#0a211f]"
+                  : "border-[#ccc]"
+              }`}
+            >
+              {formData.featured && (
+                <svg className="h-3 w-3 text-[#fff86c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
             <input
               type="checkbox"
               checked={formData.featured}
               onChange={(e) => updateForm({ featured: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded text-[#ff6a00] focus:ring-[#ff6a00]"
+              className="sr-only"
             />
             <div>
-              <div className="flex items-center gap-2 font-medium text-slate-900">
-                <Star className="h-4 w-4 text-amber-500" />
+              <div className="flex items-center gap-2 text-[14px] font-medium text-[#1a1a1a]">
+                <Star className="h-4 w-4 text-[#a68307]" />
                 Feature this listing
               </div>
-              <div className="text-sm text-slate-600">Get 5x more visibility – €49/month</div>
+              <div className="mt-0.5 text-[13px] text-[#555]">Get 5× more visibility – €49/month</div>
             </div>
           </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
+          {/* Urgent */}
+          <label className="flex cursor-pointer items-start gap-3.5 rounded-xl border border-[#d94059]/20 bg-[#d94059]/[0.04] p-4 transition-all hover:bg-[#d94059]/[0.07]">
+            <span
+              className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition-all ${
+                formData.urgent
+                  ? "border-[#0a211f] bg-[#0a211f]"
+                  : "border-[#ccc]"
+              }`}
+            >
+              {formData.urgent && (
+                <svg className="h-3 w-3 text-[#fff86c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
             <input
               type="checkbox"
               checked={formData.urgent}
               onChange={(e) => updateForm({ urgent: e.target.checked })}
-              className="mt-0.5 h-4 w-4 rounded text-[#ff6a00] focus:ring-[#ff6a00]"
+              className="sr-only"
             />
             <div>
-              <div className="flex items-center gap-2 font-medium text-slate-900">
-                <Zap className="h-4 w-4 text-rose-500" />
+              <div className="flex items-center gap-2 text-[14px] font-medium text-[#1a1a1a]">
+                <Zap className="h-4 w-4 text-[#d94059]" />
                 Mark as urgent
               </div>
-              <div className="text-sm text-slate-600">Highlight that you need a quick sale – €19</div>
+              <div className="mt-0.5 text-[13px] text-[#555]">Highlight that you need a quick sale – €19</div>
             </div>
           </label>
         </div>

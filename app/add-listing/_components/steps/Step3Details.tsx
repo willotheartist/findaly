@@ -1,4 +1,4 @@
-//·app/add-listing/_components/steps/Step3Details.tsx
+// app/add-listing/_components/steps/Step3Details.tsx
 "use client";
 
 import * as React from "react";
@@ -15,6 +15,32 @@ import {
   HULL_TYPES,
 } from "../../_data/options";
 import type { FormData, ListingType, BoatCategory, CharterType } from "../../_types/listing";
+
+/* ─── Styled radio ─── */
+function RadioOption({
+  name,
+  label,
+  checked,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5">
+      <span
+        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+          checked ? "border-[#0a211f]" : "border-[#ccc]"
+        }`}
+      >
+        {checked && <span className="h-2 w-2 rounded-full bg-[#0a211f]" />}
+      </span>
+      <span className="text-[14px] text-[#555]">{label}</span>
+    </label>
+  );
+}
 
 export default function Step3Details({
   listingType,
@@ -106,27 +132,19 @@ export default function Step3Details({
           </div>
 
           {listingType === "sale" && (
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="condition"
-                  checked={formData.condition === "new"}
-                  onChange={() => updateForm({ condition: "new" })}
-                  className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
-                />
-                <span className="text-sm font-medium text-slate-700">New</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="condition"
-                  checked={formData.condition === "used"}
-                  onChange={() => updateForm({ condition: "used" })}
-                  className="h-4 w-4 text-[#ff6a00] focus:ring-[#ff6a00]"
-                />
-                <span className="text-sm font-medium text-slate-700">Used</span>
-              </label>
+            <div className="flex gap-5">
+              <RadioOption
+                name="condition"
+                label="New"
+                checked={formData.condition === "new"}
+                onChange={() => updateForm({ condition: "new" })}
+              />
+              <RadioOption
+                name="condition"
+                label="Used"
+                checked={formData.condition === "used"}
+                onChange={() => updateForm({ condition: "used" })}
+              />
             </div>
           )}
         </div>

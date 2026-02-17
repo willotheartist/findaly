@@ -30,13 +30,13 @@ export default function Input({
 }) {
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-sm font-medium text-[#555]">
+      <label className="mb-1.5 block text-[13px] font-medium tracking-wide text-[#555]">
         {label}
-        {required && <span className="ml-1 text-rose-500">*</span>}
+        {required && <span className="ml-1 text-[#d94059]">*</span>}
       </label>
       <div className="relative">
         {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#999]">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[#999]">
             {prefix}
           </span>
         )}
@@ -46,17 +46,17 @@ export default function Input({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`h-11 w-full rounded-lg border border-[#e5e5e5] bg-white text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#ccc] focus:border-[#1a7a5c] focus:ring-2 focus:ring-[#1a7a5c]/10 ${
+          className={`h-12 w-full rounded-lg border border-[#e5e5e5] bg-white text-[14px] text-[#1a1a1a] outline-none transition-all placeholder:text-[#ccc] hover:border-[#ccc] focus:border-[#0a211f] focus:ring-2 focus:ring-[#0a211f]/8 ${
             prefix ? "pl-8" : "px-4"
-          } ${suffix ? "pr-12" : "pr-4"}`}
+          } ${suffix ? "pr-14" : "pr-4"}`}
         />
         {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[#999]">
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] font-medium text-[#999]">
             {suffix}
           </span>
         )}
       </div>
-      {hint && <p className="mt-1 text-xs text-[#999]">{hint}</p>}
+      {hint && <p className="mt-1.5 text-[12px] text-[#999]">{hint}</p>}
     </div>
   );
 }

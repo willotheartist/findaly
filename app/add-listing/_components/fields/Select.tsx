@@ -29,16 +29,16 @@ export default function Select({
 
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-sm font-medium text-[#555]">
+      <label className="mb-1.5 block text-[13px] font-medium tracking-wide text-[#555]">
         {label}
-        {required && <span className="ml-1 text-rose-500">*</span>}
+        {required && <span className="ml-1 text-[#d94059]">*</span>}
       </label>
       <div className="relative">
         <select
           name={name}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 w-full appearance-none rounded-lg border border-[#e5e5e5] bg-white px-4 pr-10 text-sm text-[#1a1a1a] outline-none transition-colors focus:border-[#1a7a5c] focus:ring-2 focus:ring-[#1a7a5c]/10"
+          className="h-12 w-full appearance-none rounded-lg border border-[#e5e5e5] bg-white px-4 pr-10 text-[14px] text-[#1a1a1a] outline-none transition-all hover:border-[#ccc] focus:border-[#0a211f] focus:ring-2 focus:ring-[#0a211f]/8"
         >
           <option value="">{placeholder}</option>
           {normalizedOptions.map((opt) => (
@@ -47,7 +47,7 @@ export default function Select({
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#999]" />
+        <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#999]" />
       </div>
     </div>
   );

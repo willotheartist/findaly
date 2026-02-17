@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 13/02/2026, 10:19:26*
+*Generated on: 15/02/2026, 11:11:12*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 148 |
+| 📄 Total Files | 156 |
 | 📁 Total Folders | 78 |
 | 🌳 Max Depth | 5 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,43 +24,43 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 68 files (45.9%)
-- 🔷 **.ts** (TypeScript files): 36 files (24.3%)
-- 🖼️ **.png** (PNG images): 9 files (6.1%)
-- 🖼️ **.jpg** (JPEG images): 8 files (5.4%)
-- 🎨 **.svg** (SVG images): 5 files (3.4%)
-- ⚙️ **.json** (JSON files): 4 files (2.7%)
-- 📄 **.sql** (Other files): 4 files (2.7%)
-- 📄 **.mjs** (Other files): 3 files (2.0%)
-- 📖 **.md** (Markdown files): 2 files (1.4%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.7%)
-- 📄 **.txt** (Text files): 1 files (0.7%)
-- 🖼️ **.ico** (Icon files): 1 files (0.7%)
-- 🎨 **.css** (Stylesheets): 1 files (0.7%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.7%)
-- ⚙️ **.toml** (TOML files): 1 files (0.7%)
-- 📄 **.prisma** (Other files): 1 files (0.7%)
-- 📄 **.patch** (Other files): 1 files (0.7%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.7%)
+- ⚛️ **.tsx** (React TypeScript files): 74 files (47.4%)
+- 🔷 **.ts** (TypeScript files): 36 files (23.1%)
+- 🖼️ **.png** (PNG images): 11 files (7.1%)
+- 🖼️ **.jpg** (JPEG images): 8 files (5.1%)
+- 🎨 **.svg** (SVG images): 5 files (3.2%)
+- ⚙️ **.json** (JSON files): 4 files (2.6%)
+- 📄 **.sql** (Other files): 4 files (2.6%)
+- 📄 **.mjs** (Other files): 3 files (1.9%)
+- 📖 **.md** (Markdown files): 2 files (1.3%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.6%)
+- 📄 **.txt** (Text files): 1 files (0.6%)
+- 🖼️ **.ico** (Icon files): 1 files (0.6%)
+- 🎨 **.css** (Stylesheets): 1 files (0.6%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.6%)
+- ⚙️ **.toml** (TOML files): 1 files (0.6%)
+- 📄 **.prisma** (Other files): 1 files (0.6%)
+- 📄 **.patch** (Other files): 1 files (0.6%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.6%)
 
 ### By Category
 
-- **React**: 68 files (45.9%)
-- **TypeScript**: 36 files (24.3%)
-- **Assets**: 23 files (15.5%)
-- **Other**: 10 files (6.8%)
-- **Config**: 6 files (4.1%)
-- **Docs**: 3 files (2.0%)
-- **DevOps**: 1 files (0.7%)
-- **Styles**: 1 files (0.7%)
+- **React**: 74 files (47.4%)
+- **TypeScript**: 36 files (23.1%)
+- **Assets**: 25 files (16.0%)
+- **Other**: 10 files (6.4%)
+- **Config**: 6 files (3.8%)
+- **Docs**: 3 files (1.9%)
+- **DevOps**: 1 files (0.6%)
+- **Styles**: 1 files (0.6%)
 
 ### 📁 Largest Directories
 
-- **root**: 148 files
+- **root**: 156 files
 - **app**: 65 files
-- **public**: 22 files
+- **components**: 24 files
+- **public**: 24 files
 - **app/add-listing**: 21 files
-- **components**: 18 files
 
 ## 🌳 Directory Structure
 
@@ -148,7 +148,6 @@ findaly/
 │   ├── 🖼️ favicon.ico
 │   ├── 🎨 globals.css
 │   ├── ⚛️ layout.tsx
-│   ├── 📂 listings/
 │   ├── 📂 login/
 │   │   ├── ⚛️ LoginClient.tsx
 │   │   └── ⚛️ page.tsx
@@ -195,21 +194,28 @@ findaly/
 │   ├── ⚛️ Header.tsx
 │   ├── ⚛️ HeaderDropdownClient.tsx
 │   ├── 📂 home/
+│   │   ├── ⚛️ BoatsForSaleSection.tsx
 │   │   ├── ⚛️ HomeHero.tsx
+│   │   ├── ⚛️ HomeSplitCtas.tsx
 │   │   └── ⚛️ ThingsToDo.tsx
 │   ├── 📂 listing/
 │   │   └── ⚛️ SellerCard.tsx
 │   ├── ⚛️ LogoutButtonClient.tsx
-│   └── 📂 stack/
+│   ├── 📂 maps/
+│   │   └── ⚛️ ListingMap.tsx
+│   ├── ⚛️ SiteHeaderHeightClient.tsx
+│   ├── ⚛️ SiteHeaderOffsetClient.tsx
+│   ├── 📂 stack/
 │   │   ├── ⚛️ StackBuilderClient.tsx
 │   │   ├── ⚛️ StackLoading.tsx
 │   │   └── ⚛️ StackResults.tsx
+│   └── ⚛️ WaazaFinancing.tsx
 ├── 📂 data/
 │   ├── 🔷 mockTools.ts
 │   └── 📂 stack/
 │   │   └── 🔷 questions.ts
 ├── 🔵 🔍 **eslint.config.mjs**
-├── 📂 eyb-sell-your-boat/
+├── 📂 eyb-sell-your-boat__OLD_NESTED/
 │   ├── 🚀 app/
 │   │   ├── 📂 add-listing/
 │   │   │   └── 📂 _components/
@@ -252,6 +258,7 @@ findaly/
 ├── 🔷 prisma.config.ts
 ├── 📖 project_structure.md
 ├── 🌐 public/
+│   ├── 🖼️ Charter.png
 │   ├── 📂 destinations/
 │   │   ├── 🖼️ Amalfi Coast.png
 │   │   ├── 🖼️ Balearics.png
@@ -269,6 +276,7 @@ findaly/
 │   ├── 🖼️ hero-charter.jpg
 │   ├── 🖼️ hero-pros.jpg
 │   ├── 🖼️ hero-sell.jpg
+│   ├── 🖼️ Holiday.png
 │   ├── 🎨 next.svg
 │   ├── 📂 uploads/
 │   │   ├── 🖼️ 3cf4a8bd-377b-4dcb-b66b-1bf4da243d90.jpg

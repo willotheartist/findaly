@@ -1,4 +1,4 @@
-//·app/add-listing/_components/steps/Step7Description.tsx
+// app/add-listing/_components/steps/Step7Description.tsx
 "use client";
 
 import * as React from "react";
@@ -22,7 +22,7 @@ export default function Step7Description({
           name="title"
           value={formData.title}
           onChange={(v) => updateForm({ title: v })}
-          placeholder="e.g., Sunseeker Predator 50 - Low Hours, Immaculate Condition"
+          placeholder="e.g., Sunseeker Predator 50 – Low Hours, Immaculate Condition"
           required
           hint="A good title includes brand, model, year, and key selling point"
         />

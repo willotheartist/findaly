@@ -7,7 +7,7 @@ import {
   Heart,
   Share2,
   ChevronLeft,
-  ChevronRight,
+  ChevronRight, // ✅ FIX: used in Sidebar
   MapPin,
   Calendar,
   Ruler,
@@ -35,6 +35,8 @@ import {
   ExternalLink,
   Sparkles,
 } from "lucide-react";
+
+import WaazaFinancing from "@/components/WaazaFinancing";
 
 /* ─── palette ─── */
 const P = {
@@ -104,6 +106,7 @@ type BoatListing = {
   videoUrl?: string;
   seller: {
     id: string;
+    slug: string; // ✅ FIX: route is /profile/[slug]
     name: string;
     type: "pro" | "private";
     company?: string;
@@ -661,7 +664,7 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
       <div style={{ padding: "0 28px 20px", borderBottom: `1px solid ${P.faint}` }}>
         <Link
-          href={`/profile/${s.id}`}
+          href={`/profile/${s.slug}`} // ✅ FIX: route is /profile/[slug]
           style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}
         >
           <div
@@ -807,7 +810,7 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
         <div style={{ ...f(400, 12), color: P.light, textAlign: "center", marginTop: 4 }}>
           Member since {s.memberSince} ·{" "}
-          <Link href={`/profile/${s.id}`} style={{ color: P.green, textDecoration: "none", ...f(500, 12) }}>
+          <Link href={`/profile/${s.slug}`} style={{ color: P.green, textDecoration: "none", ...f(500, 12) }}>
             View all listings →
           </Link>
         </div>
@@ -818,8 +821,6 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
 /* ═══════════════════════════════════════════════════════
    Similar boats — FULL WIDTH ROW (Greenacres-style)
-   - spans both columns
-   - real 4-col grid on lg+
 ═══════════════════════════════════════════════════════ */
 function SimilarBoats({
   items,
@@ -1021,11 +1022,22 @@ export default function ListingPageClient({
           {/* LEFT */}
           <div style={{ minWidth: 0 }}>
             {/* Key specs */}
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4" style={{ paddingBottom: 32 }}>
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4" style={{ paddingBottom: 22 }}>
               <KeySpec icon={MapPin} label={listing.country || "Location"} value={listing.location || "—"} />
               <KeySpec icon={Ruler} label="Length" value={listing.length ? `${listing.length} ft` : "—"} />
               <KeySpec icon={Bed} label="Cabins" value={listing.cabins || "—"} />
               <KeySpec icon={Calendar} label="Year" value={listing.year || "—"} />
+            </div>
+
+            {/* ✅ Waaza financing (inline Pretto-style) */}
+            <div style={{ marginBottom: 28 }}>
+              <WaazaFinancing
+                price={listing.price || null}
+                year={listing.year || null}
+                usage={"private"} // if you later add listing.usageType, pass it here
+                currency={listing.currency || "EUR"}
+                country={listing.country || null}
+              />
             </div>
 
             {/* Tabbed content */}
@@ -1177,7 +1189,7 @@ export default function ListingPageClient({
           </div>
         </div>
 
-        {/* ✅ FULL-WIDTH Similar section (spans both cols) */}
+        {/* Similar section */}
         <div style={{ marginTop: 36, borderTop: `1px solid ${P.faint}`, paddingTop: 10 }}>
           <SimilarBoats items={similar} current={listing} />
         </div>

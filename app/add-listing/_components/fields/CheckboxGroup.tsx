@@ -27,33 +27,40 @@ export default function CheckboxGroup({
 
   return (
     <div>
-      <label className="mb-3 block text-sm font-medium text-[#555]">{label}</label>
+      <label className="mb-3 block text-[13px] font-medium tracking-wide text-[#555]">
+        {label}
+      </label>
       <div
         className={`grid gap-2 ${
           columns === 2 ? "sm:grid-cols-2" : columns === 3 ? "sm:grid-cols-3" : ""
         }`}
       >
-        {options.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => toggle(option)}
-            className={`flex items-center gap-3 rounded-lg border px-4 py-2.5 text-left text-sm transition-all ${
-              selected.includes(option)
-                ? "border-[#0a211f] bg-[#0a211f]/5 text-[#0a211f]"
-                : "border-[#e5e5e5] text-[#555] hover:border-[#ccc]"
-            }`}
-          >
-            <div
-              className={`flex h-5 w-5 items-center justify-center rounded border ${
-                selected.includes(option) ? "border-[#0a211f] bg-[#0a211f]" : "border-[#ccc]"
+        {options.map((option) => {
+          const isSelected = selected.includes(option);
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => toggle(option)}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-[14px] transition-all ${
+                isSelected
+                  ? "border-[#0a211f] bg-[#0a211f]/[0.03] text-[#1a1a1a]"
+                  : "border-[#e5e5e5] text-[#555] hover:border-[#ccc] hover:bg-[#f5f5f4]/50"
               }`}
             >
-              {selected.includes(option) && <Check className="h-3 w-3 text-[#fff86c]" />}
-            </div>
-            {option}
-          </button>
-        ))}
+              <div
+                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition-all ${
+                  isSelected
+                    ? "border-[#0a211f] bg-[#0a211f]"
+                    : "border-[#ccc]"
+                }`}
+              >
+                {isSelected && <Check className="h-3 w-3 text-[#fff86c]" />}
+              </div>
+              {option}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
