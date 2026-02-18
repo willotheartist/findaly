@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly.",
+    "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly — the everything marketplace for the maritime world.",
 
   applicationName: "Findaly",
 
@@ -76,6 +76,49 @@ export const metadata: Metadata = {
   },
 };
 
+// ─── JSON-LD Schema ───────────────────────────────────────────────────────────
+// Organization: registers Findaly as a named entity with Google.
+// WebSite: enables the Sitelinks Searchbox in branded search results.
+// Update sameAs[] as you create social profiles.
+// Update logo.url if your logo path differs from /logo.png.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Findaly",
+  url: "https://findaly.co",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://findaly.co/logo.png",
+    width: 200,
+    height: 60,
+  },
+  description:
+    "The everything marketplace for the maritime world. Buy, sell, and charter boats worldwide.",
+  sameAs: [
+    // Add your social profiles here as you create them, e.g.:
+    // "https://www.instagram.com/findaly",
+    // "https://www.linkedin.com/company/findaly",
+    // "https://twitter.com/findaly",
+  ],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Findaly",
+  url: "https://findaly.co",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://findaly.co/buy?query={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -83,6 +126,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={interTight.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body className="min-h-screen">
         <Header />
         <SiteHeaderOffsetClient />

@@ -1,4 +1,4 @@
-// app/buy/model/[model]/country/[country]/page.tsx
+// app/buy/year/[year]/country/[country]/page.tsx
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -6,11 +6,13 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 
-type PageProps = {
-  params: Promise<{ model: string; country: string }>;
-};
+import { getMarketStats } from "@/lib/seo/marketStats";
+import MarketOverview from "@/components/seo/MarketOverview";
+import RelatedSearches from "@/components/seo/RelatedSearches";
 
-type JsonLdObject = Record<string, unknown>;
+type PageProps = {
+  params: Promise<{ year: string; country: string }>;
+};
 
 function decodeParam(s: string) {
   try {
@@ -31,29 +33,18 @@ function slugifyLoose(input: string) {
     .replace(/^-|-$/g, "");
 }
 
+function parseYear(param: string) {
+  const raw = (param || "").trim();
+  const n = Number(raw);
+  const year = Number.isFinite(n) ? Math.trunc(n) : NaN;
+  return { raw, year };
+}
+
 function titleCaseWords(input: string) {
   return (input || "")
     .split(" ")
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(" ");
-}
-
-function modelFromParam(param: string) {
-  const raw = decodeParam(param).trim();
-  const spaced = raw.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
-
-  const parts = spaced.split(" ").filter(Boolean);
-  const modelCandidateRaw = parts.length >= 2 ? parts.slice(1).join(" ") : null;
-
-  const canonicalSpaced = modelCandidateRaw || spaced;
-
-  return {
-    raw,
-    spaced,
-    canonicalSpaced,
-    display: titleCaseWords(canonicalSpaced),
-    modelCandidateRaw,
-  };
 }
 
 function countryFromParam(param: string) {
@@ -67,7 +58,29 @@ function countryFromParam(param: string) {
   };
 }
 
-function jsonLd(obj: JsonLdObject) {
+function buildSeoIntro(opts: {
+  year: number;
+  countryDisplay: string;
+  total: number;
+  brandsTop?: string[];
+  modelsTop?: string[];
+}) {
+  const { year, countryDisplay, total, brandsTop = [], modelsTop = [] } = opts;
+  const b = brandsTop.slice(0, 3).filter(Boolean);
+  const m = modelsTop.slice(0, 3).filter(Boolean);
+
+  const bits: string[] = [];
+  bits.push(
+    `Browse ${total.toLocaleString()} boat${total === 1 ? "" : "s"} from ${year} for sale in ${countryDisplay} on Findaly — updated regularly from trusted sellers and brokers.`
+  );
+  if (b.length) bits.push(`Popular brands include ${b.join(", ")}.`);
+  if (m.length) bits.push(`Common models include ${m.join(", ")}.`);
+  bits.push(`Compare specs, prices, and location — then enquire directly with sellers and brokers.`);
+
+  return bits.join(" ");
+}
+
+function jsonLd(obj: unknown) {
   return (
     <script
       type="application/ld+json"
@@ -77,39 +90,7 @@ function jsonLd(obj: JsonLdObject) {
   );
 }
 
-function buildWhere(
-  m: ReturnType<typeof modelFromParam>,
-  c: ReturnType<typeof countryFromParam>
-): Prisma.ListingWhereInput {
-  const modelOr: Prisma.ListingWhereInput[] = [
-    { model: { equals: m.canonicalSpaced, mode: "insensitive" } },
-    { model: { equals: m.spaced, mode: "insensitive" } },
-  ];
-  if (m.modelCandidateRaw) {
-    modelOr.push({ model: { equals: m.modelCandidateRaw, mode: "insensitive" } });
-  }
-
-  const countryOr: Prisma.ListingWhereInput[] = [
-    { country: { equals: c.spaced, mode: "insensitive" } },
-    { country: { equals: c.raw, mode: "insensitive" } },
-    { country: { equals: c.display, mode: "insensitive" } },
-    { country: { equals: c.upper, mode: "insensitive" } },
-  ];
-
-  return {
-    status: "LIVE",
-    kind: "VESSEL",
-    intent: "SALE",
-    model: { not: null },
-    OR: [
-      {
-        AND: [{ OR: modelOr }, { OR: countryOr }],
-      },
-    ],
-  };
-}
-
-function fmtPrice(cents: number | null | undefined, cur: string) {
+function fmtPrice(cents: number | null, cur: string) {
   if (!cents || cents <= 0) return "POA";
   const v = cents / 100;
   try {
@@ -123,63 +104,47 @@ function fmtPrice(cents: number | null | undefined, cur: string) {
   }
 }
 
-function buildSeoIntro(opts: {
-  modelDisplay: string;
-  countryDisplay: string;
-  total: number;
-  brandsTop?: string[];
-  yearsTop?: number[];
-}) {
-  const { modelDisplay, countryDisplay, total, brandsTop = [], yearsTop = [] } =
-    opts;
-
-  const b = brandsTop.slice(0, 3).filter(Boolean);
-  const y = yearsTop
-    .slice(0, 3)
-    .filter((n) => typeof n === "number" && !Number.isNaN(n));
-
-  const bits: string[] = [];
-  bits.push(
-    `Browse ${total.toLocaleString()} ${modelDisplay} boat${
-      total === 1 ? "" : "s"
-    } for sale in ${countryDisplay} on Findaly — updated regularly from trusted sellers and brokers.`
-  );
-  if (b.length) bits.push(`Top brands include ${b.join(", ")}.`);
-  if (y.length) bits.push(`Popular years include ${y.join(", ")}.`);
-  bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
-
-  return bits.join(" ");
-}
-
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
-  const { model, country } = await params;
-  const m = modelFromParam(model);
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { year: yearParam, country } = await params;
+  const y = parseYear(yearParam);
   const c = countryFromParam(country);
 
-  const where = buildWhere(m, c);
+  if (!y.year || Number.isNaN(y.year) || y.year < 1900 || y.year > 2100) {
+    return { title: "Boats by Year", robots: { index: false, follow: true } };
+  }
+
+  const where: Prisma.ListingWhereInput = {
+    status: "LIVE",
+    kind: "VESSEL",
+    intent: "SALE",
+    year: y.year,
+    OR: [
+      { country: { equals: c.spaced, mode: "insensitive" } },
+      { country: { equals: c.raw, mode: "insensitive" } },
+      { country: { equals: c.display, mode: "insensitive" } },
+      { country: { equals: c.upper, mode: "insensitive" } },
+    ],
+  };
+
   const total = await prisma.listing.count({ where });
 
   const title =
     total > 0
-      ? `${m.display} Boats for Sale in ${c.display}`
-      : `${m.display} Boats in ${c.display}`;
+      ? `Boats from ${y.year} for Sale in ${c.display}`
+      : `Boats from ${y.year} in ${c.display}`;
 
   const description =
     total > 0
       ? truncate(
-          `Browse ${total.toLocaleString()} ${m.display} boats for sale in ${c.display}. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
+          `Browse ${total.toLocaleString()} boats from ${y.year} for sale in ${c.display}. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
           160
         )
       : truncate(
-          `Explore ${m.display} boats in ${c.display} on Findaly. New inventory is added regularly.`,
+          `Explore boats from ${y.year} in ${c.display} on Findaly. New inventory is added regularly.`,
           160
         );
 
-  const canonical = `/buy/model/${slugifyLoose(m.canonicalSpaced)}/country/${slugifyLoose(
-    c.spaced
-  )}`;
+  const canonical = `/buy/year/${y.year}/country/${slugifyLoose(c.spaced)}`;
 
   return {
     title,
@@ -202,17 +167,30 @@ export async function generateMetadata({
   };
 }
 
-export default async function ModelCountryHubPage({ params }: PageProps) {
-  const { model, country } = await params;
-  const m = modelFromParam(model);
+export default async function YearCountryHubPage({ params }: PageProps) {
+  const { year: yearParam, country } = await params;
+  const y = parseYear(yearParam);
   const c = countryFromParam(country);
 
-  const safeModelSlug = slugifyLoose(m.canonicalSpaced);
-  const safeCountrySlug = slugifyLoose(c.spaced);
+  const valid = y.year && !Number.isNaN(y.year) && y.year >= 1900 && y.year <= 2100;
+  const year = valid ? y.year : NaN;
 
-  const where = buildWhere(m, c);
+  const where: Prisma.ListingWhereInput = valid
+    ? {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        year,
+        OR: [
+          { country: { equals: c.spaced, mode: "insensitive" } },
+          { country: { equals: c.raw, mode: "insensitive" } },
+          { country: { equals: c.display, mode: "insensitive" } },
+          { country: { equals: c.upper, mode: "insensitive" } },
+        ],
+      }
+    : { status: "LIVE", kind: "VESSEL", intent: "SALE", year: -1 };
 
-  const [total, listings, topBrands, topYears] = await Promise.all([
+  const [total, listings, topBrands, topModels, stats] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({
       where,
@@ -244,43 +222,41 @@ export default async function ModelCountryHubPage({ params }: PageProps) {
       take: 12,
     }),
     prisma.listing.groupBy({
-      by: ["year"],
-      where: { ...where, year: { not: null } },
-      _count: { year: true },
-      orderBy: { _count: { year: "desc" } },
+      by: ["model"],
+      where: { ...where, model: { not: null } },
+      _count: { model: true },
+      orderBy: { _count: { model: "desc" } },
       take: 12,
     }),
+    getMarketStats(where),
   ]);
 
   const brandsTop = topBrands.map((x) => x.brand).filter((x): x is string => !!x);
-  const yearsTop = topYears.map((x) => x.year).filter((x): x is number => typeof x === "number");
+  const modelsTop = topModels.map((x) => x.model).filter((x): x is string => !!x);
 
-  const intro = buildSeoIntro({
-    modelDisplay: m.display,
-    countryDisplay: c.display,
-    total,
-    brandsTop,
-    yearsTop,
-  });
+  const intro = valid
+    ? buildSeoIntro({ year, countryDisplay: c.display, total, brandsTop, modelsTop })
+    : "Invalid year.";
 
   const base = getSiteUrl();
-  const pageUrl = `${base}/buy/model/${safeModelSlug}/country/${safeCountrySlug}`;
+  const safeCountrySlug = slugifyLoose(c.spaced);
+  const pageUrl = valid ? `${base}/buy/year/${year}/country/${safeCountrySlug}` : `${base}/buy/year`;
 
-  const breadcrumb: JsonLdObject = {
+  const breadcrumb = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Model: ${m.display}`, item: `${base}/buy/model/${safeModelSlug}` },
+      { "@type": "ListItem", position: 3, name: `Year: ${valid ? year : "—"}`, item: `${base}/buy/year/${valid ? year : ""}` },
       { "@type": "ListItem", position: 4, name: `Country: ${c.display}`, item: pageUrl },
     ],
   };
 
-  const itemList: JsonLdObject = {
+  const itemList = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${m.display} Boats for Sale in ${c.display}`,
+    name: valid ? `Boats from ${year} for Sale in ${c.display}` : "Boats by Year",
     url: pageUrl,
     description: intro,
     mainEntity: {
@@ -304,70 +280,54 @@ export default async function ModelCountryHubPage({ params }: PageProps) {
           <div className="flex flex-col gap-6">
             <div>
               <div className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">
-                Buy • Model • Country
+                Buy • Year • Country
               </div>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                {m.display} boats for sale in {c.display}
+                Boats from {valid ? year : "—"} in {c.display}
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
+                {valid ? intro : "Invalid year."}
+              </p>
 
               <div className="mt-4 text-sm text-slate-500">
-                {total > 0 ? (
-                  <>
-                    Showing{" "}
-                    <span className="font-semibold text-slate-700">{Math.min(36, total)}</span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span>{" "}
-                    listings.
-                  </>
+                {valid ? (
+                  total > 0 ? (
+                    <>
+                      Showing{" "}
+                      <span className="font-semibold text-slate-700">
+                        {Math.min(36, total)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-slate-700">
+                        {total.toLocaleString()}
+                      </span>{" "}
+                      listings.
+                    </>
+                  ) : (
+                    <>No live listings found in <span className="font-semibold text-slate-700">{c.display}</span> for <span className="font-semibold text-slate-700">{year}</span> right now.</>
+                  )
                 ) : (
-                  <>
-                    No live listings found for{" "}
-                    <span className="font-semibold text-slate-700">{m.display}</span>{" "}
-                    in{" "}
-                    <span className="font-semibold text-slate-700">{c.display}</span>{" "}
-                    right now.
-                  </>
+                  <>Invalid year.</>
                 )}
               </div>
+
+              {valid && total > 0 ? (
+                <div className="mt-8">
+                  <MarketOverview stats={stats} />
+                </div>
+              ) : null}
             </div>
 
-            {(brandsTop.length > 0 || yearsTop.length > 0) && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Top brands</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {brandsTop.slice(0, 10).map((b) => (
-                      <Link
-                        key={b}
-                        href={`/buy/brand/${slugifyLoose(b)}/model/${safeModelSlug}`}
-                        className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                      >
-                        {b}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Popular years</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {yearsTop.slice(0, 10).map((y) => (
-                      <Link
-                        key={y}
-                        href={`/buy/model/${safeModelSlug}/year/${y}`}
-                        className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                      >
-                        {y}
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="mt-3 text-xs text-slate-500">
-                    (We already built /buy/model/[model]/year/[year].)
-                  </div>
-                </div>
-              </div>
-            )}
+            {valid && total > 0 ? (
+              <RelatedSearches
+                kind="country"
+                countryDisplay={c.display}
+                countrySlug={safeCountrySlug}
+                brands={brandsTop}
+                models={modelsTop}
+                years={[year]}
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -377,17 +337,15 @@ export default async function ModelCountryHubPage({ params }: PageProps) {
           {total === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8">
               <div className="text-lg font-semibold text-slate-900">
-                No {m.display} listings live in {c.display} yet.
+                No listings live in {c.display} for {valid ? year : "—"} yet.
               </div>
-              <p className="mt-2 text-slate-600">
-                Try browsing all {m.display} listings, or check back soon — inventory updates regularly.
-              </p>
+              <p className="mt-2 text-slate-600">Try browsing all boats, or check back soon — inventory updates regularly.</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
-                  href={`/buy/model/${safeModelSlug}`}
+                  href={`/buy/year/${valid ? year : ""}`}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline hover:opacity-95"
                 >
-                  Browse {m.display}
+                  Browse {valid ? year : "year"} listings
                 </Link>
                 <Link
                   href={`/buy/country/${safeCountrySlug}`}
@@ -404,6 +362,7 @@ export default async function ModelCountryHubPage({ params }: PageProps) {
                 const price = fmtPrice(l.priceCents, l.currency);
                 const specs = [
                   l.brand || null,
+                  l.model || null,
                   l.year ? `${l.year}` : null,
                   l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
                   l.location || l.country || null,
@@ -438,7 +397,6 @@ export default async function ModelCountryHubPage({ params }: PageProps) {
                       </div>
 
                       <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
-
                       <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">

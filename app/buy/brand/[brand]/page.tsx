@@ -6,6 +6,10 @@ import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 import type { Prisma } from "@prisma/client";
 
+import { getMarketStats } from "@/lib/seo/marketStats";
+import MarketOverview from "@/components/seo/MarketOverview";
+import RelatedSearches from "@/components/seo/RelatedSearches";
+
 type PageProps = {
   params: Promise<{ brand: string }>;
 };
@@ -89,12 +93,15 @@ function jsonLd(obj: JsonLdObject) {
   return (
     <script
       type="application/ld+json"
+      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
     />
   );
 }
 
-function buildBrandWhere(b: ReturnType<typeof brandFromParam>): Prisma.ListingWhereInput {
+function buildBrandWhere(
+  b: ReturnType<typeof brandFromParam>
+): Prisma.ListingWhereInput {
   return {
     status: "LIVE",
     kind: "VESSEL",
@@ -106,7 +113,23 @@ function buildBrandWhere(b: ReturnType<typeof brandFromParam>): Prisma.ListingWh
   };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+function fmtPrice(cents: number | null | undefined, cur: string) {
+  if (!cents || cents <= 0) return "POA";
+  const v = cents / 100;
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: cur,
+      maximumFractionDigits: 0,
+    }).format(v);
+  } catch {
+    return `${Math.round(v).toLocaleString()} ${cur}`;
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { brand } = await params;
   const b = brandFromParam(brand);
 
@@ -134,7 +157,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true }, // avoid thin index pages
+    robots:
+      total > 0
+        ? { index: true, follow: true }
+        : { index: false, follow: true }, // avoid thin index pages
     openGraph: {
       title: `${title} | Findaly`,
       description,
@@ -157,54 +183,76 @@ export default async function BrandHubPage({ params }: PageProps) {
 
   const where = buildBrandWhere(b);
 
-  const [total, listings, modelsGrouped, countriesGrouped] = await Promise.all([
-    prisma.listing.count({ where }),
-    prisma.listing.findMany({
-      where,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        priceCents: true,
-        currency: true,
-        location: true,
-        country: true,
-        year: true,
-        lengthFt: true,
-        lengthM: true,
-        model: true,
-        updatedAt: true,
-        featured: true,
-        media: { orderBy: { sort: "asc" }, take: 1, select: { url: true } },
-      },
-      orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
-      take: 36,
-    }),
+  const [total, listings, modelsGrouped, countriesGrouped, yearsGrouped, stats] =
+    await Promise.all([
+      prisma.listing.count({ where }),
+      prisma.listing.findMany({
+        where,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          priceCents: true,
+          currency: true,
+          location: true,
+          country: true,
+          year: true,
+          lengthFt: true,
+          lengthM: true,
+          model: true,
+          updatedAt: true,
+          featured: true,
+          media: { orderBy: { sort: "asc" }, take: 1, select: { url: true } },
+        },
+        orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
+        take: 36,
+      }),
 
-    prisma.listing.groupBy({
-      by: ["model"],
-      where: { ...where, model: { not: null } },
-      _count: { model: true },
-    }),
+      prisma.listing.groupBy({
+        by: ["model"],
+        where: { ...where, model: { not: null } },
+        _count: { model: true },
+      }),
 
-    prisma.listing.groupBy({
-      by: ["country"],
-      where: { ...where, country: { not: null } },
-      _count: { country: true },
-    }),
-  ]);
+      prisma.listing.groupBy({
+        by: ["country"],
+        where: { ...where, country: { not: null } },
+        _count: { country: true },
+      }),
+
+      prisma.listing.groupBy({
+        by: ["year"],
+        where: { ...where, year: { not: null } },
+        _count: { year: true },
+      }),
+
+      getMarketStats(where),
+    ]);
 
   const topModels = modelsGrouped
-    .filter((x): x is { model: string; _count: { model: number } } => Boolean(x.model))
+    .filter(
+      (x): x is { model: string; _count: { model: number } } => Boolean(x.model)
+    )
     .map((x) => ({ key: x.model, count: x._count.model ?? 0 }))
     .sort((a, b2) => b2.count - a.count)
     .slice(0, 12);
 
   const topCountries = countriesGrouped
-    .filter((x): x is { country: string; _count: { country: number } } => Boolean(x.country))
+    .filter(
+      (x): x is { country: string; _count: { country: number } } =>
+        Boolean(x.country)
+    )
     .map((x) => ({ key: x.country, count: x._count.country ?? 0 }))
     .sort((a, b2) => b2.count - a.count)
     .slice(0, 12);
+
+  const topYears = yearsGrouped
+    .filter((x): x is { year: number; _count: { year: number } } => typeof x.year === "number")
+    .map((x) => ({ year: x.year, count: x._count.year ?? 0 }))
+    .sort((a, b2) => b2.count - a.count)
+    .slice(0, 12)
+    .map((x) => x.year)
+    .sort((a, b2) => b2 - a); // show newest first
 
   const modelsTop = topModels.map((x) => x.key);
   const countriesTop = topCountries.map((x) => x.key);
@@ -217,7 +265,8 @@ export default async function BrandHubPage({ params }: PageProps) {
   });
 
   const base = getSiteUrl();
-  const pageUrl = `${base}/buy/brand/${slugifyLoose(b.spaced)}`;
+  const safeBrandSlug = slugifyLoose(b.spaced);
+  const pageUrl = `${base}/buy/brand/${safeBrandSlug}`;
 
   const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
@@ -225,7 +274,12 @@ export default async function BrandHubPage({ params }: PageProps) {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Brand: ${b.display}`, item: pageUrl },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `Brand: ${b.display}`,
+        item: pageUrl,
+      },
     ],
   };
 
@@ -245,22 +299,6 @@ export default async function BrandHubPage({ params }: PageProps) {
       })),
     },
   };
-
-  const fmtPrice = (cents: number | null, cur: string) => {
-    if (!cents) return "POA";
-    const v = cents / 100;
-    try {
-      return new Intl.NumberFormat("en-GB", {
-        style: "currency",
-        currency: cur,
-        maximumFractionDigits: 0,
-      }).format(v);
-    } catch {
-      return `${Math.round(v).toLocaleString()} ${cur}`;
-    }
-  };
-
-  const safeBrandSlug = slugifyLoose(b.spaced);
 
   return (
     <main className="w-full bg-white">
@@ -297,56 +335,35 @@ export default async function BrandHubPage({ params }: PageProps) {
                 ) : (
                   <>
                     No live listings found for{" "}
-                    <span className="font-semibold text-slate-700">{b.display}</span>{" "}
+                    <span className="font-semibold text-slate-700">
+                      {b.display}
+                    </span>{" "}
                     right now.
                   </>
                 )}
               </div>
+
+              {/* Market Overview */}
+              {total > 0 ? (
+                <div className="mt-8">
+                  <MarketOverview stats={stats} />
+                </div>
+              ) : null}
             </div>
 
-            {/* Quick links */}
-            {(modelsTop.length > 0 || countriesTop.length > 0) && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Popular models</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {modelsTop.slice(0, 10).map((m) => {
-                      const modelSlug = slugifyLoose(`${b.spaced}-${m}`);
-                      return (
-                        <Link
-                          key={m}
-                          href={`/buy/model/${modelSlug}`}
-                          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                        >
-                          {b.display} {m}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Top countries</div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {countriesTop.slice(0, 10).map((c) => {
-                      const cSlug = slugifyLoose(c);
-                      return (
-                        <Link
-                          key={c}
-                          href={`/buy/brand/${safeBrandSlug}/country/${cSlug}`}
-                          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                        >
-                          {c}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-3 text-xs text-slate-500">
-                    (Next step: we’ll create the country-combo route.)
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Related searches */}
+            {(modelsTop.length > 0 ||
+              countriesTop.length > 0 ||
+              topYears.length > 0) && total > 0 ? (
+              <RelatedSearches
+                kind="brand"
+                brandDisplay={b.display}
+                brandSlug={safeBrandSlug}
+                models={modelsTop}
+                countries={countriesTop}
+                years={topYears}
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -360,7 +377,8 @@ export default async function BrandHubPage({ params }: PageProps) {
                 No {b.display} listings live yet.
               </div>
               <p className="mt-2 text-slate-600">
-                Try browsing all boats, or check back soon — inventory updates regularly.
+                Try browsing all boats, or check back soon — inventory updates
+                regularly.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
@@ -422,7 +440,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {specs.join(" • ")}
+                      </div>
 
                       <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
                         {l.title}
@@ -432,7 +452,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                         <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
                           Findaly
                         </div>
-                        <div className="text-sm font-semibold text-slate-900">View →</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          View →
+                        </div>
                       </div>
                     </div>
                   </Link>

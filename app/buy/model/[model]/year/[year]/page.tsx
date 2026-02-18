@@ -1,14 +1,16 @@
-// app/buy/country/[country]/year/[year]/page.tsx
+// app/buy/model/[model]/year/[year]/page.tsx
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 
 type PageProps = {
-  params: Promise<{ country: string; year: string }>;
+  params: Promise<{ model: string; year: string }>;
 };
+
+type JsonLdObject = Record<string, unknown>;
 
 function decodeParam(s: string) {
   try {
@@ -16,13 +18,6 @@ function decodeParam(s: string) {
   } catch {
     return s;
   }
-}
-
-function titleCaseWords(input: string) {
-  return input
-    .split(" ")
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
-    .join(" ");
 }
 
 function slugifyLoose(input: string) {
@@ -36,47 +31,46 @@ function slugifyLoose(input: string) {
     .replace(/^-|-$/g, "");
 }
 
-function countryFromParam(param: string) {
+function titleCaseWords(input: string) {
+  return (input || "")
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+function parseYear(param: string) {
+  const raw = decodeParam(param).trim();
+  const n = Number(raw);
+  const year = Number.isFinite(n) ? Math.trunc(n) : NaN;
+  return { raw, year };
+}
+
+/**
+ * Accepts:
+ * - "oceanis-51-1"
+ * - "beneteau-oceanis-51-1" (brand + model combined)
+ *
+ * We keep model hubs cross-brand-safe, and canonicalize to model-only.
+ */
+function modelFromParam(param: string) {
   const raw = decodeParam(param).trim();
   const spaced = raw.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+
+  const parts = spaced.split(" ").filter(Boolean);
+  const modelCandidateRaw = parts.length >= 2 ? parts.slice(1).join(" ") : null;
+
+  const canonicalSpaced = modelCandidateRaw || spaced;
+
   return {
     raw,
     spaced,
-    display: titleCaseWords(spaced),
-    upper: spaced.toUpperCase(),
+    canonicalSpaced,
+    display: titleCaseWords(canonicalSpaced),
+    modelCandidateRaw,
   };
 }
 
-function parseYearParam(param: string) {
-  const raw = decodeParam(param).trim();
-  const y = Number.parseInt(raw, 10);
-  const max = new Date().getFullYear() + 1;
-  if (!Number.isFinite(y) || Number.isNaN(y) || y < 1900 || y > max) return null;
-  return y;
-}
-
-function buildSeoIntro(opts: {
-  countryDisplay: string;
-  year: number;
-  total: number;
-  brandsTop?: string[];
-  modelsTop?: string[];
-}) {
-  const { countryDisplay, year, total, brandsTop = [], modelsTop = [] } = opts;
-  const b = brandsTop.slice(0, 3).filter(Boolean);
-  const m = modelsTop.slice(0, 3).filter(Boolean);
-
-  const bits: string[] = [];
-  bits.push(
-    `Browse ${total.toLocaleString()} boat${total === 1 ? "" : "s"} from ${year} for sale in ${countryDisplay} on Findaly — updated regularly from trusted sellers and brokers.`
-  );
-  if (b.length) bits.push(`Popular brands include ${b.join(", ")}.`);
-  if (m.length) bits.push(`Common models include ${m.join(", ")}.`);
-  bits.push(`Compare specs, prices, and location — then enquire directly with sellers and brokers.`);
-  return bits.join(" ");
-}
-
-function jsonLd(obj: unknown) {
+function jsonLd(obj: JsonLdObject) {
   return (
     <script
       type="application/ld+json"
@@ -86,8 +80,33 @@ function jsonLd(obj: unknown) {
   );
 }
 
-function fmtPrice(cents: number | null, cur: string) {
-  if (!cents) return "POA";
+function buildWhere(
+  m: ReturnType<typeof modelFromParam>,
+  year: number
+): Prisma.ListingWhereInput {
+  const modelOr: Prisma.ListingWhereInput[] = [
+    { model: { equals: m.canonicalSpaced, mode: "insensitive" } },
+    { model: { equals: m.spaced, mode: "insensitive" } },
+  ];
+
+  if (m.modelCandidateRaw) {
+    modelOr.push({
+      model: { equals: m.modelCandidateRaw, mode: "insensitive" },
+    });
+  }
+
+  return {
+    status: "LIVE",
+    kind: "VESSEL",
+    intent: "SALE",
+    year,
+    model: { not: null },
+    OR: modelOr,
+  };
+}
+
+function fmtPrice(cents: number | null | undefined, cur: string) {
+  if (!cents || cents <= 0) return "POA";
   const v = cents / 100;
   try {
     return new Intl.NumberFormat("en-GB", {
@@ -100,37 +119,79 @@ function fmtPrice(cents: number | null, cur: string) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { country, year } = await params;
-  const c = countryFromParam(country);
-  const y = parseYearParam(year);
-  if (!y) return { title: `Boats by Year in ${c.display}` };
+function buildSeoIntro(opts: {
+  modelDisplay: string;
+  year: number;
+  total: number;
+  brandsTop?: string[];
+  countriesTop?: string[];
+}) {
+  const { modelDisplay, year, total, brandsTop = [], countriesTop = [] } = opts;
 
-  const where = {
-    status: "LIVE" as const,
-    kind: "VESSEL" as const,
-    intent: "SALE" as const,
-    year: y,
-    OR: [
-      { country: { equals: c.spaced, mode: "insensitive" as const } },
-      { country: { equals: c.raw, mode: "insensitive" as const } },
-      { country: { equals: c.display, mode: "insensitive" as const } },
-      { country: { equals: c.upper, mode: "insensitive" as const } },
-    ],
-  };
+  const b = brandsTop.slice(0, 3).filter(Boolean);
+  const c = countriesTop.slice(0, 3).filter(Boolean);
 
+  const bits: string[] = [];
+  bits.push(
+    `Browse ${total.toLocaleString()} ${modelDisplay} boat${
+      total === 1 ? "" : "s"
+    } from ${year} for sale on Findaly — updated regularly from trusted sellers and brokers.`
+  );
+
+  if (b.length) bits.push(`Top brands include ${b.join(", ")}.`);
+
+  if (c.length) {
+    bits.push(
+      `Explore listings in ${c.join(
+        ", "
+      )} and beyond — with photos, specs, and direct enquiries.`
+    );
+  } else {
+    bits.push(
+      `Compare specs, pricing, and location — then enquire directly with sellers and brokers.`
+    );
+  }
+
+  return bits.join(" ");
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { model, year: yearParam } = await params;
+  const m = modelFromParam(model);
+  const y = parseYear(yearParam);
+
+  const validYear = Number.isFinite(y.year) && y.year >= 1900 && y.year <= 2100;
+
+  if (!validYear) {
+    return {
+      title: `${m.display} Boats by Year`,
+      description: truncate(`Explore ${m.display} boats by year on Findaly.`, 160),
+      robots: { index: false, follow: true },
+    };
+  }
+
+  const where = buildWhere(m, y.year);
   const total = await prisma.listing.count({ where });
 
-  const title = total > 0 ? `${y} Boats for Sale in ${c.display}` : `${y} Boats in ${c.display}`;
+  const title =
+    total > 0
+      ? `${m.display} Boats from ${y.year} for Sale`
+      : `${m.display} Boats from ${y.year}`;
+
   const description =
     total > 0
       ? truncate(
-          `Browse ${total.toLocaleString()} boats from ${y} for sale in ${c.display}. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
+          `Browse ${total.toLocaleString()} ${m.display} boats from ${y.year} for sale worldwide. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
           160
         )
-      : truncate(`Explore boats from ${y} in ${c.display} on Findaly. New inventory is added regularly.`, 160);
+      : truncate(
+          `Explore ${m.display} boats from ${y.year} on Findaly. New inventory is added regularly.`,
+          160
+        );
 
-  const canonical = `/buy/country/${slugifyLoose(c.spaced)}/year/${y}`;
+  const canonical = `/buy/model/${slugifyLoose(m.canonicalSpaced)}/year/${y.year}`;
 
   return {
     title,
@@ -153,26 +214,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CountryYearHubPage({ params }: PageProps) {
-  const { country, year } = await params;
-  const c = countryFromParam(country);
-  const y = parseYearParam(year);
-  if (!y) notFound();
+export default async function ModelYearHubPage({ params }: PageProps) {
+  const { model, year: yearParam } = await params;
+  const m = modelFromParam(model);
+  const y = parseYear(yearParam);
 
-  const where = {
-    status: "LIVE" as const,
-    kind: "VESSEL" as const,
-    intent: "SALE" as const,
-    year: y,
-    OR: [
-      { country: { equals: c.spaced, mode: "insensitive" as const } },
-      { country: { equals: c.raw, mode: "insensitive" as const } },
-      { country: { equals: c.display, mode: "insensitive" as const } },
-      { country: { equals: c.upper, mode: "insensitive" as const } },
-    ],
-  };
+  const validYear = Number.isFinite(y.year) && y.year >= 1900 && y.year <= 2100;
+  const safeModelSlug = slugifyLoose(m.canonicalSpaced);
 
-  const [total, listings, topBrands, topModels] = await Promise.all([
+  const where: Prisma.ListingWhereInput = validYear
+    ? buildWhere(m, y.year)
+    : { status: "LIVE", kind: "VESSEL", intent: "SALE", year: -1 };
+
+  const [total, listings, topBrands, topCountries] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({
       where,
@@ -204,44 +258,48 @@ export default async function CountryYearHubPage({ params }: PageProps) {
       take: 12,
     }),
     prisma.listing.groupBy({
-      by: ["model"],
-      where: { ...where, model: { not: null } },
-      _count: { model: true },
-      orderBy: { _count: { model: "desc" } },
+      by: ["country"],
+      where: { ...where, country: { not: null } },
+      _count: { country: true },
+      orderBy: { _count: { country: "desc" } },
       take: 12,
     }),
   ]);
 
   const brandsTop = topBrands.map((x) => x.brand).filter((x): x is string => !!x);
-  const modelsTop = topModels.map((x) => x.model).filter((x): x is string => !!x);
+  const countriesTop = topCountries.map((x) => x.country).filter((x): x is string => !!x);
 
-  const intro = buildSeoIntro({
-    countryDisplay: c.display,
-    year: y,
-    total,
-    brandsTop,
-    modelsTop,
-  });
+  const intro =
+    validYear && total > 0
+      ? buildSeoIntro({
+          modelDisplay: m.display,
+          year: y.year,
+          total,
+          brandsTop,
+          countriesTop,
+        })
+      : validYear
+        ? `Explore ${m.display} boats from ${y.year} on Findaly. New inventory is added regularly.`
+        : "This page expects a valid year like /buy/model/oceanis-51-1/year/2020.";
 
   const base = getSiteUrl();
-  const safeCountrySlug = slugifyLoose(c.spaced);
-  const pageUrl = `${base}/buy/country/${safeCountrySlug}/year/${y}`;
+  const pageUrl = `${base}/buy/model/${safeModelSlug}/year/${validYear ? y.year : ""}`;
 
-  const breadcrumb = {
+  const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Country: ${c.display}`, item: `${base}/buy/country/${safeCountrySlug}` },
-      { "@type": "ListItem", position: 4, name: `Year: ${y}`, item: pageUrl },
+      { "@type": "ListItem", position: 3, name: `Model: ${m.display}`, item: `${base}/buy/model/${safeModelSlug}` },
+      { "@type": "ListItem", position: 4, name: `Year: ${validYear ? y.year : "—"}`, item: pageUrl },
     ],
   };
 
-  const itemList = {
+  const itemList: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${y} Boats for Sale in ${c.display}`,
+    name: validYear ? `${m.display} Boats from ${y.year} for Sale` : `${m.display} Boats by Year`,
     url: pageUrl,
     description: intro,
     mainEntity: {
@@ -260,98 +318,141 @@ export default async function CountryYearHubPage({ params }: PageProps) {
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
 
+      {/* Hero */}
       <section className="w-full border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
-          <div className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">Buy • Country • Year</div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Boats for sale in {c.display} from {y}
-          </h1>
-          <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
-
-          <div className="mt-4 text-sm text-slate-500">
-            {total > 0 ? (
-              <>
-                Showing <span className="font-semibold text-slate-700">{Math.min(36, total)}</span> of{" "}
-                <span className="font-semibold text-slate-700">{total.toLocaleString()}</span> listings.
-              </>
-            ) : (
-              <>
-                No live listings found in <span className="font-semibold text-slate-700">{c.display}</span> for {y}.
-              </>
-            )}
-          </div>
-
-          {(brandsTop.length > 0 || modelsTop.length > 0) && (
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                <div className="text-sm font-semibold text-slate-900">Popular brands</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {brandsTop.slice(0, 10).map((b) => (
-                    <Link
-                      key={b}
-                      href={`/buy/brand/${slugifyLoose(b)}/country/${safeCountrySlug}`}
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                    >
-                      {b}
-                    </Link>
-                  ))}
-                </div>
+          <div className="flex flex-col gap-6">
+            <div>
+              <div className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">
+                Buy • Model • Year
               </div>
 
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                <div className="text-sm font-semibold text-slate-900">Popular models</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {modelsTop.slice(0, 10).map((m) => (
-                    <Link
-                      key={m}
-                      href={`/buy/model/${slugifyLoose(m)}/year/${y}`}
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
-                    >
-                      {m}
-                    </Link>
-                  ))}
-                </div>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                {m.display} boats from {validYear ? y.year : "—"}
+              </h1>
+
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
+                {intro}
+              </p>
+
+              <div className="mt-4 text-sm text-slate-500">
+                {validYear ? (
+                  total > 0 ? (
+                    <>
+                      Showing{" "}
+                      <span className="font-semibold text-slate-700">
+                        {Math.min(36, total)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-slate-700">
+                        {total.toLocaleString()}
+                      </span>{" "}
+                      listings.
+                    </>
+                  ) : (
+                    <>
+                      No live listings found for{" "}
+                      <span className="font-semibold text-slate-700">{m.display}</span>{" "}
+                      from{" "}
+                      <span className="font-semibold text-slate-700">{y.year}</span>{" "}
+                      right now.
+                    </>
+                  )
+                ) : (
+                  <>Invalid year.</>
+                )}
               </div>
             </div>
-          )}
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href={`/buy/country/${safeCountrySlug}`}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline hover:opacity-95"
-            >
-              All boats in {c.display}
-            </Link>
-            <Link
-              href={`/buy/year/${y}`}
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-900 no-underline hover:border-slate-300"
-            >
-              All boats from {y}
-            </Link>
+            {(brandsTop.length > 0 || countriesTop.length > 0) && validYear ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                  <div className="text-sm font-semibold text-slate-900">
+                    Top brands
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {brandsTop.slice(0, 10).map((b) => (
+                      <Link
+                        key={b}
+                        href={`/buy/brand/${slugifyLoose(b)}/model/${safeModelSlug}`}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                      >
+                        {b}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                  <div className="text-sm font-semibold text-slate-900">
+                    Top countries
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {countriesTop.slice(0, 10).map((c) => (
+                      <Link
+                        key={c}
+                        href={`/buy/model/${safeModelSlug}/country/${slugifyLoose(c)}`}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                      >
+                        {c}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
+      {/* Grid */}
       <section className="w-full">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
-          {total === 0 ? (
+          {!validYear ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8">
               <div className="text-lg font-semibold text-slate-900">
-                No listings live in {c.display} for {y} yet.
+                Invalid year.
               </div>
-              <p className="mt-2 text-slate-600">Try the country page, or check back soon — inventory updates regularly.</p>
+              <p className="mt-2 text-slate-600">
+                Try a URL like{" "}
+                <span className="font-mono">/buy/model/{safeModelSlug}/year/2020</span>.
+              </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
-                  href={`/buy/country/${safeCountrySlug}`}
+                  href={`/buy/model/${safeModelSlug}`}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline hover:opacity-95"
                 >
-                  Browse {c.display}
+                  Browse {m.display}
                 </Link>
                 <Link
-                  href="/add-listing"
+                  href="/buy"
                   className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-900 no-underline hover:border-slate-300"
                 >
-                  List a boat
+                  Browse all boats
+                </Link>
+              </div>
+            </div>
+          ) : total === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8">
+              <div className="text-lg font-semibold text-slate-900">
+                No {m.display} listings live from {y.year} yet.
+              </div>
+              <p className="mt-2 text-slate-600">
+                Try browsing all boats, or check back soon — inventory updates
+                regularly.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href={`/buy/model/${safeModelSlug}`}
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white no-underline hover:opacity-95"
+                >
+                  Browse {m.display}
+                </Link>
+                <Link
+                  href={`/buy/year/${y.year}`}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-900 no-underline hover:border-slate-300"
+                >
+                  Browse {y.year}
                 </Link>
               </div>
             </div>
@@ -362,10 +463,13 @@ export default async function CountryYearHubPage({ params }: PageProps) {
                 const price = fmtPrice(l.priceCents, l.currency);
                 const specs = [
                   l.brand || null,
-                  l.model || null,
                   l.year ? `${l.year}` : null,
-                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
-                  l.location || l.country || null,
+                  l.lengthM
+                    ? `${Math.round(l.lengthM)}m`
+                    : l.lengthFt
+                      ? `${Math.round(l.lengthFt)}ft`
+                      : null,
+                  l.country || l.location || null,
                 ].filter(Boolean) as string[];
 
                 return (
@@ -388,7 +492,9 @@ export default async function CountryYearHubPage({ params }: PageProps) {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-lg font-semibold tracking-tight text-slate-900">{price}</div>
+                        <div className="text-lg font-semibold tracking-tight text-slate-900">
+                          {price}
+                        </div>
                         {l.featured ? (
                           <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             Featured
@@ -396,13 +502,21 @@ export default async function CountryYearHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {specs.join(" • ")}
+                      </div>
 
-                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
+                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
+                        {l.title}
+                      </div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Findaly</div>
-                        <div className="text-sm font-semibold text-slate-900">View →</div>
+                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
+                          Findaly
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          View →
+                        </div>
                       </div>
                     </div>
                   </Link>

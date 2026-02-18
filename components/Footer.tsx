@@ -1,5 +1,6 @@
 // components/Footer.tsx
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 
 function FooterLink({
   href,
@@ -22,13 +23,264 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
   return <div className="text-sm font-semibold text-slate-900">{children}</div>;
 }
 
-export default function Footer() {
+function slugifyLoose(input: string) {
+  return (input || "")
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, "")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+type TopAgg = { key: string; count: number };
+
+type BrandRow = { brand: string | null; _count: { brand: number } };
+type ModelRow = { model: string | null; _count: { model: number } };
+type CountryRow = { country: string | null; _count: { country: number } };
+type YearRow = { year: number | null; _count: { year: number } };
+
+function normalizeAgg<Row extends Record<string, unknown>>(
+  rows: Row[],
+  field: string,
+  countGetter: (row: Row) => number
+): TopAgg[] {
+  return rows
+    .map((r) => ({
+      key: String((r[field] as unknown) ?? "").trim(),
+      count: Number(countGetter(r) ?? 0),
+    }))
+    .filter((x) => x.key.length > 0 && x.count > 0)
+    .sort((a, b) => b.count - a.count);
+}
+
+export default async function Footer() {
+  const TAKE = 18;
+
+  const [brandAgg, modelAgg, countryAgg, yearAgg] = await Promise.all([
+    prisma.listing.groupBy({
+      by: ["brand"],
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        brand: { not: null },
+      },
+      _count: { brand: true },
+      orderBy: { _count: { brand: "desc" } },
+      take: TAKE,
+    }),
+    prisma.listing.groupBy({
+      by: ["model"],
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        model: { not: null },
+      },
+      _count: { model: true },
+      orderBy: { _count: { model: "desc" } },
+      take: TAKE,
+    }),
+    prisma.listing.groupBy({
+      by: ["country"],
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        country: { not: null },
+      },
+      _count: { country: true },
+      orderBy: { _count: { country: "desc" } },
+      take: TAKE,
+    }),
+    prisma.listing.groupBy({
+      by: ["year"],
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        year: { not: null },
+      },
+      _count: { year: true },
+      orderBy: { _count: { year: "desc" } },
+      take: TAKE,
+    }),
+  ]);
+
+  const topBrands = normalizeAgg<BrandRow>(brandAgg, "brand", (r) => r._count.brand);
+  const topModels = normalizeAgg<ModelRow>(modelAgg, "model", (r) => r._count.model);
+  const topCountries = normalizeAgg<CountryRow>(countryAgg, "country", (r) => r._count.country);
+
+  const topYears = (yearAgg as YearRow[])
+    .map((r) => ({
+      year: Number(r.year),
+      count: Number(r._count.year ?? 0),
+    }))
+    .filter((x) => Number.isFinite(x.year) && !Number.isNaN(x.year) && x.count > 0)
+    .sort((a, b) => b.year - a.year)
+    .slice(0, 12);
+
+  const fallbackBrands = [
+    "Beneteau",
+    "Jeanneau",
+    "Lagoon",
+    "Sunseeker",
+    "Azimut",
+    "Princess",
+    "Ferretti",
+    "Pershing",
+    "Bavaria",
+    "Galeon",
+    "Fairline",
+    "Sanlorenzo",
+  ];
+
+  const fallbackCountries = [
+    "France",
+    "Spain",
+    "Italy",
+    "Greece",
+    "United Kingdom",
+    "Turkey",
+    "Croatia",
+    "United States",
+    "United Arab Emirates",
+    "Monaco",
+    "Netherlands",
+    "Germany",
+  ];
+
+  const brandsForUI = topBrands.length ? topBrands.map((x) => x.key) : fallbackBrands;
+  const modelsForUI = topModels.length ? topModels.map((x) => x.key) : [];
+  const countriesForUI = topCountries.length ? topCountries.map((x) => x.key) : fallbackCountries;
+
   return (
     <footer className="w-full border-t border-slate-200 bg-white">
+      {/* ─────────────────────────────────────────────────────────────
+          MEGA “EXPLORE FINDALY” (above footer, leboncoin-style)
+         ───────────────────────────────────────────────────────────── */}
+      <div className="w-full border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <div className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">
+                Explore Findaly
+              </div>
+              <div className="mt-2 text-xl font-semibold tracking-tight text-slate-900">
+                Browse popular searches
+              </div>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
+                Quick links to high-intent hubs. These help buyers move faster — and help search engines
+                discover your strongest inventory pages.
+              </p>
+            </div>
+
+            <div className="hidden md:block">
+              <Link
+                href="/buy"
+                className="inline-flex items-center justify-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-900 no-underline hover:border-slate-300"
+              >
+                Browse all boats →
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-12">
+            {/* Brands */}
+            <div className="lg:col-span-3">
+              <div className="text-sm font-semibold text-slate-900">Popular brands</div>
+              <div className="mt-3 grid gap-2">
+                {brandsForUI.slice(0, 16).map((b) => (
+                  <FooterLink key={b} href={`/buy/brand/${slugifyLoose(b)}`}>
+                    {b}
+                  </FooterLink>
+                ))}
+              </div>
+              <div className="mt-4">
+                <FooterLink href="/buy">All listings →</FooterLink>
+              </div>
+            </div>
+
+            {/* Models */}
+            <div className="lg:col-span-3">
+              <div className="text-sm font-semibold text-slate-900">Popular models</div>
+              {modelsForUI.length ? (
+                <>
+                  <div className="mt-3 grid gap-2">
+                    {modelsForUI.slice(0, 16).map((m) => (
+                      <FooterLink key={m} href={`/buy/model/${slugifyLoose(m)}`}>
+                        {m}
+                      </FooterLink>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <FooterLink href="/buy">Explore models →</FooterLink>
+                  </div>
+                </>
+              ) : (
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  Models will appear here automatically as inventory grows.
+                </p>
+              )}
+            </div>
+
+            {/* Countries */}
+            <div className="lg:col-span-3">
+              <div className="text-sm font-semibold text-slate-900">Popular countries</div>
+              <div className="mt-3 grid gap-2">
+                {countriesForUI.slice(0, 16).map((c) => (
+                  <FooterLink key={c} href={`/buy/country/${slugifyLoose(c)}`}>
+                    {c}
+                  </FooterLink>
+                ))}
+              </div>
+              <div className="mt-4">
+                <FooterLink href="/buy">Explore countries →</FooterLink>
+              </div>
+            </div>
+
+            {/* Years */}
+            <div className="lg:col-span-3">
+              <div className="text-sm font-semibold text-slate-900">Browse by year</div>
+              {topYears.length ? (
+                <div className="mt-3 grid gap-2">
+                  {topYears.slice(0, 12).map((y) => (
+                    <FooterLink key={y.year} href={`/buy/year/${y.year}`}>
+                      {y.year}
+                    </FooterLink>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  Year pages will populate as soon as listings include build years.
+                </p>
+              )}
+
+              <div className="mt-4">
+                <FooterLink href="/buy">Browse by filters →</FooterLink>
+              </div>
+            </div>
+          </div>
+
+          {/* Small mobile CTA */}
+          <div className="mt-8 md:hidden">
+            <Link
+              href="/buy"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900 no-underline hover:border-slate-300"
+            >
+              Browse all boats →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          EXISTING FOOTER (unchanged)
+         ───────────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Top */}
         <div className="grid gap-10 lg:grid-cols-12">
-          {/* Brand + email */}
           <div className="lg:col-span-4">
             <div className="text-xl font-extrabold tracking-tight text-slate-900">
               findaly
@@ -38,14 +290,12 @@ export default function Footer() {
               confidence. Built for brokers, brands, and serious buyers.
             </p>
 
-            {/* Swap-ish email block (no shadow) */}
             <div className="mt-8">
               <div className="relative max-w-sm">
                 <label className="sr-only" htmlFor="footer-email">
                   Email
                 </label>
 
-                {/* playful underline */}
                 <svg
                   className="pointer-events-none absolute -left-2 -top-5 h-16 w-[360px] max-w-[95vw]"
                   viewBox="0 0 360 80"
@@ -95,10 +345,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Links grid (Swap-style density) */}
           <div className="lg:col-span-8">
             <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Marketplace */}
               <div>
                 <FooterHeading>Marketplace</FooterHeading>
                 <div className="mt-4 grid gap-2">
@@ -112,7 +360,6 @@ export default function Footer() {
                 </div>
               </div>
 
-              {/* Explore */}
               <div>
                 <FooterHeading>Explore</FooterHeading>
                 <div className="mt-4 grid gap-2">
@@ -126,7 +373,6 @@ export default function Footer() {
                 </div>
               </div>
 
-              {/* Learn */}
               <div>
                 <FooterHeading>Learn</FooterHeading>
                 <div className="mt-4 grid gap-2">
@@ -140,7 +386,6 @@ export default function Footer() {
                 </div>
               </div>
 
-              {/* Company */}
               <div>
                 <FooterHeading>Company</FooterHeading>
                 <div className="mt-4 grid gap-2">
@@ -162,7 +407,6 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Secondary dense row (Swap-like) */}
             <div className="mt-10 grid gap-8 border-t border-slate-200 pt-10 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <FooterHeading>For Brokers</FooterHeading>
@@ -207,7 +451,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom */}
         <div className="mt-12 flex flex-col gap-4 border-t border-slate-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} Findaly. All rights reserved.

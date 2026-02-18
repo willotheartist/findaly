@@ -16,6 +16,7 @@
     "@vercel/blob": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
+    "framer-motion": "^12.34.1",
     "lucide-react": "^0.561.0",
     "maplibre-gl": "^5.18.0",
     "next": "16.0.7",

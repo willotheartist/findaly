@@ -29,6 +29,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${base}/buy`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/sell`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${base}/charter`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${base}/brokers`, lastModified: now, changeFrequency: "monthly", priority: 0.80 },
+    { url: `${base}/finance`, lastModified: now, changeFrequency: "monthly", priority: 0.80 },
     { url: `${base}/destinations`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${base}/add-listing`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
