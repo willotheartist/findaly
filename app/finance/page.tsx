@@ -84,6 +84,56 @@ export default function FinancePage() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FAQ SCHEMA
+  // ─────────────────────────────────────────────────────────────────────────────
+  const financeFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Can I finance a used boat as well as a new one?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Most marine lenders will finance both new and used vessels, though the terms may differ. Age, condition, and survey results all influence the lending decision for older vessels.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What deposit do I need to buy a yacht on finance?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Typical deposits range from 10 to 30% depending on the lender, vessel type, and your financial profile. Some specialist lenders offer lower deposit products for well-qualified buyers.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Does the boat need a survey before finance is approved?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Most lenders require a marine survey for vessels above a certain value or age. The survey protects both you and the lender by confirming the vessel's condition and market value.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I finance a yacht registered in another country?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "International marine finance is complex but absolutely possible. Specialist lenders work with cross-border purchases regularly — flag state, VAT status, and registration all affect the structure of the finance.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What is the difference between a marine mortgage and a personal loan for a boat?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "A marine mortgage uses the vessel as security, typically offering lower rates and longer terms. A personal loan is unsecured, quicker, but usually at higher rates and over shorter periods — better suited for smaller vessels.",
+        },
+      },
+    ],
+  }
+
   return (
     <>
       <style>{`
@@ -439,6 +489,12 @@ export default function FinancePage() {
             </nav>
           </div>
         </div>
+
+        {/* FAQ SCHEMA SCRIPT (inside top-level wrapper, just before closing tag) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(financeFaqSchema) }}
+        />
       </div>
     </>
   )

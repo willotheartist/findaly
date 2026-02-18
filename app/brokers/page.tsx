@@ -1,3 +1,4 @@
+// app/brokers/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -87,6 +88,56 @@ const faqs = [
 export default function BrokersPage() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FAQ SCHEMA
+  // ─────────────────────────────────────────────────────────────────────────────
+  const brokersFaqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Why should I use a yacht broker instead of selling privately?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Brokers bring experience, a qualified buyer network, and handle the legal paperwork. For high-value vessels or complex international transactions, a reputable broker can be invaluable.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do I know a broker on Findaly is reputable?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Verified brokers on Findaly have completed our identity and business verification process. Look for the verified badge on their profile.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What commission do yacht brokers typically charge?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Industry standard is typically 8 to 10% of the sale price for the selling broker, sometimes split with a buying broker. Always agree on commission in writing before engaging a broker.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can a broker list their entire fleet on Findaly?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. Pro accounts allow unlimited listings, bulk import tools, analytics dashboards, priority search placement, and verified badges across all their listings.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "I am a broker — how do I get a Pro account?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Create a free account, then upgrade to Pro from your dashboard. Pro accounts are available for individual brokers and full brokerages.",
+        },
+      },
+    ],
+  }
 
   return (
     <>
@@ -549,6 +600,12 @@ export default function BrokersPage() {
             </nav>
           </div>
         </div>
+
+        {/* FAQ SCHEMA SCRIPT (inside top-level wrapper, just before closing tag) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(brokersFaqSchema) }}
+        />
       </div>
     </>
   )

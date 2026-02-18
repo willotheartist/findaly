@@ -441,7 +441,8 @@ export default function SellPage() {
                       <div className="step-number">{item.step}</div>
                       <div>
                         <h3 className="font-semibold text-[17px] text-[#0a211f] mb-2">{item.title}</h3>
-                        <p className="mb-0!">{item.body}</p>
+                        {/* ✅ FIX: mb-0! is not valid tailwind */}
+                        <p className="mb-0">{item.body}</p>
                       </div>
                     </div>
                   ))}

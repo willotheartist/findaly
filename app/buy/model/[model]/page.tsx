@@ -10,63 +10,11 @@ import { getMarketStats } from "@/lib/seo/marketStats";
 import MarketOverview from "@/components/seo/MarketOverview";
 import RelatedSearches from "@/components/seo/RelatedSearches";
 
+import { modelFromParam, slugifyLoose } from "@/lib/seoParam";
+
 type PageProps = {
   params: Promise<{ model: string }>;
 };
-
-function decodeParam(s: string) {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s;
-  }
-}
-
-function titleCaseWords(input: string) {
-  return input
-    .split(" ")
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
-    .join(" ");
-}
-
-function slugifyLoose(input: string) {
-  return (input || "")
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, "")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-/**
- * Accepts:
- * - "oceanis-51-1"
- * - "beneteau-oceanis-51-1" (brand + model combined)
- *
- * We do NOT enforce brand matching on this page (model pages should be cross-brand-safe).
- * We only use the "brandCandidate" concept to derive a "modelCandidate" when the slug is prefixed.
- */
-function modelFromParam(param: string) {
-  const raw = decodeParam(param).trim();
-  const spaced = raw.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
-
-  const parts = spaced.split(" ").filter(Boolean);
-  const brandCandidateRaw = parts.length >= 2 ? parts[0] : null;
-  const modelCandidateRaw = parts.length >= 2 ? parts.slice(1).join(" ") : null;
-
-  const canonicalSpaced = modelCandidateRaw || spaced;
-
-  return {
-    raw,
-    spaced,
-    canonicalSpaced, // ✅ used for canonical + display
-    display: titleCaseWords(canonicalSpaced),
-    brandCandidateRaw,
-    modelCandidateRaw,
-  };
-}
 
 function buildSeoIntro(opts: {
   modelDisplay: string;
@@ -95,15 +43,9 @@ function buildSeoIntro(opts: {
   if (y.length) bits.push(`Popular years include ${y.join(", ")}.`);
 
   if (c.length) {
-    bits.push(
-      `Explore listings in ${c.join(
-        ", "
-      )} and beyond — with photos, specs, and direct enquiries.`
-    );
+    bits.push(`Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`);
   } else {
-    bits.push(
-      `Compare specs, pricing, and location — then enquire directly with sellers and brokers.`
-    );
+    bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
   }
 
   return bits.join(" ");
@@ -134,31 +76,22 @@ function fmtPrice(cents: number | null, cur: string) {
 }
 
 function buildWhere(m: ReturnType<typeof modelFromParam>): Prisma.ListingWhereInput {
-  // ✅ match model-only canonical AND also allow the raw spaced (in case DB stores it)
-  // ✅ if URL includes brand prefix, also try modelCandidateRaw as model-only
-  const modelOr: Prisma.ListingWhereInput[] = [
-    { model: { equals: m.canonicalSpaced, mode: "insensitive" } },
-    { model: { equals: m.spaced, mode: "insensitive" } },
-  ];
-
-  if (m.modelCandidateRaw) {
-    modelOr.push({ model: { equals: m.modelCandidateRaw, mode: "insensitive" } });
-  }
-
   return {
     status: "LIVE",
     kind: "VESSEL",
     intent: "SALE",
     model: { not: null },
-    OR: modelOr,
+    OR: m.candidates.map((cand) => ({
+      model: { equals: cand, mode: "insensitive" },
+    })),
   };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { model } = await params;
   const m = modelFromParam(model);
-  const where = buildWhere(m);
 
+  const where = buildWhere(m);
   const total = await prisma.listing.count({ where });
 
   const title = total > 0 ? `${m.display} Boats for Sale` : `${m.display} Boats`;
@@ -173,7 +106,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           160
         );
 
-  // ✅ canonical always model-only
   const canonical = `/buy/model/${slugifyLoose(m.canonicalSpaced)}`;
 
   return {
@@ -202,14 +134,7 @@ export default async function ModelHubPage({ params }: PageProps) {
   const m = modelFromParam(model);
   const where = buildWhere(m);
 
-  const [
-    total,
-    listings,
-    topBrands,
-    topCountries,
-    topYears,
-    stats,
-  ] = await Promise.all([
+  const [total, listings, topBrands, topCountries, topYears, stats] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({
       where,
@@ -257,18 +182,13 @@ export default async function ModelHubPage({ params }: PageProps) {
     getMarketStats(where),
   ]);
 
-  const brandsTop = topBrands
-    .map((x) => x.brand)
-    .filter((x): x is string => !!x);
-
-  const countriesTop = topCountries
-    .map((x) => x.country)
-    .filter((x): x is string => !!x);
+  const brandsTop = topBrands.map((x) => x.brand).filter((x): x is string => !!x);
+  const countriesTop = topCountries.map((x) => x.country).filter((x): x is string => !!x);
 
   const yearsTop = topYears
     .map((x) => x.year)
     .filter((x): x is number => typeof x === "number" && !Number.isNaN(x))
-    .sort((a, b2) => b2 - a); // newest first
+    .sort((a, b2) => b2 - a);
 
   const intro = buildSeoIntro({
     modelDisplay: m.display,
@@ -314,7 +234,6 @@ export default async function ModelHubPage({ params }: PageProps) {
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
 
-      {/* Hero */}
       <section className="w-full border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
           <div className="flex flex-col gap-6">
@@ -325,35 +244,22 @@ export default async function ModelHubPage({ params }: PageProps) {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 {m.display} boats for sale
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
-                {intro}
-              </p>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
 
               <div className="mt-4 text-sm text-slate-500">
                 {total > 0 ? (
                   <>
-                    Showing{" "}
-                    <span className="font-semibold text-slate-700">
-                      {Math.min(36, total)}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-semibold text-slate-700">
-                      {total.toLocaleString()}
-                    </span>{" "}
-                    listings.
+                    Showing <span className="font-semibold text-slate-700">{Math.min(36, total)}</span> of{" "}
+                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span> listings.
                   </>
                 ) : (
                   <>
                     No live listings found for{" "}
-                    <span className="font-semibold text-slate-700">
-                      {m.display}
-                    </span>{" "}
-                    right now.
+                    <span className="font-semibold text-slate-700">{m.display}</span> right now.
                   </>
                 )}
               </div>
 
-              {/* Market Overview */}
               {total > 0 ? (
                 <div className="mt-8">
                   <MarketOverview stats={stats} />
@@ -361,7 +267,6 @@ export default async function ModelHubPage({ params }: PageProps) {
               ) : null}
             </div>
 
-            {/* Related searches */}
             {total > 0 ? (
               <RelatedSearches
                 kind="model"
@@ -376,17 +281,13 @@ export default async function ModelHubPage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* Grid */}
       <section className="w-full">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
           {total === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8">
-              <div className="text-lg font-semibold text-slate-900">
-                No {m.display} listings live yet.
-              </div>
+              <div className="text-lg font-semibold text-slate-900">No {m.display} listings live yet.</div>
               <p className="mt-2 text-slate-600">
-                Try browsing all boats, or check back soon — inventory updates
-                regularly.
+                Try browsing all boats, or check back soon — inventory updates regularly.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
@@ -411,11 +312,7 @@ export default async function ModelHubPage({ params }: PageProps) {
                 const specs = [
                   l.brand || null,
                   l.year ? `${l.year}` : null,
-                  l.lengthM
-                    ? `${Math.round(l.lengthM)}m`
-                    : l.lengthFt
-                      ? `${Math.round(l.lengthFt)}ft`
-                      : null,
+                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
                   l.country || l.location || null,
                 ].filter(Boolean) as string[];
 
@@ -439,9 +336,7 @@ export default async function ModelHubPage({ params }: PageProps) {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-lg font-semibold tracking-tight text-slate-900">
-                          {price}
-                        </div>
+                        <div className="text-lg font-semibold tracking-tight text-slate-900">{price}</div>
                         {l.featured ? (
                           <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             Featured
@@ -449,21 +344,12 @@ export default async function ModelHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">
-                        {specs.join(" • ")}
-                      </div>
-
-                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
-                        {l.title}
-                      </div>
+                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
+                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
-                          Findaly
-                        </div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          View →
-                        </div>
+                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Findaly</div>
+                        <div className="text-sm font-semibold text-slate-900">View →</div>
                       </div>
                     </div>
                   </Link>

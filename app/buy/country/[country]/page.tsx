@@ -10,46 +10,11 @@ import { getMarketStats } from "@/lib/seo/marketStats";
 import MarketOverview from "@/components/seo/MarketOverview";
 import RelatedSearches from "@/components/seo/RelatedSearches";
 
+import { countryFromParam, slugifyLoose } from "@/lib/seoParam";
+
 type PageProps = {
   params: Promise<{ country: string }>;
 };
-
-function decodeParam(s: string) {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s;
-  }
-}
-
-function titleCaseWords(input: string) {
-  return input
-    .split(" ")
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
-    .join(" ");
-}
-
-function slugifyLoose(input: string) {
-  return (input || "")
-    .toLowerCase()
-    .trim()
-    .replace(/['"]/g, "")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function countryFromParam(param: string) {
-  const raw = decodeParam(param).trim();
-  const spaced = raw.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
-  return {
-    raw,
-    spaced,
-    display: titleCaseWords(spaced),
-    upper: spaced.toUpperCase(),
-  };
-}
 
 function buildSeoIntro(opts: {
   countryDisplay: string;
@@ -99,11 +64,8 @@ function fmtPrice(cents: number | null, cur: string) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { country } = await params;
-  const c = countryFromParam(country);
-
-  const where: Prisma.ListingWhereInput = {
+function buildWhere(c: ReturnType<typeof countryFromParam>): Prisma.ListingWhereInput {
+  return {
     status: "LIVE",
     kind: "VESSEL",
     intent: "SALE",
@@ -114,7 +76,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       { country: { equals: c.upper, mode: "insensitive" } },
     ],
   };
+}
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { country } = await params;
+  const c = countryFromParam(country);
+
+  const where = buildWhere(c);
   const total = await prisma.listing.count({ where });
 
   const title =
@@ -158,26 +126,9 @@ export default async function CountryHubPage({ params }: PageProps) {
   const { country } = await params;
   const c = countryFromParam(country);
 
-  const where: Prisma.ListingWhereInput = {
-    status: "LIVE",
-    kind: "VESSEL",
-    intent: "SALE",
-    OR: [
-      { country: { equals: c.spaced, mode: "insensitive" } },
-      { country: { equals: c.raw, mode: "insensitive" } },
-      { country: { equals: c.display, mode: "insensitive" } },
-      { country: { equals: c.upper, mode: "insensitive" } },
-    ],
-  };
+  const where = buildWhere(c);
 
-  const [
-    total,
-    listings,
-    topBrands,
-    topModels,
-    topYears,
-    stats,
-  ] = await Promise.all([
+  const [total, listings, topBrands, topModels, topYears, stats] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({
       where,
