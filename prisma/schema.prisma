@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ * Enums
+ * ─────────────────────────────────────────────────────────────
+ */
+
 enum AccountType {
   PRIVATE
   BROKER
@@ -78,6 +84,48 @@ enum PartsCondition {
   REFURBISHED
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────
+ * Monetization enums
+ * ─────────────────────────────────────────────────────────────
+ */
+
+enum ProductKey {
+  FEATURED_LISTING_14D
+  FEATURED_LISTING_30D
+
+  BOOST_7D
+  BOOST_14D
+
+  FINANCE_PRIORITY_14D
+  FINANCE_PRIORITY_30D
+
+  BROKER_PRO_MONTHLY
+  VERIFIED_BROKER_MONTHLY
+}
+
+enum PaymentProvider {
+  KOMPIPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+}
+
+enum BrokerPlan {
+  FREE
+  PRO
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ * Models
+ * ─────────────────────────────────────────────────────────────
+ */
+
 model User {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -94,7 +142,8 @@ model User {
   messagesSent Message[] @relation("Sent")
   messagesRecv Message[] @relation("Recv")
 
-  savedSearches SavedSearch[]
+  savedSearches  SavedSearch[]
+  paymentIntents PaymentIntent[]
 }
 
 model Session {
@@ -129,11 +178,19 @@ model Profile {
   email   String?
   phone   String?
 
-  // ✅ Media URLs (uploaded assets)
   avatarUrl      String?
   companyLogoUrl String?
 
   isVerified Boolean @default(false)
+
+  /**
+   * ───────── Monetization fields ─────────
+   */
+  brokerPlan             BrokerPlan @default(FREE)
+  brokerProActiveUntil   DateTime?
+  verifiedUntil          DateTime?
+  kompipayCustomerId     String?
+  kompipaySubscriptionId String?
 
   listings Listing[]
 
@@ -172,6 +229,15 @@ model Listing {
   urgent       Boolean @default(false)
   acceptOffers Boolean @default(true)
 
+  /**
+   * ───────── Monetization fields ─────────
+   */
+  featuredUntil        DateTime?
+  boostLevel           Int       @default(0)
+  boostUntil           DateTime?
+  financePriority      Boolean   @default(false)
+  financePriorityUntil DateTime?
+
   // VESSEL SPECIFIC
   boatCategory    String?
   charterType     String?
@@ -205,9 +271,9 @@ model Listing {
   berths Int?
   heads  Int?
 
-  features        Json @default("[]")
-  electronics     Json @default("[]")
-  safetyEquipment Json @default("[]")
+  features        Json    @default("[]")
+  electronics     Json    @default("[]")
+  safetyEquipment Json    @default("[]")
   customFeatures  String?
 
   charterGuests        Int?
@@ -215,7 +281,7 @@ model Listing {
   charterPricePeriod   CharterPricePeriod?
   charterAvailableFrom DateTime?
   charterAvailableTo   DateTime?
-  charterIncluded      Json @default("[]")
+  charterIncluded      Json                @default("[]")
 
   recentWorks String?
 
@@ -227,7 +293,7 @@ model Listing {
   serviceName        String?
   serviceDescription String?
   serviceExperience  String?
-  serviceAreas       Json @default("[]")
+  serviceAreas       Json    @default("[]")
 
   // PARTS SPECIFIC
   partsCategory      String?
@@ -248,8 +314,9 @@ model Listing {
   profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  media         ListingMedia[]
-  conversations Conversation[]
+  media          ListingMedia[]
+  conversations  Conversation[]
+  paymentIntents PaymentIntent[]
 
   @@index([profileId])
   @@index([kind, intent, status])
@@ -312,13 +379,52 @@ model SavedSearch {
   lastUsedAt DateTime?
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name String
-  kind String @default("BUY")
-  query Json
+  name      String
+  kind      String @default("BUY")
+  query     Json
   replayUrl String
 
   @@index([userId, createdAt])
   @@index([kind])
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ * PaymentIntent (idempotency + audit)
+ * ─────────────────────────────────────────────────────────────
+ */
+
+model PaymentIntent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  provider PaymentProvider @default(KOMPIPAY)
+  status   PaymentStatus   @default(PENDING)
+
+  productKey ProductKey
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  listingId String?
+  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  quantity Int @default(1)
+
+  kompipaySessionId  String? @unique
+  kompipayEventId    String?
+  kompipaySubId      String?
+  kompipayCustomerId String?
+
+  appliedAt DateTime?
+
+  metadata Json @default("{}")
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([productKey])
+  @@index([listingId])
 }

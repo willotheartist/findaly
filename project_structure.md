@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 18/02/2026, 08:21:00*
+*Generated on: 18/02/2026, 12:07:50*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 174 |
-| 📁 Total Folders | 107 |
+| 📄 Total Files | 194 |
+| 📁 Total Folders | 121 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,42 +24,42 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 89 files (51.1%)
-- 🔷 **.ts** (TypeScript files): 39 files (22.4%)
-- 🖼️ **.png** (PNG images): 11 files (6.3%)
-- 🖼️ **.jpg** (JPEG images): 8 files (4.6%)
-- 🎨 **.svg** (SVG images): 5 files (2.9%)
-- ⚙️ **.json** (JSON files): 4 files (2.3%)
-- 📄 **.sql** (Other files): 4 files (2.3%)
-- 📄 **.mjs** (Other files): 3 files (1.7%)
-- 📖 **.md** (Markdown files): 2 files (1.1%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.6%)
-- 📄 **.txt** (Text files): 1 files (0.6%)
-- 🖼️ **.ico** (Icon files): 1 files (0.6%)
-- 🎨 **.css** (Stylesheets): 1 files (0.6%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.6%)
-- ⚙️ **.toml** (TOML files): 1 files (0.6%)
-- 📄 **.prisma** (Other files): 1 files (0.6%)
-- 📄 **.patch** (Other files): 1 files (0.6%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.6%)
+- ⚛️ **.tsx** (React TypeScript files): 102 files (52.6%)
+- 🔷 **.ts** (TypeScript files): 41 files (21.1%)
+- 🖼️ **.jpg** (JPEG images): 13 files (6.7%)
+- 🖼️ **.png** (PNG images): 11 files (5.7%)
+- 🎨 **.svg** (SVG images): 5 files (2.6%)
+- ⚙️ **.json** (JSON files): 4 files (2.1%)
+- 📄 **.sql** (Other files): 4 files (2.1%)
+- 📄 **.mjs** (Other files): 3 files (1.5%)
+- 📖 **.md** (Markdown files): 2 files (1.0%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.5%)
+- 📄 **.txt** (Text files): 1 files (0.5%)
+- 🖼️ **.ico** (Icon files): 1 files (0.5%)
+- 🎨 **.css** (Stylesheets): 1 files (0.5%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.5%)
+- ⚙️ **.toml** (TOML files): 1 files (0.5%)
+- 📄 **.prisma** (Other files): 1 files (0.5%)
+- 📄 **.patch** (Other files): 1 files (0.5%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.5%)
 
 ### By Category
 
-- **React**: 89 files (51.1%)
-- **TypeScript**: 39 files (22.4%)
-- **Assets**: 25 files (14.4%)
-- **Other**: 10 files (5.7%)
-- **Config**: 6 files (3.4%)
-- **Docs**: 3 files (1.7%)
-- **DevOps**: 1 files (0.6%)
-- **Styles**: 1 files (0.6%)
+- **React**: 102 files (52.6%)
+- **TypeScript**: 41 files (21.1%)
+- **Assets**: 30 files (15.5%)
+- **Other**: 10 files (5.2%)
+- **Config**: 6 files (3.1%)
+- **Docs**: 3 files (1.5%)
+- **DevOps**: 1 files (0.5%)
+- **Styles**: 1 files (0.5%)
 
 ### 📁 Largest Directories
 
-- **root**: 174 files
-- **app**: 81 files
-- **components**: 25 files
-- **public**: 24 files
+- **root**: 194 files
+- **app**: 91 files
+- **public**: 29 files
+- **components**: 28 files
 - **app/add-listing**: 21 files
 
 ## 🌳 Directory Structure
@@ -71,6 +71,8 @@ findaly/
 │   ├── ⚙️ project.json
 │   └── 📄 README.txt
 ├── 🚀 app/
+│   ├── 📂 about/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 add-listing/
 │   │   ├── 📂 _components/
 │   │   │   ├── 📂 fields/
@@ -132,6 +134,8 @@ findaly/
 │   │   │   └── 🔷 route.ts
 │   │   └── 📂 uploads/
 │   │   │   └── 🔷 route.ts
+│   ├── 📂 brokers/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 buy/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
@@ -179,7 +183,20 @@ findaly/
 │   │   ├── ⚛️ page.tsx
 │   │   └── 📂 year/
 │   │   │   └── 📂 [year]/
+│   │   │   │   ├── 📂 brand/
+│   │   │   │   │   └── 📂 [brand]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   ├── 📂 country/
+│   │   │   │   │   └── 📂 [country]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   │   │   ├── 📂 model/
+│   │   │   │   │   └── 📂 [model]/
+│   │   │   │   │   │   └── ⚛️ page.tsx
 │   │   │   │   └── ⚛️ page.tsx
+│   ├── 📂 charter/
+│   │   └── ⚛️ page.tsx
+│   ├── 📂 contact/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 destinations/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── 🔷 _data.ts
@@ -188,6 +205,8 @@ findaly/
 │   │   │   │   └── ⚛️ page.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
+│   ├── 📂 finance/
+│   │   └── ⚛️ page.tsx
 │   ├── 🎨 globals.css
 │   ├── ⚛️ layout.tsx
 │   ├── 📂 login/
@@ -214,6 +233,8 @@ findaly/
 │   ├── 🔷 robots.ts
 │   ├── 📂 searches/
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 sell/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 settings/
 │   │   ├── 📂 _components/
 │   │   │   └── ⚛️ SettingsClient.tsx
@@ -221,6 +242,8 @@ findaly/
 │   ├── 📂 signup/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔷 sitemap.ts
+│   ├── 📂 trust/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 upgrade/
 │   │   └── ⚛️ page.tsx
 │   └── 📂 use-cases/
@@ -248,6 +271,9 @@ findaly/
 │   ├── 📂 maps/
 │   │   └── ⚛️ ListingMap.tsx
 │   ├── 📂 seo/
+│   │   ├── ⚛️ MarketOverview.tsx
+│   │   ├── ⚛️ PillarRelatedSearches.tsx
+│   │   ├── ⚛️ RelatedSearches.tsx
 │   │   └── ⚛️ SeoLinkBlock.tsx
 │   ├── ⚛️ SiteHeaderHeightClient.tsx
 │   ├── ⚛️ SiteHeaderOffsetClient.tsx
@@ -282,6 +308,9 @@ findaly/
 │   │   ├── 🔷 profile.ts
 │   │   └── 🔷 session.ts
 │   ├── 🔷 db.ts
+│   ├── 📂 seo/
+│   │   └── 🔷 marketStats.ts
+│   ├── 🔷 seoParam.ts
 │   └── 🔷 site.ts
 ├── 🔷 middleware.ts
 ├── 🔷 next-env.d.ts
@@ -305,6 +334,8 @@ findaly/
 ├── 🔷 prisma.config.ts
 ├── 📖 project_structure.md
 ├── 🌐 public/
+│   ├── 🖼️ brokers-hero.jpg
+│   ├── 🖼️ charter-hero.jpg
 │   ├── 🖼️ Charter.png
 │   ├── 📂 destinations/
 │   │   ├── 🖼️ Amalfi Coast.png
@@ -316,6 +347,7 @@ findaly/
 │   │   ├── 🖼️ Greece.png
 │   │   └── 🖼️ Turkey.png
 │   ├── 🎨 file.svg
+│   ├── 🖼️ finance-hero.jpg
 │   ├── 📂 fonts/
 │   │   └── 📂 inter-tight/
 │   ├── 🎨 globe.svg
@@ -324,7 +356,9 @@ findaly/
 │   ├── 🖼️ hero-pros.jpg
 │   ├── 🖼️ hero-sell.jpg
 │   ├── 🖼️ Holiday.png
+│   ├── 🖼️ list-boat-cta.jpg
 │   ├── 🎨 next.svg
+│   ├── 🖼️ sell-hero.jpg
 │   ├── 📂 uploads/
 │   │   ├── 🖼️ 3cf4a8bd-377b-4dcb-b66b-1bf4da243d90.jpg
 │   │   ├── 🖼️ 926df4ff-3967-40ba-998c-87c0f27af596.png
@@ -364,8 +398,8 @@ findaly/
 - ⚙️ Config: YAML files
 - ⚙️ Config: TOML files
 - 🖼️ Assets: PNG images
-- 🎨 Assets: SVG images
 - 🖼️ Assets: JPEG images
+- 🎨 Assets: SVG images
 
 ### Importance Levels
 - 🔴 Critical: Essential project files

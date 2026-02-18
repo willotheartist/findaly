@@ -277,7 +277,7 @@ export default async function Footer() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          EXISTING FOOTER (unchanged)
+          EXISTING FOOTER (updated surgically)
          ───────────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-12">
@@ -395,6 +395,8 @@ export default async function Footer() {
                   <FooterLink href="/careers">Careers</FooterLink>
                   <FooterLink href="/blog">Blog</FooterLink>
                   <FooterLink href="/faq">FAQ</FooterLink>
+                  {/* ✅ Added */}
+                  <FooterLink href="/pricing">Pricing</FooterLink>
                 </div>
 
                 <div className="mt-8">
@@ -435,6 +437,13 @@ export default async function Footer() {
                   <FooterLink href="/cookies">Cookies</FooterLink>
                   <FooterLink href="/terms">Terms</FooterLink>
                   <FooterLink href="/disclaimer">Disclaimer</FooterLink>
+
+                  {/* ✅ Added: Sitemap link (standard) */}
+                  <FooterLink href="/sitemap.xml">Sitemap</FooterLink>
+
+                  {/* ✅ Added: billing redirect pages (optional but practical) */}
+                  <FooterLink href="/billing/success">Billing status</FooterLink>
+                  <FooterLink href="/billing/cancel">Checkout cancelled</FooterLink>
                 </div>
               </div>
 
@@ -452,15 +461,24 @@ export default async function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-4 border-t border-slate-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} Findaly. All rights reserved.
-          </p>
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} Findaly. All rights reserved.
+            </p>
+
+            {/* ✅ Added: merchant-of-record disclosure */}
+            <p className="text-xs text-slate-500">
+              Paid features are processed by Wall&Fifth via KompiPay on behalf of Findaly.
+            </p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <FooterLink href="/add-listing">List a yacht</FooterLink>
             <FooterLink href="/buy">Browse listings</FooterLink>
             <FooterLink href="/brokers">Find a broker</FooterLink>
             <FooterLink href="/contact">Get in touch</FooterLink>
+            {/* ✅ Added */}
+            <FooterLink href="/pricing">Pricing</FooterLink>
           </div>
         </div>
       </div>
