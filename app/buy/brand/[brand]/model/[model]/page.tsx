@@ -71,13 +71,17 @@ function modelFromParam(param: string) {
   // - "51 1" -> "51.1"
   // - keep original spaced
   // - display title-case
-  const dotted =
-    spaced
-      .replace(/\b(\d+)\s+(\d+)\b/g, "$1.$2")
-      .replace(/\s+/g, " ")
-      .trim();
+  const dotted = spaced
+    .replace(/\b(\d+)\s+(\d+)\b/g, "$1.$2")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  const candidates = uniqStrings([spaced, dotted, titleCaseWords(spaced), titleCaseWords(dotted)]);
+  const candidates = uniqStrings([
+    spaced,
+    dotted,
+    titleCaseWords(spaced),
+    titleCaseWords(dotted),
+  ]);
 
   return {
     raw,
@@ -94,7 +98,13 @@ function buildSeoIntro(opts: {
   countriesTop?: string[];
   yearsTop?: number[];
 }) {
-  const { brandDisplay, modelDisplay, total, countriesTop = [], yearsTop = [] } = opts;
+  const {
+    brandDisplay,
+    modelDisplay,
+    total,
+    countriesTop = [],
+    yearsTop = [],
+  } = opts;
   const c = countriesTop.slice(0, 3).filter(Boolean);
   const y = yearsTop
     .slice(0, 3)
@@ -112,10 +122,14 @@ function buildSeoIntro(opts: {
 
   if (c.length) {
     bits.push(
-      `Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`
+      `Explore listings in ${c.join(
+        ", "
+      )} and beyond — with photos, specs, and direct enquiries.`
     );
   } else {
-    bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
+    bits.push(
+      `Compare specs, pricing, and location — then enquire directly with sellers and brokers.`
+    );
   }
 
   return bits.join(" ");
@@ -195,13 +209,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           160
         );
 
-  const canonical = `/buy/brand/${slugifyLoose(b.spaced)}/model/${slugifyLoose(m.spaced)}`;
+  const canonical = `/buy/brand/${slugifyLoose(b.spaced)}/model/${slugifyLoose(
+    m.spaced
+  )}`;
 
   return {
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots:
+      total > 0
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
     openGraph: {
       title: `${title} | Findaly`,
       description,
@@ -305,13 +324,20 @@ export default async function BrandModelHubPage({ params }: PageProps) {
   const safeModelSlug = slugifyLoose(m.spaced);
   const pageUrl = `${base}/buy/brand/${safeBrandSlug}/model/${safeModelSlug}`;
 
+  const isBeneteau = safeBrandSlug === "beneteau";
+
   const breadcrumb = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Brand: ${b.display}`, item: `${base}/buy/brand/${safeBrandSlug}` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `Brand: ${b.display}`,
+        item: `${base}/buy/brand/${safeBrandSlug}`,
+      },
       { "@type": "ListItem", position: 4, name: `Model: ${m.display}`, item: pageUrl },
     ],
   };
@@ -349,14 +375,22 @@ export default async function BrandModelHubPage({ params }: PageProps) {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 {b.display} {m.display} boats for sale
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
+                {intro}
+              </p>
 
               <div className="mt-4 text-sm text-slate-500">
                 {total > 0 ? (
                   <>
                     Showing{" "}
-                    <span className="font-semibold text-slate-700">{Math.min(36, total)}</span> of{" "}
-                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span> listings.
+                    <span className="font-semibold text-slate-700">
+                      {Math.min(36, total)}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-slate-700">
+                      {total.toLocaleString()}
+                    </span>{" "}
+                    listings.
                   </>
                 ) : (
                   <>
@@ -368,13 +402,53 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                   </>
                 )}
               </div>
+
+              {/* ✅ Authority layer: Beneteau model → guides backlink */}
+              {isBeneteau ? (
+                <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        Buyer guide
+                      </div>
+                      <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                        Research this model properly — pricing, what to check,
+                        and common buying mistakes.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Link
+                          href="/guides/buying-a-beneteau"
+                          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                        >
+                          Buying a Beneteau
+                        </Link>
+                        <Link
+                          href="/guides/beneteau-price-guide"
+                          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                        >
+                          Price guide
+                        </Link>
+                        <Link
+                          href="/guides/buying-a-used-beneteau"
+                          className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                        >
+                          Used checklist
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-900">→</div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Quick links */}
             {(countriesTop.length > 0 || yearsTop.length > 0) && (
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Top countries</div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Top countries
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {countriesTop.slice(0, 10).map((c) => {
                       const cSlug = countrySlugFromValue(c);
@@ -392,7 +466,9 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Popular years</div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Popular years
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {yearsTop.slice(0, 10).map((y) => (
                       <Link
@@ -405,7 +481,8 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                     ))}
                   </div>
                   <div className="mt-3 text-xs text-slate-500">
-                    (Later: we’ll add clean URL <span className="font-mono">/buy/year/[year]</span>.)
+                    (Later: we’ll add clean URL{" "}
+                    <span className="font-mono">/buy/year/[year]</span>.)
                   </div>
                 </div>
               </div>
@@ -438,7 +515,8 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                 No {b.display} {m.display} listings live yet.
               </div>
               <p className="mt-2 text-slate-600">
-                Try the brand page or model page — or check back soon. Inventory updates regularly.
+                Try the brand page or model page — or check back soon. Inventory
+                updates regularly.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
@@ -462,7 +540,11 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                 const price = fmtPrice(l.priceCents, l.currency);
                 const specs = [
                   l.year ? `${l.year}` : null,
-                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
+                  l.lengthM
+                    ? `${Math.round(l.lengthM)}m`
+                    : l.lengthFt
+                    ? `${Math.round(l.lengthFt)}ft`
+                    : null,
                   l.country || l.location || null,
                 ].filter(Boolean) as string[];
 
@@ -486,7 +568,9 @@ export default async function BrandModelHubPage({ params }: PageProps) {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-lg font-semibold tracking-tight text-slate-900">{price}</div>
+                        <div className="text-lg font-semibold tracking-tight text-slate-900">
+                          {price}
+                        </div>
                         {l.featured ? (
                           <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             Featured
@@ -494,13 +578,21 @@ export default async function BrandModelHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {specs.join(" • ")}
+                      </div>
 
-                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
+                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
+                        {l.title}
+                      </div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Findaly</div>
-                        <div className="text-sm font-semibold text-slate-900">View →</div>
+                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
+                          Findaly
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          View →
+                        </div>
                       </div>
                     </div>
                   </Link>

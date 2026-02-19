@@ -5,7 +5,7 @@ export type KompiPayProductKey = ProductKey;
 
 /**
  * Map Findaly product keys to KompiPay price keys (created inside KompiPay).
- * Replace the strings with your real KompiPay price keys.
+ * (These are NOT Stripe price_ IDs.)
  */
 export const KOMPIPAY_PRICE_KEYS: Record<ProductKey, string> = {
   FEATURED_LISTING_14D: "price_featured_listing_14d",
@@ -19,6 +19,29 @@ export const KOMPIPAY_PRICE_KEYS: Record<ProductKey, string> = {
 
   BROKER_PRO_MONTHLY: "price_broker_pro_monthly",
   VERIFIED_BROKER_MONTHLY: "price_verified_broker_monthly",
+};
+
+/**
+ * ✅ CURRENT KompiPay embed endpoint (/api/embed/checkout) expects an AMOUNT,
+ * not a "priceKey". So Findaly must also know the amount to charge.
+ *
+ * Store MINOR UNITS (GBP pennies).
+ * Example: £49.00 => 4900
+ *
+ * Replace these placeholder values with your real pricing.
+ */
+export const KOMPIPAY_AMOUNTS_MINOR: Record<ProductKey, number> = {
+  FEATURED_LISTING_14D: 4900,
+  FEATURED_LISTING_30D: 7900,
+
+  BOOST_7D: 1900,
+  BOOST_14D: 2900,
+
+  FINANCE_PRIORITY_14D: 2900,
+  FINANCE_PRIORITY_30D: 4900,
+
+  BROKER_PRO_MONTHLY: 9900,
+  VERIFIED_BROKER_MONTHLY: 14900,
 };
 
 type Effect =

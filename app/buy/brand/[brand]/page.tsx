@@ -146,7 +146,10 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots:
+      total > 0
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
     openGraph: {
       title: `${title} | Findaly`,
       description,
@@ -169,56 +172,62 @@ export default async function BrandHubPage({ params }: PageProps) {
 
   const where = buildBrandWhere(b);
 
-  const [total, listings, modelsGrouped, countriesGrouped, agg, distinctCountries] =
-    await Promise.all([
-      prisma.listing.count({ where }),
-      prisma.listing.findMany({
-        where,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          priceCents: true,
-          currency: true,
-          location: true,
-          country: true,
-          year: true,
-          lengthFt: true,
-          lengthM: true,
-          model: true,
-          updatedAt: true,
-          featured: true,
-          media: { orderBy: { sort: "asc" }, take: 1, select: { url: true } },
-        },
-        orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
-        take: 36,
-      }),
+  const [
+    total,
+    listings,
+    modelsGrouped,
+    countriesGrouped,
+    agg,
+    distinctCountries,
+  ] = await Promise.all([
+    prisma.listing.count({ where }),
+    prisma.listing.findMany({
+      where,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        priceCents: true,
+        currency: true,
+        location: true,
+        country: true,
+        year: true,
+        lengthFt: true,
+        lengthM: true,
+        model: true,
+        updatedAt: true,
+        featured: true,
+        media: { orderBy: { sort: "asc" }, take: 1, select: { url: true } },
+      },
+      orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
+      take: 36,
+    }),
 
-      prisma.listing.groupBy({
-        by: ["model"],
-        where: { ...where, model: { not: null } },
-        _count: { model: true },
-      }),
+    prisma.listing.groupBy({
+      by: ["model"],
+      where: { ...where, model: { not: null } },
+      _count: { model: true },
+    }),
 
-      prisma.listing.groupBy({
-        by: ["country"],
-        where: { ...where, country: { not: null } },
-        _count: { country: true },
-      }),
+    prisma.listing.groupBy({
+      by: ["country"],
+      where: { ...where, country: { not: null } },
+      _count: { country: true },
+    }),
 
-      prisma.listing.aggregate({
-        where,
-        _avg: { priceCents: true, lengthM: true, lengthFt: true },
-        _min: { priceCents: true, lengthM: true, lengthFt: true },
-        _max: { priceCents: true, lengthM: true, lengthFt: true },
-      }),
+    prisma.listing.aggregate({
+      where,
+      _avg: { priceCents: true, lengthM: true, lengthFt: true },
+      _min: { priceCents: true, lengthM: true, lengthFt: true },
+      _max: { priceCents: true, lengthM: true, lengthFt: true },
+    }),
 
-      prisma.listing.findMany({
-        where: { ...where, country: { not: null } },
-        distinct: ["country"],
-        select: { country: true },
-      }),
-    ]);
+    prisma.listing.findMany({
+      where: { ...where, country: { not: null } },
+      distinct: ["country"],
+      select: { country: true },
+    }),
+  ]);
 
   const topModels = modelsGrouped
     .filter(
@@ -256,7 +265,12 @@ export default async function BrandHubPage({ params }: PageProps) {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Brand: ${b.display}`, item: pageUrl },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `Brand: ${b.display}`,
+        item: pageUrl,
+      },
     ],
   };
 
@@ -278,14 +292,48 @@ export default async function BrandHubPage({ params }: PageProps) {
   };
 
   const safeBrandSlug = slugifyLoose(b.spaced);
+  const isBeneteau = safeBrandSlug === "beneteau";
+
+  const beneteauGuides: Array<{
+    title: string;
+    desc: string;
+    href: string;
+  }> = [
+    {
+      title: "Buying a Beneteau",
+      desc: "The complete buyer guide — models, prices, common mistakes, and what to check.",
+      href: "/guides/buying-a-beneteau",
+    },
+    {
+      title: "Beneteau Price Guide",
+      desc: "Realistic price ranges by size, condition, year, and region — plus what moves value.",
+      href: "/guides/beneteau-price-guide",
+    },
+    {
+      title: "Beneteau vs Jeanneau",
+      desc: "Which brand fits your use case? Layouts, build, resale, maintenance, and buyer profiles.",
+      href: "/guides/beneteau-vs-jeanneau",
+    },
+    {
+      title: "Buying a Used Beneteau",
+      desc: "A checklist-style guide for viewings, surveys, red flags, and negotiation angles.",
+      href: "/guides/buying-a-used-beneteau",
+    },
+  ];
 
   const countriesListed = distinctCountries
     .map((x) => x.country)
     .filter((x): x is string => Boolean(x)).length;
 
-  const avgPriceCents = agg._avg.priceCents ? Math.round(agg._avg.priceCents) : null;
-  const minPriceCents = agg._min.priceCents ? Math.round(agg._min.priceCents) : null;
-  const maxPriceCents = agg._max.priceCents ? Math.round(agg._max.priceCents) : null;
+  const avgPriceCents = agg._avg.priceCents
+    ? Math.round(agg._avg.priceCents)
+    : null;
+  const minPriceCents = agg._min.priceCents
+    ? Math.round(agg._min.priceCents)
+    : null;
+  const maxPriceCents = agg._max.priceCents
+    ? Math.round(agg._max.priceCents)
+    : null;
 
   const avgLengthM =
     typeof agg._avg.lengthM === "number" ? agg._avg.lengthM : null;
@@ -296,8 +344,8 @@ export default async function BrandHubPage({ params }: PageProps) {
     avgLengthM && avgLengthM > 0
       ? `${fmtNumber(avgLengthM, "m")}`
       : avgLengthFt && avgLengthFt > 0
-        ? `${fmtNumber(avgLengthFt, "ft")}`
-        : "—";
+      ? `${fmtNumber(avgLengthFt, "ft")}`
+      : "—";
 
   return (
     <main className="w-full bg-white">
@@ -334,7 +382,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                 ) : (
                   <>
                     No live listings found for{" "}
-                    <span className="font-semibold text-slate-700">{b.display}</span>{" "}
+                    <span className="font-semibold text-slate-700">
+                      {b.display}
+                    </span>{" "}
                     right now.
                   </>
                 )}
@@ -371,9 +421,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                       </div>
                       <div className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                         {minPriceCents && maxPriceCents
-                          ? `${fmtMoneyEURFromCents(minPriceCents)} – ${fmtMoneyEURFromCents(
-                              maxPriceCents
-                            )}`
+                          ? `${fmtMoneyEURFromCents(
+                              minPriceCents
+                            )} – ${fmtMoneyEURFromCents(maxPriceCents)}`
                           : "—"}
                       </div>
                       <div className="mt-1 text-xs text-slate-500">
@@ -407,6 +457,72 @@ export default async function BrandHubPage({ params }: PageProps) {
                   </div>
                 </div>
               ) : null}
+
+              {/* ✅ Authority layer: Beneteau guide cluster */}
+              {isBeneteau ? (
+                <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        Beneteau buying guides
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        Research the brand, understand pricing, and learn what to
+                        check before you view a boat.
+                      </div>
+                    </div>
+                    <div className="hidden sm:block text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
+                      Authority
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {beneteauGuides.map((g) => (
+                      <Link
+                        key={g.href}
+                        href={g.href}
+                        className="group rounded-2xl border border-slate-200/80 bg-white p-4 no-underline hover:border-slate-300"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="text-[15px] font-semibold tracking-tight text-slate-900">
+                            {g.title}
+                          </div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            →
+                          </div>
+                        </div>
+                        <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                          {g.desc}
+                        </p>
+                        <div className="mt-3 text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
+                          Read guide
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      href="/finance"
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                    >
+                      Yacht finance
+                    </Link>
+                    <Link
+                      href="/brokers"
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                    >
+                      Find a broker
+                    </Link>
+                    <Link
+                      href="/buy"
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                    >
+                      Browse all boats
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Quick links */}
@@ -420,7 +536,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                     {modelsTop.slice(0, 10).map((m) => (
                       <Link
                         key={m}
-                        href={`/buy/model/${modelSlugFromValue(`${b.spaced} ${m}`)}`}
+                        href={`/buy/model/${modelSlugFromValue(
+                          `${b.spaced} ${m}`
+                        )}`}
                         className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
                       >
                         {b.display} {m}
@@ -437,7 +555,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                     {countriesTop.slice(0, 10).map((c) => (
                       <Link
                         key={c}
-                        href={`/buy/brand/${safeBrandSlug}/country/${countrySlugFromValue(c)}`}
+                        href={`/buy/brand/${safeBrandSlug}/country/${countrySlugFromValue(
+                          c
+                        )}`}
                         className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
                       >
                         {c}
@@ -488,8 +608,8 @@ export default async function BrandHubPage({ params }: PageProps) {
                   l.lengthM
                     ? `${Math.round(l.lengthM)}m`
                     : l.lengthFt
-                      ? `${Math.round(l.lengthFt)}ft`
-                      : null,
+                    ? `${Math.round(l.lengthFt)}ft`
+                    : null,
                   l.country || l.location || null,
                 ].filter((x): x is string => Boolean(x));
 

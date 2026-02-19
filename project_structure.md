@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 18/02/2026, 12:07:50*
+*Generated on: 19/02/2026, 14:40:13*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 194 |
-| 📁 Total Folders | 121 |
+| 📄 Total Files | 207 |
+| 📁 Total Folders | 137 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,14 +24,14 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 102 files (52.6%)
-- 🔷 **.ts** (TypeScript files): 41 files (21.1%)
-- 🖼️ **.jpg** (JPEG images): 13 files (6.7%)
-- 🖼️ **.png** (PNG images): 11 files (5.7%)
-- 🎨 **.svg** (SVG images): 5 files (2.6%)
-- ⚙️ **.json** (JSON files): 4 files (2.1%)
-- 📄 **.sql** (Other files): 4 files (2.1%)
-- 📄 **.mjs** (Other files): 3 files (1.5%)
+- ⚛️ **.tsx** (React TypeScript files): 109 files (52.7%)
+- 🔷 **.ts** (TypeScript files): 44 files (21.3%)
+- 🖼️ **.jpg** (JPEG images): 13 files (6.3%)
+- 🖼️ **.png** (PNG images): 11 files (5.3%)
+- 📄 **.sql** (Other files): 7 files (3.4%)
+- 🎨 **.svg** (SVG images): 5 files (2.4%)
+- ⚙️ **.json** (JSON files): 4 files (1.9%)
+- 📄 **.mjs** (Other files): 3 files (1.4%)
 - 📖 **.md** (Markdown files): 2 files (1.0%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.5%)
 - 📄 **.txt** (Text files): 1 files (0.5%)
@@ -45,21 +45,21 @@
 
 ### By Category
 
-- **React**: 102 files (52.6%)
-- **TypeScript**: 41 files (21.1%)
-- **Assets**: 30 files (15.5%)
-- **Other**: 10 files (5.2%)
-- **Config**: 6 files (3.1%)
-- **Docs**: 3 files (1.5%)
+- **React**: 109 files (52.7%)
+- **TypeScript**: 44 files (21.3%)
+- **Assets**: 30 files (14.5%)
+- **Other**: 13 files (6.3%)
+- **Config**: 6 files (2.9%)
+- **Docs**: 3 files (1.4%)
 - **DevOps**: 1 files (0.5%)
 - **Styles**: 1 files (0.5%)
 
 ### 📁 Largest Directories
 
-- **root**: 194 files
-- **app**: 91 files
+- **root**: 207 files
+- **app**: 99 files
+- **components**: 29 files
 - **public**: 29 files
-- **components**: 28 files
 - **app/add-listing**: 21 files
 
 ## 🌳 Directory Structure
@@ -108,6 +108,9 @@ findaly/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   └── 📂 signup/
 │   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 kompipay/
+│   │   │   └── 📂 create-session/
+│   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 listings/
 │   │   │   ├── 📂 [id]/
 │   │   │   │   └── 🔷 route.ts
@@ -132,8 +135,16 @@ findaly/
 │   │   ├── 📂 stack/
 │   │   ├── 📂 upload/
 │   │   │   └── 🔷 route.ts
-│   │   └── 📂 uploads/
+│   │   ├── 📂 uploads/
 │   │   │   └── 🔷 route.ts
+│   │   └── 📂 webhooks/
+│   │   │   └── 📂 kompipay/
+│   │   │   │   └── 🔷 route.ts
+│   ├── 📂 billing/
+│   │   ├── 📂 cancel/
+│   │   │   └── ⚛️ page.tsx
+│   │   └── 📂 success/
+│   │   │   └── ⚛️ page.tsx
 │   ├── 📂 brokers/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 buy/
@@ -197,6 +208,8 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 contact/
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 cookies/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 destinations/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── 🔷 _data.ts
@@ -226,6 +239,10 @@ findaly/
 │   │   ├── ⚛️ MyListingsClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── ⚛️ page.tsx
+│   ├── 📂 pricing/
+│   │   └── ⚛️ page.tsx
+│   ├── 📂 privacy/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 profile/
 │   │   └── 📂 [slug]/
 │   │   │   ├── ⚛️ page.tsx
@@ -242,6 +259,8 @@ findaly/
 │   ├── 📂 signup/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔷 sitemap.ts
+│   ├── 📂 terms/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 trust/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 upgrade/
@@ -265,6 +284,8 @@ findaly/
 │   │   ├── ⚛️ HomeHero.tsx
 │   │   ├── ⚛️ HomeSplitCtas.tsx
 │   │   └── ⚛️ ThingsToDo.tsx
+│   ├── 📂 kompipay/
+│   │   └── ⚛️ CheckoutButton.tsx
 │   ├── 📂 listing/
 │   │   └── ⚛️ SellerCard.tsx
 │   ├── ⚛️ LogoutButtonClient.tsx
@@ -308,6 +329,8 @@ findaly/
 │   │   ├── 🔷 profile.ts
 │   │   └── 🔷 session.ts
 │   ├── 🔷 db.ts
+│   ├── 📂 kompipay/
+│   │   └── 🔷 products.ts
 │   ├── 📂 seo/
 │   │   └── 🔷 marketStats.ts
 │   ├── 🔷 seoParam.ts
@@ -327,6 +350,12 @@ findaly/
 │   │   ├── 📂 20260124152715_add_listing_details/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20260125165402_add_profile_media_urls/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260218132700_add_kompipay_monetization/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260218134046_kompipay_monetization/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260218135432_kompipay_monetization_v2/
 │   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma

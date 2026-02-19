@@ -3,11 +3,12 @@
 
 import * as React from "react";
 import type { ProductKey } from "@prisma/client";
+import { KOMPIPAY_AMOUNTS_MINOR, KOMPIPAY_PRICE_KEYS } from "@/lib/kompipay/products";
 
 type Props = {
   productKey: ProductKey;
   listingId?: string;
-  quantity?: number;
+  quantity?: number; // KompiPay embed endpoint currently assumes quantity=1; kept for API compatibility
   children: React.ReactNode;
   className?: string;
 };
@@ -15,6 +16,16 @@ type Props = {
 function errorMessage(err: unknown) {
   if (err instanceof Error) return err.message;
   return String(err);
+}
+
+function kpOrigin() {
+  return (process.env.NEXT_PUBLIC_KOMPIPAY_ORIGIN || "https://kompipay.com")
+    .trim()
+    .replace(/\/+$/, "");
+}
+
+function titleFor(productKey: ProductKey) {
+  return `Findaly — ${String(productKey).replace(/_/g, " ")}`;
 }
 
 export default function CheckoutButton({
@@ -32,26 +43,47 @@ export default function CheckoutButton({
     setLoading(true);
 
     try {
-      const res = await fetch("/api/kompipay/create-session", {
+      const publishableKey = process.env.NEXT_PUBLIC_KOMPIPAY_PUBLISHABLE_KEY;
+      if (!publishableKey) {
+        throw new Error("Missing NEXT_PUBLIC_KOMPIPAY_PUBLISHABLE_KEY (set it in Findaly env vars)");
+      }
+
+      const price = KOMPIPAY_AMOUNTS_MINOR[productKey];
+      if (!price || !Number.isFinite(price) || price < 1) {
+        throw new Error(`Missing/invalid price for ${productKey} in KOMPIPAY_AMOUNTS_MINOR`);
+      }
+
+      const res = await fetch(`${kpOrigin()}/api/embed/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productKey, listingId, quantity }),
+        body: JSON.stringify({
+          publishableKey,
+          title: titleFor(productKey),
+          currency: "GBP",
+          price, // minor units (pennies)
+          metadata: {
+            source: "findaly",
+            productKey,
+            listingId: listingId ?? null,
+            quantity,
+            priceKey: KOMPIPAY_PRICE_KEYS[productKey] ?? null,
+          },
+        }),
       });
 
       const json: unknown = await res.json().catch(() => ({}));
-
       const j =
         typeof json === "object" && json !== null
           ? (json as Record<string, unknown>)
           : {};
 
       if (!res.ok) {
-        const e = typeof j.error === "string" ? j.error : "Checkout failed";
+        const e = typeof j.error === "string" ? j.error : "KompiPay checkout failed";
         throw new Error(e);
       }
 
-      const checkoutUrl = typeof j.checkout_url === "string" ? j.checkout_url : null;
-      if (!checkoutUrl) throw new Error("Missing checkout_url");
+      const checkoutUrl = typeof j.checkoutUrl === "string" ? j.checkoutUrl : null;
+      if (!checkoutUrl) throw new Error("Missing checkoutUrl from KompiPay");
 
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
