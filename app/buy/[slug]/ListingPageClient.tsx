@@ -2,7 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 import {
   Heart,
   Share2,
@@ -194,6 +195,7 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
             position: "relative",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={images[0]}
             alt={title}
@@ -273,6 +275,7 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
                   position: "relative",
                 }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img}
                   alt={`${title} ${i + 2}`}
@@ -385,6 +388,7 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
             </button>
           )}
 
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={images[lb]}
             alt=""
@@ -437,7 +441,7 @@ function CircleBtn({
   onClick,
   label,
 }: {
-  icon: typeof Heart;
+  icon: LucideIcon;
   active?: boolean;
   onClick?: () => void;
   label: string;
@@ -459,6 +463,7 @@ function CircleBtn({
         cursor: "pointer",
         color: active ? P.rose : P.muted,
         transition: "all .15s",
+        opacity: onClick ? 1 : 0.9,
       }}
     >
       <I style={{ width: 18, height: 18 }} fill={active ? P.rose : "none"} />
@@ -472,7 +477,7 @@ function KeySpec({
   label,
   value,
 }: {
-  icon: typeof MapPin;
+  icon: LucideIcon;
   label: string;
   value: string | number;
 }) {
@@ -541,7 +546,7 @@ function SpecGroup({
   children,
 }: {
   title: string;
-  icon: typeof Ruler;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
@@ -550,7 +555,13 @@ function SpecGroup({
         <I style={{ width: 20, height: 20, color: P.muted }} />
         <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>{title}</h3>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: 8,
+        }}
+      >
         {children}
       </div>
     </div>
@@ -558,7 +569,15 @@ function SpecGroup({
 }
 
 /* ─── Feature list ─── */
-function Features({ title, items, icon: I }: { title: string; items: string[]; icon: typeof Anchor }) {
+function Features({
+  title,
+  items,
+  icon: I,
+}: {
+  title: string;
+  items: string[];
+  icon: LucideIcon;
+}) {
   const [open, setOpen] = useState(false);
   const show = open ? items : items.slice(0, 8);
   if (!items.length) return null;
@@ -658,14 +677,21 @@ function Sidebar({ listing }: { listing: BoatListing }) {
           {fmtPrice(listing.price, listing.currency)}
         </div>
         {listing.priceNegotiable && (
-          <div style={{ ...f(400, 13), color: P.muted, marginTop: 4 }}>Price negotiable</div>
+          <div style={{ ...f(400, 13), color: P.muted, marginTop: 4 }}>
+            Price negotiable
+          </div>
         )}
       </div>
 
       <div style={{ padding: "0 28px 20px", borderBottom: `1px solid ${P.faint}` }}>
         <Link
           href={`/profile/${s.slug}`} // ✅ FIX: route is /profile/[slug]
-          style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}
+          style={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
         >
           <div
             style={{
@@ -689,7 +715,9 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <span style={{ ...f(500, 15), color: P.text }}>{s.company || s.name}</span>
+              <span style={{ ...f(500, 15), color: P.text }}>
+                {s.company || s.name}
+              </span>
               {s.verified && <BadgeCheck style={{ width: 16, height: 16, color: P.blue }} />}
               {isPro && (
                 <span
@@ -707,10 +735,21 @@ function Sidebar({ listing }: { listing: BoatListing }) {
             </div>
 
             {s.company && s.name && s.company !== s.name && (
-              <div style={{ ...f(400, 12), color: P.muted, marginTop: 2 }}>{s.name}</div>
+              <div style={{ ...f(400, 12), color: P.muted, marginTop: 2 }}>
+                {s.name}
+              </div>
             )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: 4, ...f(400, 12), color: P.muted, marginTop: 3 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                ...f(400, 12),
+                color: P.muted,
+                marginTop: 3,
+              }}
+            >
               <MapPin style={{ width: 12, height: 12 }} />
               {s.location}
             </div>
@@ -719,10 +758,19 @@ function Sidebar({ listing }: { listing: BoatListing }) {
           <ChevronRight style={{ width: 18, height: 18, color: P.light, flexShrink: 0 }} />
         </Link>
 
-        <div style={{ display: "flex", gap: 16, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${P.faint}` }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            marginTop: 14,
+            paddingTop: 14,
+            borderTop: `1px solid ${P.faint}`,
+          }}
+        >
           {s.listingsCount !== undefined && s.listingsCount > 0 && (
             <div style={{ ...f(400, 13), color: P.sub }}>
-              <span style={{ ...f(600, 13), color: P.text }}>{s.listingsCount}</span> listings
+              <span style={{ ...f(600, 13), color: P.text }}>{s.listingsCount}</span>{" "}
+              listings
             </div>
           )}
           {s.responseTime && (
@@ -810,7 +858,10 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
         <div style={{ ...f(400, 12), color: P.light, textAlign: "center", marginTop: 4 }}>
           Member since {s.memberSince} ·{" "}
-          <Link href={`/profile/${s.slug}`} style={{ color: P.green, textDecoration: "none", ...f(500, 12) }}>
+          <Link
+            href={`/profile/${s.slug}`}
+            style={{ color: P.green, textDecoration: "none", ...f(500, 12) }}
+          >
             View all listings →
           </Link>
         </div>
@@ -841,11 +892,14 @@ function SimilarBoats({
 
   function Card({ it }: { it: SimilarCard }) {
     const price = it.price ? fmtPrice(it.price, it.currency) : "POA";
-    const meta = `${it.lengthFt ? `${Math.round(it.lengthFt)} ft` : "—"} • ${it.year || "—"} • ${
-      it.location || it.country || "Location"
-    }`;
+    const meta = `${it.lengthFt ? `${Math.round(it.lengthFt)} ft` : "—"} • ${
+      it.year || "—"
+    } • ${it.location || it.country || "Location"}`;
 
-    const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
+    const parts = meta
+      .split("•")
+      .map((s) => s.trim())
+      .filter(Boolean);
     const location = parts.length ? parts[parts.length - 1] : "";
     const specs = parts.length > 1 ? parts.slice(0, -1).join(" • ") : meta;
 
@@ -911,7 +965,9 @@ function SimilarBoats({
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
               F
             </div>
-            <div className="truncate text-sm text-slate-500">{it.sellerName || "Findaly"}</div>
+            <div className="truncate text-sm text-slate-500">
+              {it.sellerName || "Findaly"}
+            </div>
           </div>
 
           <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
@@ -924,9 +980,22 @@ function SimilarBoats({
 
   return (
     <section style={{ paddingTop: 34 }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-        <h3 style={{ ...f(500, 18), color: P.text, margin: 0 }}>Similar boats for sale</h3>
-        <Link href={viewMoreHref} className="text-sm font-medium text-slate-600 no-underline hover:text-slate-900">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 12,
+          marginBottom: 18,
+        }}
+      >
+        <h3 style={{ ...f(500, 18), color: P.text, margin: 0 }}>
+          Similar boats for sale
+        </h3>
+        <Link
+          href={viewMoreHref}
+          className="text-sm font-medium text-slate-600 no-underline hover:text-slate-900"
+        >
           View more →
         </Link>
       </div>
@@ -953,7 +1022,42 @@ export default function ListingPageClient({
   similar: SimilarCard[];
 }) {
   const [saved, setSaved] = useState(false);
-  const [tab, setTab] = useState<"description" | "specs" | "features">("description");
+  const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"description" | "specs" | "features">(
+    "description"
+  );
+
+  // Boot saved state from server
+  useEffect(() => {
+    let cancelled = false;
+
+    async function boot() {
+      const res = await fetch(
+        `/api/saved?listingId=${encodeURIComponent(listing.id)}`,
+        { method: "GET" }
+      ).catch(() => null);
+
+      if (!res) return;
+
+      if (res.status === 401) {
+        // Not signed in -> keep false
+        return;
+      }
+
+      const data: unknown = await res.json().catch(() => ({}));
+      const obj =
+        data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+      const isSaved = Boolean(obj?.saved);
+
+      if (!cancelled) setSaved(isSaved);
+    }
+
+    void boot();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [listing.id]);
 
   const tabConfig = [
     { id: "description" as const, label: "Description", icon: FileText },
@@ -965,8 +1069,27 @@ export default function ListingPageClient({
     <main style={{ minHeight: "100vh", backgroundColor: P.white }}>
       {/* Breadcrumb */}
       <div style={{ borderBottom: `1px solid ${P.faint}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/buy" style={{ display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", ...f(400, 14), color: P.sub }}>
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "12px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Link
+            href="/buy"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              textDecoration: "none",
+              ...f(400, 14),
+              color: P.sub,
+            }}
+          >
             <ChevronLeft style={{ width: 18, height: 18 }} /> Back to results
           </Link>
           {isAdmin && (
@@ -999,14 +1122,81 @@ export default function ListingPageClient({
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 0" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ ...f(400, 26, 34), color: P.text, margin: 0, letterSpacing: "-0.01em" }}>
+            <h1
+              style={{
+                ...f(400, 26, 34),
+                color: P.text,
+                margin: 0,
+                letterSpacing: "-0.01em",
+              }}
+            >
               {listing.title}
             </h1>
-            <div style={{ width: 80, height: 3, backgroundColor: P.green, borderRadius: 2, marginTop: 16 }} />
+            <div
+              style={{
+                width: 80,
+                height: 3,
+                backgroundColor: P.green,
+                borderRadius: 2,
+                marginTop: 16,
+              }}
+            />
           </div>
+
           <div style={{ display: "flex", gap: 8, flexShrink: 0, paddingTop: 2 }}>
             <CircleBtn icon={Trash2} label="Remove" />
-            <CircleBtn icon={Heart} active={saved} onClick={() => setSaved(!saved)} label="Save" />
+            <CircleBtn
+              icon={Heart}
+              active={saved}
+              onClick={async () => {
+                if (saving) return;
+
+                const next = !saved; // optimistic
+                setSaved(next);
+                setSaving(true);
+
+                const res = await fetch("/api/saved", {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ listingId: listing.id }),
+                }).catch(() => null);
+
+                setSaving(false);
+
+                if (!res) {
+                  setSaved(!next);
+                  alert("Network error. Try again.");
+                  return;
+                }
+
+                if (res.status === 401) {
+                  setSaved(!next);
+                  window.location.href = `/login?next=${encodeURIComponent(
+                    `/buy/${listing.slug}`
+                  )}`;
+                  return;
+                }
+
+                if (!res.ok) {
+                  setSaved(!next);
+                  const data: unknown = await res.json().catch(() => ({}));
+                  const obj =
+                    data && typeof data === "object"
+                      ? (data as Record<string, unknown>)
+                      : {};
+                  alert(String(obj?.error ?? "SAVE_FAILED"));
+                  return;
+                }
+
+                const data: unknown = await res.json().catch(() => ({}));
+                const obj =
+                  data && typeof data === "object"
+                    ? (data as Record<string, unknown>)
+                    : {};
+                setSaved(Boolean(obj?.saved));
+              }}
+              label={saved ? "Unsave" : "Save"}
+            />
             <CircleBtn icon={Share2} label="Share" />
           </div>
         </div>
@@ -1041,7 +1231,14 @@ export default function ListingPageClient({
             </div>
 
             {/* Tabbed content */}
-            <div style={{ border: `1px solid ${P.line}`, borderRadius: 16, overflow: "hidden", backgroundColor: P.white }}>
+            <div
+              style={{
+                border: `1px solid ${P.line}`,
+                borderRadius: 16,
+                overflow: "hidden",
+                backgroundColor: P.white,
+              }}
+            >
               <div style={{ display: "flex", borderBottom: `1px solid ${P.line}` }}>
                 {tabConfig.map((t) => {
                   const active = tab === t.id;
@@ -1059,7 +1256,9 @@ export default function ListingPageClient({
                         padding: "16px 12px",
                         background: "none",
                         border: "none",
-                        borderBottom: active ? `3px solid ${P.green}` : "3px solid transparent",
+                        borderBottom: active
+                          ? `3px solid ${P.green}`
+                          : "3px solid transparent",
                         cursor: "pointer",
                         ...f(active ? 500 : 400, 14),
                         color: active ? P.green : P.muted,
@@ -1078,41 +1277,98 @@ export default function ListingPageClient({
                   <div>
                     {listing.description ? (
                       listing.description.split("\n\n").map((p, i) => (
-                        <p key={i} style={{ ...f(400, 15, 26), color: P.sub, margin: "0 0 20px", whiteSpace: "pre-wrap" }}>
+                        <p
+                          key={i}
+                          style={{
+                            ...f(400, 15, 26),
+                            color: P.sub,
+                            margin: "0 0 20px",
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
                           {p}
                         </p>
                       ))
                     ) : (
-                      <p style={{ ...f(400, 15), color: P.light }}>No description provided.</p>
+                      <p style={{ ...f(400, 15), color: P.light }}>
+                        No description provided.
+                      </p>
                     )}
                   </div>
                 )}
 
                 {tab === "specs" && (
                   <div>
-                    {(listing.length > 0 || listing.beam > 0 || listing.draft > 0) && (
+                    {(listing.length > 0 ||
+                      listing.beam > 0 ||
+                      listing.draft > 0) && (
                       <SpecGroup title="Dimensions" icon={Ruler}>
-                        {listing.length > 0 && <SpecChip label="Length" value={`${listing.length} ft${listing.lengthM > 0 ? ` (${listing.lengthM}m)` : ""}`} />}
-                        {listing.beam > 0 && <SpecChip label="Beam" value={`${listing.beam} ft${listing.beamM > 0 ? ` (${listing.beamM}m)` : ""}`} />}
-                        {listing.draft > 0 && <SpecChip label="Draft" value={`${listing.draft} ft${listing.draftM > 0 ? ` (${listing.draftM}m)` : ""}`} />}
-                        {listing.displacement && <SpecChip label="Displacement" value={listing.displacement} />}
+                        {listing.length > 0 && (
+                          <SpecChip
+                            label="Length"
+                            value={`${listing.length} ft${
+                              listing.lengthM > 0 ? ` (${listing.lengthM}m)` : ""
+                            }`}
+                          />
+                        )}
+                        {listing.beam > 0 && (
+                          <SpecChip
+                            label="Beam"
+                            value={`${listing.beam} ft${
+                              listing.beamM > 0 ? ` (${listing.beamM}m)` : ""
+                            }`}
+                          />
+                        )}
+                        {listing.draft > 0 && (
+                          <SpecChip
+                            label="Draft"
+                            value={`${listing.draft} ft${
+                              listing.draftM > 0 ? ` (${listing.draftM}m)` : ""
+                            }`}
+                          />
+                        )}
+                        {listing.displacement && (
+                          <SpecChip
+                            label="Displacement"
+                            value={listing.displacement}
+                          />
+                        )}
                       </SpecGroup>
                     )}
 
                     {(listing.hullMaterial || listing.hullType) && (
                       <SpecGroup title="Hull & Construction" icon={Ship}>
-                        {listing.hullMaterial && <SpecChip label="Material" value={listing.hullMaterial} />}
-                        {listing.hullType && <SpecChip label="Hull type" value={listing.hullType} />}
-                        {listing.hullColor && <SpecChip label="Colour" value={listing.hullColor} />}
+                        {listing.hullMaterial && (
+                          <SpecChip label="Material" value={listing.hullMaterial} />
+                        )}
+                        {listing.hullType && (
+                          <SpecChip label="Hull type" value={listing.hullType} />
+                        )}
+                        {listing.hullColor && (
+                          <SpecChip label="Colour" value={listing.hullColor} />
+                        )}
                       </SpecGroup>
                     )}
 
                     {(listing.engineMake || listing.enginePower) && (
                       <SpecGroup title="Propulsion" icon={Navigation}>
-                        {listing.engineMake && <SpecChip label="Engine" value={`${listing.engineMake}${listing.engineModel ? ` ${listing.engineModel}` : ""}`} />}
-                        {listing.enginePower && <SpecChip label="Power" value={`${listing.enginePower} HP`} />}
-                        {listing.engineHours && <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />}
-                        {listing.fuelType && <SpecChip label="Fuel" value={listing.fuelType} />}
+                        {listing.engineMake && (
+                          <SpecChip
+                            label="Engine"
+                            value={`${listing.engineMake}${
+                              listing.engineModel ? ` ${listing.engineModel}` : ""
+                            }`}
+                          />
+                        )}
+                        {listing.enginePower && (
+                          <SpecChip label="Power" value={`${listing.enginePower} HP`} />
+                        )}
+                        {listing.engineHours && (
+                          <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />
+                        )}
+                        {listing.fuelType && (
+                          <SpecChip label="Fuel" value={listing.fuelType} />
+                        )}
                       </SpecGroup>
                     )}
 
@@ -1131,34 +1387,84 @@ export default function ListingPageClient({
                     <Features title="Equipment & Features" items={listing.features} icon={Anchor} />
                     <Features title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
                     <Features title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
-                    {!listing.features.length && !listing.electronics.length && !listing.safetyEquipment.length && (
-                      <p style={{ ...f(400, 15), color: P.light }}>No features listed.</p>
-                    )}
+                    {!listing.features.length &&
+                      !listing.electronics.length &&
+                      !listing.safetyEquipment.length && (
+                        <p style={{ ...f(400, 15), color: P.light }}>
+                          No features listed.
+                        </p>
+                      )}
                   </div>
                 )}
               </div>
             </div>
 
             {/* Listing details */}
-            <div style={{ border: `1px solid ${P.line}`, borderRadius: 16, padding: 28, marginTop: 24, backgroundColor: P.white }}>
+            <div
+              style={{
+                border: `1px solid ${P.line}`,
+                borderRadius: 16,
+                padding: 28,
+                marginTop: 24,
+                backgroundColor: P.white,
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <CircleDot style={{ width: 18, height: 18, color: P.muted }} />
-                <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>Listing details</h3>
+                <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>
+                  Listing details
+                </h3>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: 8,
+                }}
+              >
                 <SpecChip label="Condition" value={listing.condition || "—"} />
                 {listing.taxStatus && <SpecChip label="Tax status" value={listing.taxStatus} />}
                 {listing.lying && <SpecChip label="Lying" value={listing.lying} />}
-                <SpecChip label="Listed" value={new Date(listing.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} />
+                <SpecChip
+                  label="Listed"
+                  value={new Date(listing.createdAt).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                />
               </div>
             </div>
 
             {/* Location */}
             <div style={{ marginTop: 24 }}>
-              <h3 style={{ ...f(500, 16), color: P.text, margin: "0 0 16px" }}>Location</h3>
-              <div style={{ height: 200, borderRadius: 12, backgroundColor: P.faint, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${P.line}` }}>
+              <h3 style={{ ...f(500, 16), color: P.text, margin: "0 0 16px" }}>
+                Location
+              </h3>
+              <div
+                style={{
+                  height: 200,
+                  borderRadius: 12,
+                  backgroundColor: P.faint,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: `1px solid ${P.line}`,
+                }}
+              >
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ width: 46, height: 46, borderRadius: "50%", backgroundColor: P.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+                  <div
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: "50%",
+                      backgroundColor: P.dark,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto",
+                    }}
+                  >
                     <MapPin style={{ width: 20, height: 20, color: P.accent }} />
                   </div>
                   <div style={{ ...f(400, 14), color: P.sub, marginTop: 12 }}>
@@ -1169,13 +1475,37 @@ export default function ListingPageClient({
             </div>
 
             {/* Safety tips */}
-            <div style={{ marginTop: 24, padding: 24, borderRadius: 12, backgroundColor: "#fefce8", border: "1px solid #fef08a" }}>
+            <div
+              style={{
+                marginTop: 24,
+                padding: 24,
+                borderRadius: 12,
+                backgroundColor: "#fefce8",
+                border: "1px solid #fef08a",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <Shield style={{ width: 17, height: 17, color: "#a16207" }} />
-                <span style={{ ...f(500, 14), color: "#854d0e" }}>Safety tips</span>
+                <span style={{ ...f(500, 14), color: "#854d0e" }}>
+                  Safety tips
+                </span>
               </div>
-              {["Always inspect the boat in person before purchase", "Use a marine surveyor for pre-purchase inspection", "Never transfer money before seeing documentation"].map((t, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, ...f(400, 13), color: "#92400e", marginBottom: 6 }}>
+              {[
+                "Always inspect the boat in person before purchase",
+                "Use a marine surveyor for pre-purchase inspection",
+                "Never transfer money before seeing documentation",
+              ].map((t, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    ...f(400, 13),
+                    color: "#92400e",
+                    marginBottom: 6,
+                  }}
+                >
                   <CircleDot style={{ width: 13, height: 13, marginTop: 3, flexShrink: 0 }} />
                   {t}
                 </div>
@@ -1196,14 +1526,32 @@ export default function ListingPageClient({
       </div>
 
       {/* Mobile bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden" style={{ backgroundColor: P.white, borderTop: `1px solid ${P.line}`, padding: 16 }}>
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        style={{
+          backgroundColor: P.white,
+          borderTop: `1px solid ${P.line}`,
+          padding: 16,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...f(300, 22, 26), color: P.text }}>{fmtPrice(listing.price, listing.currency)}</div>
-            <div style={{ ...f(400, 13), color: P.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ ...f(300, 22, 26), color: P.text }}>
+              {fmtPrice(listing.price, listing.currency)}
+            </div>
+            <div
+              style={{
+                ...f(400, 13),
+                color: P.muted,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {listing.title}
             </div>
           </div>
+
           {isAdmin && (
             <Link
               href={`/my-listings/${listing.id}/edit`}
@@ -1222,6 +1570,7 @@ export default function ListingPageClient({
               <Pencil style={{ width: 14, height: 14 }} /> Edit
             </Link>
           )}
+
           <button
             type="button"
             onClick={() => {

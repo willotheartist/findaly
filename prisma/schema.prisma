@@ -143,6 +143,7 @@ model User {
   messagesRecv Message[] @relation("Recv")
 
   savedSearches  SavedSearch[]
+  savedListings  SavedListing[]
   paymentIntents PaymentIntent[]
 }
 
@@ -317,6 +318,7 @@ model Listing {
   media          ListingMedia[]
   conversations  Conversation[]
   paymentIntents PaymentIntent[]
+  savedBy        SavedListing[]
 
   @@index([profileId])
   @@index([kind, intent, status])
@@ -370,6 +372,20 @@ model Message {
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
   @@index([receiverId, createdAt])
+}
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
 }
 
 model SavedSearch {

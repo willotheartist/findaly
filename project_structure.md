@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 21/02/2026, 08:29:29*
+*Generated on: 21/02/2026, 10:21:04*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 220 |
-| 📁 Total Folders | 148 |
+| 📄 Total Files | 236 |
+| 📁 Total Folders | 158 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,40 +24,40 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 121 files (55.0%)
-- 🔷 **.ts** (TypeScript files): 45 files (20.5%)
-- 🖼️ **.jpg** (JPEG images): 13 files (5.9%)
-- 🖼️ **.png** (PNG images): 11 files (5.0%)
-- 📄 **.sql** (Other files): 7 files (3.2%)
-- 🎨 **.svg** (SVG images): 5 files (2.3%)
-- ⚙️ **.json** (JSON files): 4 files (1.8%)
-- 📄 **.mjs** (Other files): 3 files (1.4%)
-- 📖 **.md** (Markdown files): 2 files (0.9%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.5%)
-- 📄 **.txt** (Text files): 1 files (0.5%)
-- 🖼️ **.ico** (Icon files): 1 files (0.5%)
-- 🎨 **.css** (Stylesheets): 1 files (0.5%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.5%)
-- ⚙️ **.toml** (TOML files): 1 files (0.5%)
-- 📄 **.prisma** (Other files): 1 files (0.5%)
-- 📄 **.patch** (Other files): 1 files (0.5%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.5%)
+- ⚛️ **.tsx** (React TypeScript files): 134 files (56.8%)
+- 🔷 **.ts** (TypeScript files): 47 files (19.9%)
+- 🖼️ **.jpg** (JPEG images): 13 files (5.5%)
+- 🖼️ **.png** (PNG images): 11 files (4.7%)
+- 📄 **.sql** (Other files): 8 files (3.4%)
+- 🎨 **.svg** (SVG images): 5 files (2.1%)
+- ⚙️ **.json** (JSON files): 4 files (1.7%)
+- 📄 **.mjs** (Other files): 3 files (1.3%)
+- 📖 **.md** (Markdown files): 2 files (0.8%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.4%)
+- 📄 **.txt** (Text files): 1 files (0.4%)
+- 🖼️ **.ico** (Icon files): 1 files (0.4%)
+- 🎨 **.css** (Stylesheets): 1 files (0.4%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.4%)
+- ⚙️ **.toml** (TOML files): 1 files (0.4%)
+- 📄 **.prisma** (Other files): 1 files (0.4%)
+- 📄 **.patch** (Other files): 1 files (0.4%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.4%)
 
 ### By Category
 
-- **React**: 121 files (55.0%)
-- **TypeScript**: 45 files (20.5%)
-- **Assets**: 30 files (13.6%)
-- **Other**: 13 files (5.9%)
-- **Config**: 6 files (2.7%)
-- **Docs**: 3 files (1.4%)
-- **DevOps**: 1 files (0.5%)
-- **Styles**: 1 files (0.5%)
+- **React**: 134 files (56.8%)
+- **TypeScript**: 47 files (19.9%)
+- **Assets**: 30 files (12.7%)
+- **Other**: 14 files (5.9%)
+- **Config**: 6 files (2.5%)
+- **Docs**: 3 files (1.3%)
+- **DevOps**: 1 files (0.4%)
+- **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 220 files
-- **app**: 112 files
+- **root**: 236 files
+- **app**: 127 files
 - **components**: 29 files
 - **public**: 29 files
 - **app/add-listing**: 21 files
@@ -100,6 +100,9 @@ findaly/
 │   │   │   └── 🔷 listing.ts
 │   │   ├── ⚛️ ListingWizard.tsx
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 alerts/
+│   │   ├── ⚛️ AlertsClient.tsx
+│   │   └── ⚛️ page.tsx
 │   ├── 🔌 api/
 │   │   ├── 📂 auth/
 │   │   │   ├── 📂 login/
@@ -128,6 +131,8 @@ findaly/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   └── 📂 update/
 │   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 saved/
+│   │   │   └── 🔷 route.ts
 │   │   ├── 📂 searches/
 │   │   │   ├── 📂 [id]/
 │   │   │   │   └── 🔷 route.ts
@@ -223,6 +228,8 @@ findaly/
 │   ├── 🎨 globals.css
 │   ├── 📂 guides/
 │   │   ├── 🔷 _data.ts
+│   │   ├── 📂 astrea-42-buying-guide/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 beneteau-oceanis-vs-first/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 beneteau-price-guide/
@@ -232,6 +239,12 @@ findaly/
 │   │   ├── 📂 buying-a-beneteau/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 catamaran-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 fountaine-pajot-catamaran-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 isla-40-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 lagoon-40-buying-guide/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 lagoon-42-buying-guide/
 │   │   │   └── ⚛️ page.tsx
@@ -272,10 +285,18 @@ findaly/
 │   │   │   ├── ⚛️ page.tsx
 │   │   │   └── ⚛️ ProfilePageClient.tsx
 │   ├── 🔷 robots.ts
+│   ├── 📂 saved/
+│   │   ├── ⚛️ page.tsx
+│   │   └── ⚛️ SavedClient.tsx
+│   ├── 📂 search/
+│   │   ├── ⚛️ page.tsx
+│   │   └── ⚛️ SearchClient.tsx
 │   ├── 📂 searches/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 sell/
-│   │   └── ⚛️ page.tsx
+│   │   ├── 🔷 content.ts
+│   │   ├── ⚛️ page.tsx
+│   │   └── ⚛️ SellPageClient.tsx
 │   ├── 📂 settings/
 │   │   ├── 📂 _components/
 │   │   │   └── ⚛️ SettingsClient.tsx
@@ -283,6 +304,9 @@ findaly/
 │   ├── 📂 signup/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔷 sitemap.ts
+│   ├── 📂 support/
+│   │   ├── ⚛️ page.tsx
+│   │   └── ⚛️ SupportClient.tsx
 │   ├── 📂 terms/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 trust/
@@ -380,6 +404,8 @@ findaly/
 │   │   ├── 📂 20260218134046_kompipay_monetization/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20260218135432_kompipay_monetization_v2/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260221080138_add_saved_listings/
 │   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
