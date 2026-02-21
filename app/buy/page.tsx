@@ -243,7 +243,7 @@ export default async function BuyPage({ searchParams }: PageProps) {
     id: listing.id,
     slug: listing.slug,
     title: listing.title,
-    priceCents: listing.priceCents,
+    priceCents: listing.priceCents ? Number(listing.priceCents) : null,
     currency: listing.currency,
     priceType: listing.priceType,
     location: listing.location,

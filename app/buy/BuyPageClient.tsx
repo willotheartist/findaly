@@ -312,6 +312,7 @@ function FilterDropdown({
 function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid" }) {
   const router = useRouter();
   const [isSaved, setIsSaved] = useState(false);
+  const [isSavedList, setIsSavedList] = useState(false);
   const isPro = listing.seller.type === "PROFESSIONAL";
 
   const images = useMemo(() => {
@@ -492,7 +493,7 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
   }
 
   // List view (kept as-is; we can restyle later if you want)
-  const [isSavedList, setIsSavedList] = useState(false);
+
 
   return (
     <Link

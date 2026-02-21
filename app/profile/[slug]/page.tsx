@@ -49,14 +49,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const responseRate = profile.isVerified ? 95 : 75;
   const avgResponseTime = profile.isVerified ? "Within 2 hours" : "Within 24 hours";
 
-  // ✅ Transform safely (avoid any runtime throws from unexpected nulls)
+  // ✅ Transform safely — convert BigInt priceCents to Number
   const transformedListings = profile.listings.map((listing) => ({
     id: listing.id,
     slug: listing.slug,
     title: listing.title,
     kind: listing.kind,
     status: listing.status,
-    priceCents: listing.priceCents,
+    priceCents: listing.priceCents ? Number(listing.priceCents) : null,
     currency: listing.currency,
     location: listing.location,
     country: listing.country,
@@ -87,7 +87,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
     isVerified: profile.isVerified,
     createdAt: profile.createdAt.toISOString(),
 
-    // ✅ do NOT assume user relation exists
     accountType,
     user: {
       id: linkedUserId,
@@ -110,9 +109,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
 
   const profile = await prisma.profile.findUnique({
     where: { slug },

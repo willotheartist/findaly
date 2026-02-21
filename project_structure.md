@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 21/02/2026, 11:53:37*
+*Generated on: 21/02/2026, 12:33:25*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 236 |
+| 📄 Total Files | 237 |
 | 📁 Total Folders | 158 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,10 +24,10 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 134 files (56.8%)
-- 🔷 **.ts** (TypeScript files): 47 files (19.9%)
+- ⚛️ **.tsx** (React TypeScript files): 135 files (57.0%)
+- 🔷 **.ts** (TypeScript files): 47 files (19.8%)
 - 🖼️ **.jpg** (JPEG images): 13 files (5.5%)
-- 🖼️ **.png** (PNG images): 11 files (4.7%)
+- 🖼️ **.png** (PNG images): 11 files (4.6%)
 - 📄 **.sql** (Other files): 8 files (3.4%)
 - 🎨 **.svg** (SVG images): 5 files (2.1%)
 - ⚙️ **.json** (JSON files): 4 files (1.7%)
@@ -45,8 +45,8 @@
 
 ### By Category
 
-- **React**: 134 files (56.8%)
-- **TypeScript**: 47 files (19.9%)
+- **React**: 135 files (57.0%)
+- **TypeScript**: 47 files (19.8%)
 - **Assets**: 30 files (12.7%)
 - **Other**: 14 files (5.9%)
 - **Config**: 6 files (2.5%)
@@ -56,9 +56,9 @@
 
 ### 📁 Largest Directories
 
-- **root**: 236 files
+- **root**: 237 files
 - **app**: 127 files
-- **components**: 29 files
+- **components**: 30 files
 - **public**: 29 files
 - **app/add-listing**: 21 files
 
@@ -325,6 +325,7 @@ findaly/
 │   │   ├── ⚛️ DestinationSection.tsx
 │   │   └── ⚛️ DestinationSlugHero.tsx
 │   ├── ⚛️ Footer.tsx
+│   ├── ⚛️ GoogleAnalytics.tsx
 │   ├── ⚛️ Header.tsx
 │   ├── ⚛️ HeaderDropdownClient.tsx
 │   ├── 📂 home/
