@@ -1,4 +1,4 @@
-//·app/guides/beneteau-swift-trawler-buying-guide/page.tsx
+// app/guides/astrea-42-buying-guide/page.tsx
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
@@ -28,14 +28,15 @@ const stagger = {
 
 const tocSections = [
   { id: "overview", label: "Overview" },
-  { id: "why", label: "Why Swift Trawler" },
-  { id: "lineup", label: "Lineup & best-fit" },
-  { id: "pricing", label: "Price ranges" },
-  { id: "comparison", label: "Model comparison" },
+  { id: "why", label: "Why Astrea 42" },
+  { id: "layouts", label: "Layouts & versions" },
+  { id: "pricing", label: "Real price ranges" },
+  { id: "comparison", label: "Astrea 42 vs alternatives" },
   { id: "ownership", label: "Ownership reality" },
   { id: "inspection", label: "Inspection checklist" },
   { id: "sea-trial", label: "Sea trial focus" },
   { id: "paperwork", label: "Paperwork & VAT" },
+  { id: "charter", label: "Charter boats" },
   { id: "resale", label: "Resale & liquidity" },
   { id: "faq", label: "FAQ" },
 ]
@@ -71,21 +72,22 @@ function useTocTracker() {
    ─────────────────────────────────────────── */
 
 const stats = [
-  { value: "Cruising", label: "Built for comfortable coastal + extended trips" },
-  { value: "Efficient", label: "Trawler-style economy vs planing cruisers" },
-  { value: "Stable", label: "Stabilisers + hull form matter more than hype" },
-  { value: "Liquid", label: "Strong global resale demand for clean examples" },
+  { value: "42ft", label: "Extra volume without jumping to 45–50ft burden" },
+  { value: "Guest-ready", label: "Popular layouts for family + hosting" },
+  { value: "Spec-led", label: "Pricing moves with autonomy systems" },
+  { value: "Liquid", label: "Strong demand when history is clean" },
 ]
 
 const quickTopics = [
-  "Beneteau Swift Trawler",
-  "Swift Trawler 35",
-  "Swift Trawler 41",
-  "Swift Trawler 44",
-  "Swift Trawler 48",
-  "Swift Trawler 50",
-  "Used trawler checklist",
-  "Sea trial guide",
+  "Fountaine Pajot Astrea 42",
+  "Astrea 42 price",
+  "Astrea 42 vs Isla 40",
+  "Astrea 42 vs Lagoon 42",
+  "Used Astrea 42 checklist",
+  "Catamaran survey checklist",
+  "Saildrive seals",
+  "Rigging replacement cost",
+  "Lithium solar upgrade",
 ]
 
 type RangeRow = {
@@ -97,170 +99,150 @@ type RangeRow = {
 
 const rangeTable: RangeRow[] = [
   {
-    segment: "Older generations / earlier builds",
-    range: "Often ~€300k–€650k",
-    whatDrivesIt: "Hours, maintenance records, generator/AC health, refits, stabilisers",
-    bestFor: "Value buyers who want range + volume and can inspect hard",
+    segment: "Early builds / base spec / higher-hours (often charter)",
+    range: "Often ~€650k–€950k",
+    whatDrivesIt:
+      "Charter history, engine hours, saildrive service, sail age, nav suite age, plumbing wear, cosmetic fatigue",
+    bestFor: "Value buyers who can survey hard and budget a technical refit",
   },
   {
-    segment: "Mid generations / late-model used",
-    range: "Often ~€650k–€1.2m",
-    whatDrivesIt: "Spec packages, navigation suite, stabilisers, tender garage/handling gear",
-    bestFor: "Most balanced: comfort, modern systems, easier resale",
+    segment: "Owner-use / balanced spec / clean documentation",
+    range: "Often ~€950k–€1.35m",
+    whatDrivesIt:
+      "Service records, electrical condition, watermaker/genset/AC health, sail wardrobe, rigging age and history",
+    bestFor: "The sweet spot for most buyers: comfort + manageable ownership + easier resale",
   },
   {
-    segment: "Recent / high-spec / larger platforms",
-    range: "Often ~€1.0m–€1.8m+",
-    whatDrivesIt: "Stabilisation, premium nav, climate systems, condition, inventory completeness",
-    bestFor: "Owners planning real time aboard and predictable ownership",
+    segment: "Late-model / high-spec / autonomy upgrades done properly",
+    range: "Often ~€1.3m–€1.8m+",
+    whatDrivesIt:
+      "Lithium + solar installation quality, modern nav, premium inventory, systems load-tested, location and tax status",
+    bestFor: "Owners planning long seasons aboard with predictable systems",
   },
 ]
 
-type ModelCard = {
-  name: string
-  slug: string
+type LayoutCard = {
+  title: string
   bestFor: string
   watchOut: string
-  valueDrivers: string[]
+  valueNotes: string[]
 }
 
-const models: ModelCard[] = [
+const layouts: LayoutCard[] = [
   {
-    name: "Swift Trawler 35",
-    slug: "swift-trawler-35",
-    bestFor: "Smaller crew, marina-friendly length, efficient cruising with modern comfort",
-    watchOut: "Systems density for size: generator/AC, corrosion checks, service access",
-    valueDrivers: ["Low-stress handling", "Well-kept service history", "Clean electrical + bilge"],
+    title: "Owner’s version (3-cabin)",
+    bestFor: "Couples cruising long seasons who want a real owner suite + storage",
+    watchOut: "Don’t assume autonomy spec — verify power and water systems match your plan",
+    valueNotes: ["Strong owner-buyer demand", "Often cleaner histories", "Great resale when documented"],
   },
   {
-    name: "Swift Trawler 41",
-    slug: "swift-trawler-41",
-    bestFor: "Best all-rounder for couples/families who cruise often",
-    watchOut: "Stabiliser service history, HVAC under load, drivetrain vibration notes",
-    valueDrivers: ["Stabilisers (and records)", "Electronics age", "Engine hours vs servicing"],
+    title: "4-cabin / 4-head (guest focus)",
+    bestFor: "Families and hosting-heavy owners",
+    watchOut: "Plumbing and heads take the most wear; odours/leaks are the tell",
+    valueNotes: ["Broad market demand", "Charter crossover", "Inspect plumbing hard"],
   },
   {
-    name: "Swift Trawler 44",
-    slug: "swift-trawler-44",
-    bestFor: "The liquidity sweet spot: space + comfort + broad resale demand",
-    watchOut: "Deferred maintenance: cooling systems, generator, through-hulls, corrosion in ER",
-    valueDrivers: ["Stabilisation", "Full logs", "Clean sea-trial performance"],
-  },
-  {
-    name: "Swift Trawler 48",
-    slug: "swift-trawler-48",
-    bestFor: "More volume + longer stays onboard, better for liveaboard-style cruising",
-    watchOut: "Systems complexity grows: electrics, plumbing, thrusters, stabiliser calibration",
-    valueDrivers: ["Spec completeness", "Engine room condition", "Tender/handling gear"],
-  },
-  {
-    name: "Swift Trawler 50",
-    slug: "swift-trawler-50",
-    bestFor: "Owners prioritising comfort, stability, and long time aboard",
-    watchOut: "Maintenance discipline is everything: you’re buying a systems platform",
-    valueDrivers: ["Stabilisers + records", "Generator/AC health", "Professional care history"],
+    title: "Charter-optimised inventory",
+    bestFor: "Buyers hunting value and willing to refit",
+    watchOut: "Cosmetic refresh can hide tired rigging, saildrives, electrics, pumps",
+    valueNotes: ["Often cheaper entry point", "History must be real", "Load-test everything"],
   },
 ]
 
 type ComparisonRow = {
   model: string
   bestFor: string
-  ownershipFeel: string
-  keyChecks: string
-  linkSlug: string
+  whyPeopleChooseIt: string
+  whatToWatch: string
+  primaryLink?: { href: string; label: string }
 }
 
 const comparisonRows: ComparisonRow[] = [
   {
-    model: "Swift Trawler 35",
-    bestFor: "Couples, shorter passages, easy handling",
-    ownershipFeel: "Simpler, lighter systems burden (if well kept)",
-    keyChecks: "Cooling, electrical, corrosion, access for servicing",
-    linkSlug: "swift-trawler-35",
+    model: "Astrea 42",
+    bestFor: "More space for guests while staying (relatively) manageable",
+    whyPeopleChooseIt: "A modern 42ft platform with great liveability; popular with families",
+    whatToWatch: "Payload creep, electrical quality, saildrive history, leaks and plumbing wear",
+    primaryLink: { href: "/buy/brand/fountaine-pajot/model/astrea-42", label: "Astrea 42 listings" },
   },
   {
-    model: "Swift Trawler 41",
-    bestFor: "All-round cruising + frequent weekends away",
-    ownershipFeel: "Balanced comfort and operating cost",
-    keyChecks: "Stabilisers, generator, HVAC under load, drivetrain vibration",
-    linkSlug: "swift-trawler-41",
+    model: "Isla 40",
+    bestFor: "Modern 40ft sweet spot for couples + manageable complexity",
+    whyPeopleChooseIt: "Often calmer ownership; great value when spec and history are clean",
+    whatToWatch: "Electrical installs, water systems, saildrive seals, ingress and damp",
+    primaryLink: { href: "/guides/isla-40-buying-guide", label: "Isla 40 guide" },
   },
   {
-    model: "Swift Trawler 44",
-    bestFor: "Most demanded used-platform in many markets",
-    ownershipFeel: "Comfortable + predictable when maintained",
-    keyChecks: "Service logs, through-hulls, engine room corrosion, sea trial",
-    linkSlug: "swift-trawler-44",
+    model: "Lagoon 42",
+    bestFor: "Deep global market benchmark (owner + charter)",
+    whyPeopleChooseIt: "Huge supply and liquidity; lots of service familiarity",
+    whatToWatch: "Charter wear, systems fatigue, cosmetic masking, rigging age",
+    primaryLink: { href: "/guides/lagoon-42-buying-guide", label: "Lagoon 42 guide" },
   },
   {
-    model: "Swift Trawler 48",
-    bestFor: "Longer stays onboard and more guests",
-    ownershipFeel: "More comfort, more systems",
-    keyChecks: "Systems integrity, stabiliser records, electrics/plumbing",
-    linkSlug: "swift-trawler-48",
-  },
-  {
-    model: "Swift Trawler 50",
-    bestFor: "Serious cruising lifestyle and longer seasons",
-    ownershipFeel: "Premium comfort; maintenance discipline required",
-    keyChecks: "Generator/AC, stabilisers, full history, professional upkeep",
-    linkSlug: "swift-trawler-50",
+    model: "Lagoon 40",
+    bestFor: "Lots of used supply in a popular size band",
+    whyPeopleChooseIt: "Inventory depth can create bargains if you buy carefully",
+    whatToWatch: "Spec variance is massive; verify autonomy upgrades and maintenance",
   },
 ]
 
 const inspectionChecklist = [
-  "Full engine survey + diagnostics, including cooling system inspection and service intervals",
-  "Generator + air-conditioning under load (not just “it turns on”)",
-  "Stabilisation system operation + service history (if fitted)",
-  "Drivetrain condition (shaft/IPS where relevant), seals, alignment, vibration notes",
-  "Fuel system: filters, evidence of water contamination, tank condition, smells/leaks",
-  "Corrosion checks in engine room, around through-hulls, seacocks, clamps, bonding",
-  "Electrical system: batteries, charging, inverters, shore power, wiring quality",
-  "Bilge management: pumps, alarms, float switches, ingress clues",
-  "Hull + deck: moisture readings, gelcoat cracks, hardware bedding, window seals",
-  "Documentation: ownership chain, VAT/tax status, registration, CE compliance where relevant",
+  "Rig + standing rigging age (invoices matter), chainplates, corrosion, tuning history",
+  "Sails: age/shape/UV damage; inventory completeness vs your cruising plans",
+  "Engines: diagnostics + service history; verify hours against invoices",
+  "Saildrives: seals, corrosion, oil condition; check maintenance intervals and any water ingress history",
+  "Electrical: batteries (type/age), chargers, inverter, shore power, wiring quality and fusing",
+  "Lithium/solar (if present): install quality, BMS config, ventilation, documentation and safety",
+  "Generator + air-conditioning (if fitted) under sustained load — not just a quick demo",
+  "Watermaker output + maintenance discipline (membranes, flushing, filter changes)",
+  "Leaks/water ingress: deck fittings, windows, hatches, moisture readings where relevant",
+  "Steering/autopilot, rudder bearings, sail-handling hardware and winches",
+  "Plumbing: odours, leaks, seacocks/through-hulls, pumps, bilge alarms",
+  "Bridge-deck slamming/stress clues and structural integrity signals (use-pattern matters)",
+  "Documentation: VAT/tax status, registration, ownership chain, CE compliance, liens",
 ]
 
 const seaTrialFocus = [
-  "Cold start behaviour + smoke, idle stability, engine temps and pressure trends",
-  "Acceleration to cruising RPM: note any hesitation, vibration, or unusual noises",
-  "Steering feel + tracking, thruster behaviour, docking responsiveness",
-  "WOT (if appropriate) to confirm engines reach rated RPM without overheating",
-  "Stabilisers engaged (if fitted): confirm effect and any warning codes",
-  "Generator + AC running during trial: verify electrical stability under load",
-  "Post-trial engine room check: leaks, smells, heat, belt dust, coolant residue",
+  "Cold start + idle stability; alarms, smoke, unusual vibration",
+  "Steering feel + tracking; autopilot engagement test",
+  "Cruising RPM: temp/pressure trends and any drivetrain vibration",
+  "Sail handling if possible: hoist/reef, traveller loads, winch behaviour, sail shape",
+  "Genset + AC running during trial: voltage stability and real load behaviour",
+  "Watermaker running (if fitted): output stability, noise/vibration, filter condition",
+  "Post-trial engine rooms: dry, no new leaks, belt dust, coolant residue, smells",
 ]
 
 const faqs = [
   {
-    q: "What is the Beneteau Swift Trawler range best known for?",
-    a: "Swift Trawlers are known for efficient coastal and extended cruising, strong onboard comfort, and a design philosophy focused on practical ownership rather than pure speed.",
+    q: "Is the Fountaine Pajot Astrea 42 a good catamaran?",
+    a: "For many buyers, yes. The Astrea 42 is popular because it offers a meaningful jump in space and hosting comfort while staying more manageable than larger 45–50ft platforms. Condition and systems history matter more than brand reputation.",
   },
   {
-    q: "How much does a used Swift Trawler cost?",
-    a: "Pricing varies by model, year, and specification, but used Swift Trawlers often range from the mid-six figures to well into seven figures. Stabilisation, service history, and systems condition are major value drivers.",
+    q: "How much does a used Astrea 42 cost?",
+    a: "Pricing varies by year, region, and specification. Many used boats cluster from around the high six figures into the mid seven figures. Electrical autonomy upgrades and documented systems health are major price drivers.",
   },
   {
-    q: "Which Swift Trawler model is the best all-rounder?",
-    a: "Many buyers see the Swift Trawler 41–44 zone as the sweet spot: enough volume for real comfort, manageable operating complexity, and strong resale demand when maintained properly.",
+    q: "Astrea 42 vs Isla 40 — which should I choose?",
+    a: "Choose Astrea 42 if you prioritise extra volume, hosting comfort, and longer stays with more people. Choose Isla 40 if you prefer slightly simpler ownership and a modern 40ft sweet spot. In both, buy records first, then buy the boat.",
   },
   {
-    q: "What should I prioritise when buying used?",
-    a: "Mechanical and systems health comes first: engines, generator, AC, electrical systems, stabilisers, and corrosion checks. A sea trial and professional survey are essential.",
+    q: "What should I prioritise during survey?",
+    a: "Rigging age, saildrive health, electrical system quality (especially lithium/solar installs), and load-testing generator/AC/watermaker. Leaks and plumbing health are also key, especially in guest-heavy layouts.",
   },
   {
-    q: "Do Swift Trawlers hold their value?",
-    a: "Generally, yes—especially well-maintained examples with clear service records and clean histories. Liquidity is strongest for popular models in good condition.",
+    q: "Do Astrea 42s hold their value?",
+    a: "Typically, yes — clean examples with strong documentation and sensible autonomy spec tend to sell well. Liquidity improves when the history is clear and systems are proven under load.",
   },
 ]
 
-export default function BeneteauSwiftTrawlerBuyingGuidePage() {
+export default function Astrea42BuyingGuidePage() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const schemas = useMemo(() => {
-    const base = "https://www.findaly.co" // purely used for schema strings; page still works without it
-    const url = `${base}/guides/beneteau-swift-trawler-buying-guide`
+    const base = "https://www.findaly.co"
+    const url = `${base}/guides/astrea-42-buying-guide`
 
     const faqSchema = {
       "@context": "https://schema.org",
@@ -275,9 +257,9 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
     const articleSchema = {
       "@context": "https://schema.org",
       "@type": "Article",
-      headline: "Beneteau Swift Trawler buying guide (2026): models, prices, and what to inspect",
+      headline: "Fountaine Pajot Astrea 42 buying guide (2026): prices, layouts, what to inspect",
       description:
-        "A practical, global buying guide to the Beneteau Swift Trawler range: realistic pricing, model comparison, inspection checklist, sea trial focus, and resale considerations.",
+        "A practical buying guide to the Fountaine Pajot Astrea 42: real-world price bands, layouts and versions, comparison vs Isla 40 and Lagoon alternatives, inspection checklist, sea trial priorities, paperwork/VAT and resale.",
       author: { "@type": "Organization", name: "Findaly" },
       publisher: {
         "@type": "Organization",
@@ -286,8 +268,8 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
       },
       mainEntityOfPage: { "@type": "WebPage", "@id": url },
       image: [`${base}/hero-buy.jpg`],
-      datePublished: "2026-02-19",
-      dateModified: "2026-02-19",
+      datePublished: "2026-02-21",
+      dateModified: "2026-02-21",
     }
 
     const breadcrumbSchema = {
@@ -296,7 +278,7 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Home", item: `${base}/` },
         { "@type": "ListItem", position: 2, name: "Guides", item: `${base}/guides` },
-        { "@type": "ListItem", position: 3, name: "Swift Trawler buying guide", item: url },
+        { "@type": "ListItem", position: 3, name: "Astrea 42 buying guide", item: url },
       ],
     }
 
@@ -343,7 +325,7 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
       <div className="pillar-page min-h-screen pb-0">
         {/* HERO */}
         <div className="relative h-[70vh] min-h-[520px] w-full overflow-hidden">
-          <Image src="/hero-buy.jpg" alt="Beneteau Swift Trawler buying guide — Findaly" fill className="object-cover" priority />
+          <Image src="/hero-buy.jpg" alt="Fountaine Pajot Astrea 42 buying guide — Findaly" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-linear-to-b from-[#0a211f]/70 via-[#0a211f]/35 to-[#f5f2eb]" />
 
           <motion.div
@@ -352,41 +334,35 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
             initial="hidden"
             animate="show"
           >
-            <motion.p
-              className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4"
-              variants={fadeUp}
-            >
-              Buying Guide • Beneteau • Swift Trawler
+            <motion.p className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4" variants={fadeUp}>
+              Buying Guide • Fountaine Pajot • Astrea 42
             </motion.p>
 
             <motion.h1
               className="text-[clamp(34px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em] text-white max-w-4xl"
               variants={fadeUp}
             >
-              Beneteau Swift Trawler buying guide:{" "}
-              <span className="text-[#fff86c]">pricing, models</span> & what to inspect (2026).
+              Astrea 42 buying guide:{" "}
+              <span className="text-[#fff86c]">prices, layouts</span> & what to inspect (2026).
             </motion.h1>
 
-            <motion.p
-              className="mt-6 text-[17px] text-white/70 max-w-2xl leading-relaxed"
-              variants={fadeUp}
-            >
-              A practical, global guide for serious buyers — with real-world pricing bands,
-              model comparisons, inspection priorities, and the sea-trial checklist that protects your downside.
+            <motion.p className="mt-6 text-[17px] text-white/70 max-w-2xl leading-relaxed" variants={fadeUp}>
+              A practical guide for serious buyers: real-world pricing bands, layout choices, comparison vs Isla 40 and Lagoon
+              alternatives, inspection priorities, sea-trial stress tests, and resale logic.
             </motion.p>
 
             <motion.div className="mt-8 flex gap-3 flex-wrap justify-center" variants={fadeUp}>
               <Link
-                href="/buy/brand/beneteau"
+                href="/buy/brand/fountaine-pajot/model/astrea-42"
                 className="inline-flex h-12 items-center justify-center rounded-xl bg-[#fff86c] px-7 text-[14.5px] font-semibold text-[#0a211f] transition-opacity hover:opacity-90"
               >
-                Browse Beneteau listings
+                Browse Astrea 42 listings
               </Link>
               <Link
-                href="/buy/brand/beneteau/model/swift-trawler-44"
+                href="/buy/brand/fountaine-pajot"
                 className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 px-7 text-[14.5px] font-medium text-white hover:bg-white/10 transition-colors"
               >
-                Swift Trawler 44 listings
+                Fountaine Pajot brand hub
               </Link>
             </motion.div>
 
@@ -451,26 +427,30 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                   <div className="bg-[#0a211f] p-5">
                     <p className="text-[15px] font-semibold text-white">Jump into live inventory</p>
                     <p className="mt-1.5 text-[13px] text-white/50 leading-relaxed">
-                      Use the Beneteau brand hub, then filter for Swift Trawler models by year, country, length, and budget.
+                      Filter Astrea 42 listings by year, country, cabins, and spec. Then cross-check what you see
+                      against the inspection + sea-trial sections below.
                     </p>
                     <Link
-                      href="/buy/brand/beneteau"
+                      href="/buy/brand/fountaine-pajot/model/astrea-42"
                       className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#fff86c] text-[13.5px] font-semibold text-[#0a211f]"
                     >
-                      Browse Beneteau →
+                      Browse Astrea 42 →
                     </Link>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">
-                    Beneteau hubs
+                    Related guides
                   </p>
-                  <Link href="/buy/brand/beneteau" className="pillar-link">
-                    <span>🏷️</span> Beneteau brand hub
+                  <Link href="/guides/isla-40-buying-guide" className="pillar-link">
+                    <span>🧠</span> Isla 40 buying guide
                   </Link>
-                  <Link href="/buy" className="pillar-link">
-                    <span>🛥️</span> Browse all yachts
+                  <Link href="/guides/lagoon-42-buying-guide" className="pillar-link">
+                    <span>⭐</span> Lagoon 42 buying guide
+                  </Link>
+                  <Link href="/guides/catamaran-buying-guide" className="pillar-link">
+                    <span>🌊</span> Catamaran buying basics
                   </Link>
                   <Link href="/finance" className="pillar-link">
                     <span>💰</span> Yacht finance
@@ -482,20 +462,18 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
 
                 <div className="rounded-2xl border border-[#0a211f]/10 bg-[#0a211f]/2 p-5">
                   <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">
-                    Swift Trawler shortcuts
+                    Fountaine Pajot shortcuts
                   </p>
                   <div className="space-y-2">
-                    {[
-                      { title: "Swift Trawler 35 listings", slug: "swift-trawler-35", icon: "🚤" },
-                      { title: "Swift Trawler 41 listings", slug: "swift-trawler-41", icon: "🧭" },
-                      { title: "Swift Trawler 44 listings", slug: "swift-trawler-44", icon: "⭐" },
-                      { title: "Swift Trawler 48 listings", slug: "swift-trawler-48", icon: "🛟" },
-                      { title: "Swift Trawler 50 listings", slug: "swift-trawler-50", icon: "🏝️" },
-                    ].map((x) => (
-                      <Link key={x.slug} href={`/buy/brand/beneteau/model/${x.slug}`} className="pillar-link">
-                        <span>{x.icon}</span> {x.title}
-                      </Link>
-                    ))}
+                    <Link href="/buy/brand/fountaine-pajot" className="pillar-link">
+                      <span>🏷️</span> FP brand hub
+                    </Link>
+                    <Link href="/buy/brand/fountaine-pajot/model/isla-40" className="pillar-link">
+                      <span>🚤</span> Isla 40 listings
+                    </Link>
+                    <Link href="/buy/brand/fountaine-pajot/model/astrea-42" className="pillar-link">
+                      <span>🧭</span> Astrea 42 listings
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -504,115 +482,93 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
             <article className="article-body min-w-0">
               <section id="overview" className="scroll-mt-28">
                 <p className="section-label">Overview</p>
-                <h2 className="section-heading">A trawler isn’t a vibe — it’s an ownership strategy.</h2>
+                <h2 className="section-heading">Astrea 42: the “more space” upgrade — without becoming a 50ft project.</h2>
                 <p>
-                  Buyers searching for a <strong>Beneteau Swift Trawler</strong> typically want one thing:
-                  <strong> comfortable, efficient cruising</strong> without the maintenance chaos of
-                  chasing “performance” for its own sake. The Swift Trawler range is built around predictable
-                  ownership — efficient hull form, liveable layouts, and systems designed for real time onboard.
+                  The <strong>Fountaine Pajot Astrea 42</strong> is popular because it delivers a real jump in space and hosting comfort
+                  while staying closer to “manageable ownership” than larger 45–50ft platforms.
+                  It’s a family-friendly 42ft catamaran that works for long seasons — as long as the systems story is clean.
                 </p>
                 <p>
-                  This guide is designed to support the entire Findaly internal structure:{" "}
-                  <strong>Beneteau → Swift Trawler models → (eventually) year + country hubs</strong>.
-                  If you want to browse inventory while reading, start at the{" "}
+                  This guide supports Findaly’s internal structure:{" "}
+                  <strong>Fountaine Pajot → Astrea 42 model hub → (later) year + country hubs</strong>.
+                  Browse inventory while reading here:{" "}
                   <Link
-                    href="/buy/brand/beneteau"
+                    href="/buy/brand/fountaine-pajot/model/astrea-42"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
                   >
-                    Beneteau brand hub
-                  </Link>{" "}
-                  then filter into your target Swift Trawler model.
+                    Astrea 42 listings on Findaly
+                  </Link>
+                  .
                 </p>
                 <div className="pull-quote">
-                  “You don’t buy a Swift Trawler to go fast. You buy it to go far — comfortably — and sell cleanly later.”
+                  “The jump from 40ft to 42ft isn’t just space — it’s payload, systems, and how disciplined you must be.”
                 </div>
               </section>
 
               <section id="why" className="mt-20 scroll-mt-28">
-                <p className="section-label">Why Swift Trawler</p>
-                <h2 className="section-heading">Why the Swift Trawler range wins (and where buyers should be sharp).</h2>
+                <p className="section-label">Why Astrea 42</p>
+                <h2 className="section-heading">Why buyers choose it (and what separates a gem from a headache).</h2>
                 <p>
-                  Swift Trawlers are popular because they solve the real-world use case: weekends that become weeks,
-                  coastal passages that become seasons. They prioritise <strong>comfort underway</strong>,
-                  <strong> stability at anchor</strong>, and <strong>habitable living</strong>.
+                  Buyers move into the Astrea 42 because they want to host comfortably and stay aboard longer without feeling cramped.
+                  But the bigger the platform, the more your life depends on systems: electrics, plumbing, and drivetrain history.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
-                    <div className="card-title">What it gets right</div>
-                    <div className="text-[12px] text-[#0a211f]/45">And where buyers should focus</div>
+                    <div className="card-title">Strengths vs watch-outs</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Where to focus as a buyer</div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                     <div className="row">
                       <div className="row-title">Strengths</div>
                       <ul className="mt-3">
-                        <li>Efficient cruising profile vs many planing motor yachts</li>
-                        <li>Comfortable interiors designed for longer stays</li>
-                        <li>Good liquidity in popular used models (condition dependent)</li>
-                        <li>Broad service familiarity: mechanics, yards, surveyors know the platforms</li>
-                        <li>Owner community + known ownership patterns</li>
+                        <li>Noticeable comfort upgrade vs 40ft class for guests</li>
+                        <li>Popular platform with good global demand</li>
+                        <li>Flexible layouts for owner-use or guest-heavy use</li>
+                        <li>Strong “family catamaran” reputation in the market</li>
+                        <li>Autonomy upgrades can create truly independent cruising</li>
                       </ul>
                     </div>
                     <div className="row">
                       <div className="row-title">Watch-outs</div>
                       <ul className="mt-3">
-                        <li>Systems health matters more than cosmetics (generator/AC/electrics)</li>
-                        <li>Stabiliser maintenance is non-negotiable if fitted</li>
-                        <li>Corrosion and through-hull discipline separates “good” from “expensive”</li>
-                        <li>Service records are a pricing weapon — for you or against you</li>
-                        <li>Sea trial under load exposes the truth</li>
+                        <li>Payload creep can quietly ruin performance and wear systems</li>
+                        <li>Electrical installs (especially lithium) must be proven + documented</li>
+                        <li>Saildrive maintenance history is a major risk control</li>
+                        <li>Leaks/plumbing issues scale with cabins/heads</li>
+                        <li>Charter cosmetics can disguise systems fatigue</li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <section id="lineup" className="mt-20 scroll-mt-28">
-                <p className="section-label">Lineup & best-fit</p>
-                <h2 className="section-heading">Pick the platform that fits your cruising style, not your ego.</h2>
+              <section id="layouts" className="mt-20 scroll-mt-28">
+                <p className="section-label">Layouts & versions</p>
+                <h2 className="section-heading">Pick a layout that matches your real use-case.</h2>
                 <p>
-                  “Swift Trawler” isn’t one thing — it’s a family. The smart way to choose is to define your use:
-                  how many people aboard, how often you cruise, and how much complexity you’re willing to maintain.
+                  A layout isn’t just sleeping capacity — it’s how much plumbing you maintain, how you store gear, and how you live day-to-day.
+                  The right choice depends on whether you cruise as a couple or host frequently.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
-                    <div className="card-title">Key models (best-fit + what to watch)</div>
-                    <div className="text-[12px] text-[#0a211f]/45">Links go to Findaly’s model hubs</div>
+                    <div className="card-title">Common Astrea 42 layouts</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Best-fit + watch-outs</div>
                   </div>
 
                   <div>
-                    {models.map((m) => (
-                      <div key={m.slug} className="row">
-                        <div className="flex items-start justify-between gap-4 flex-wrap">
-                          <div>
-                            <div className="row-title">
-                              <Link
-                                href={`/buy/brand/beneteau/model/${m.slug}`}
-                                className="text-[#0a211f] no-underline hover:underline decoration-[#fff86c] underline-offset-4"
-                              >
-                                Beneteau {m.name}
-                              </Link>
-                            </div>
-                            <div className="row-meta">
-                              <strong className="text-[#0a211f]">Best for:</strong> {m.bestFor}
-                            </div>
-                          </div>
-
-                          <Link
-                            href={`/buy/brand/beneteau/model/${m.slug}`}
-                            className="inline-flex h-10 items-center justify-center rounded-xl bg-[#0a211f] px-4 text-[13px] font-semibold text-[#fff86c]"
-                          >
-                            View listings →
-                          </Link>
+                    {layouts.map((l) => (
+                      <div key={l.title} className="row">
+                        <div className="row-title">{l.title}</div>
+                        <div className="row-meta">
+                          <strong className="text-[#0a211f]">Best for:</strong> {l.bestFor}
                         </div>
-
                         <p className="row-note">
-                          <strong>Watch-out:</strong> {m.watchOut}
+                          <strong>Watch-out:</strong> {l.watchOut}
                         </p>
-
                         <p className="row-note mb-0!">
-                          <strong>Value drivers:</strong> {m.valueDrivers.join(" • ")}
+                          <strong>Value notes:</strong> {l.valueNotes.join(" • ")}
                         </p>
                       </div>
                     ))}
@@ -620,32 +576,30 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  If you want the fastest path to inventory: open the{" "}
+                  If you want the tighter 40ft alternative, read:{" "}
                   <Link
-                    href="/buy/brand/beneteau"
+                    href="/guides/isla-40-buying-guide"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
                   >
-                    Beneteau brand hub
-                  </Link>{" "}
-                  and filter to Swift Trawler models. That route helps reinforce Findaly’s internal linking layer
-                  and keeps this guide connected to live listings.
+                    Isla 40 buying guide
+                  </Link>
+                  .
                 </p>
               </section>
 
               <section id="pricing" className="mt-20 scroll-mt-28">
-                <p className="section-label">Price ranges</p>
-                <h2 className="section-heading">Real-world pricing is a systems conversation, not a brochure one.</h2>
+                <p className="section-label">Real price ranges</p>
+                <h2 className="section-heading">Astrea 42 pricing is a premium for clean systems + clean history.</h2>
                 <p>
-                  Swift Trawler prices vary by model, year, region, and specification — but the biggest swings come from
-                  <strong> maintenance discipline</strong> and <strong>systems integrity</strong>.
-                  Two boats that “look the same” can be separated by a six-figure gap if one has tired generators, weak AC,
-                  neglected stabilisers, or corrosion issues.
+                  Two Astrea 42s that “look identical” can be separated by a massive real cost difference.
+                  The premium is usually paid for: documented rigging/saildrive servicing, stable electrics,
+                  reliable water systems, and boats that pass load tests.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
                     <div className="card-title">Typical price bands (global)</div>
-                    <div className="text-[12px] text-[#0a211f]/45">Use as directional context, not a promise</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Directional context, not a promise</div>
                   </div>
 
                   <div className="row p-0">
@@ -675,12 +629,9 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  If you’re financing the purchase, keep it practical: the smartest buyers finance a boat they can still
-                  comfortably own (berth, insurance, servicing, upgrades). Explore the basics here:{" "}
-                  <Link
-                    href="/finance"
-                    className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
-                  >
+                  Financing lens: the “cheap” boat can be the most expensive if it needs rigging + saildrives + electrical work.
+                  If you want the basics:{" "}
+                  <Link href="/finance" className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold">
                     yacht finance on Findaly
                   </Link>
                   .
@@ -688,17 +639,16 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
               </section>
 
               <section id="comparison" className="mt-20 scroll-mt-28">
-                <p className="section-label">Model comparison</p>
-                <h2 className="section-heading">Swift Trawler model comparison: choose by use-case.</h2>
+                <p className="section-label">Astrea 42 vs alternatives</p>
+                <h2 className="section-heading">Comparison: choose by maintenance rhythm + payload reality.</h2>
                 <p>
-                  When buyers get stuck, it’s usually because they’re comparing length and photos. The more useful lens is:
-                  <strong> how it feels to own</strong> — systems, complexity, and the maintenance rhythm.
+                  A 42ft catamaran can feel like a dream — or feel like a systems job. Choose based on how disciplined you want to be.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
                     <div className="card-title">At-a-glance comparison</div>
-                    <div className="text-[12px] text-[#0a211f]/45">Click through to model hubs</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Ownership feel wins</div>
                   </div>
 
                   <div className="row p-0">
@@ -707,24 +657,28 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                         <tr>
                           <th className="th">Model</th>
                           <th className="th">Best for</th>
-                          <th className="th">Ownership feel</th>
-                          <th className="th">Key checks</th>
+                          <th className="th">Why people choose it</th>
+                          <th className="th">What to watch</th>
                         </tr>
                       </thead>
                       <tbody>
                         {comparisonRows.map((r) => (
                           <tr key={r.model}>
                             <td className="td">
-                              <Link
-                                href={`/buy/brand/beneteau/model/${r.linkSlug}`}
-                                className="text-[#0a211f] font-semibold no-underline hover:underline decoration-[#fff86c] underline-offset-4"
-                              >
-                                {r.model}
-                              </Link>
+                              {r.primaryLink ? (
+                                <Link
+                                  href={r.primaryLink.href}
+                                  className="text-[#0a211f] font-semibold no-underline hover:underline decoration-[#fff86c] underline-offset-4"
+                                >
+                                  {r.model}
+                                </Link>
+                              ) : (
+                                <strong>{r.model}</strong>
+                              )}
                             </td>
                             <td className="td">{r.bestFor}</td>
-                            <td className="td">{r.ownershipFeel}</td>
-                            <td className="td">{r.keyChecks}</td>
+                            <td className="td">{r.whyPeopleChooseIt}</td>
+                            <td className="td">{r.whatToWatch}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -733,56 +687,58 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  A simple rule that keeps buyers safe: <strong>buy the records, then buy the boat</strong>.
-                  A clean Swift Trawler with consistent servicing will usually beat a “cheaper” boat with missing history.
+                  Want the category foundation page? Read:{" "}
+                  <Link
+                    href="/guides/catamaran-buying-guide"
+                    className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
+                  >
+                    Catamaran buying guide
+                  </Link>
+                  .
                 </p>
               </section>
 
               <section id="ownership" className="mt-20 scroll-mt-28">
                 <p className="section-label">Ownership reality</p>
-                <h2 className="section-heading">What ownership really costs: systems, servicing, and discipline.</h2>
+                <h2 className="section-heading">Ownership success is mostly about discipline (and weight).</h2>
                 <p>
-                  Swift Trawler ownership success is less about the badge and more about the system stack:
-                  engines, generator, climate, electrics, stabilisers, thrusters, pumps. If these are healthy,
-                  the experience is calm. If they’re tired, it becomes expensive — fast.
+                  The Astrea 42 can be a “set it and enjoy it” boat when maintained proactively.
+                  But payload creep (extra gear, extra toys, extra water) adds stress everywhere: sails, engines, rigs, and systems.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
-                    <div className="card-title">Where your money actually goes</div>
-                    <div className="text-[12px] text-[#0a211f]/45">The “silent” costs buyers miss</div>
+                    <div className="card-title">What actually matters</div>
+                    <div className="text-[12px] text-[#0a211f]/45">For long-term happiness</div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                     <div className="row">
-                      <div className="row-title">High-impact items</div>
+                      <div className="row-title">High-impact habits</div>
                       <ul className="mt-3">
-                        <li>Engine cooling systems + scheduled servicing</li>
-                        <li>Generator and air-conditioning under load</li>
-                        <li>Stabilisers (service intervals + calibration)</li>
-                        <li>Batteries, charging, inverter, shore power integrity</li>
-                        <li>Corrosion management + through-hull discipline</li>
+                        <li>Keep service logs (engines, saildrives, rig)</li>
+                        <li>Load-test systems regularly (genset/AC/watermaker)</li>
+                        <li>Keep wiring tidy, documented, and safe</li>
+                        <li>Stay on top of leaks early (small leaks become big)</li>
+                        <li>Control payload and be honest about what you carry</li>
                       </ul>
                     </div>
                     <div className="row">
-                      <div className="row-title">Owner mindset</div>
+                      <div className="row-title">Ownership pitfalls</div>
                       <ul className="mt-3">
-                        <li>Prioritise records and condition over “newer” aesthetics</li>
-                        <li>Sea trial + survey are not optional — they’re your protection</li>
-                        <li>Budget upgrades early: nav, batteries, safety equipment</li>
-                        <li>Pay attention to engine room cleanliness (it signals care)</li>
-                        <li>Plan resale day from purchase day (keep logs, keep receipts)</li>
+                        <li>Undocumented “upgrades” and DIY electrics</li>
+                        <li>Ignoring saildrive seals and corrosion until it’s a problem</li>
+                        <li>Letting plumbing and odours become “normal”</li>
+                        <li>Buying based on photos and vibes</li>
+                        <li>Not budgeting for sails/rigging as consumables</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
                 <p className="mt-8">
-                  If you’re buying internationally, broker support can reduce risk. Find one here:{" "}
-                  <Link
-                    href="/brokers"
-                    className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
-                  >
-                    yacht brokers on Findaly
+                  If you’re buying internationally, a broker reduces risk. Start here:{" "}
+                  <Link href="/brokers" className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold">
+                    find a broker on Findaly
                   </Link>
                   .
                 </p>
@@ -790,16 +746,15 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
 
               <section id="inspection" className="mt-20 scroll-mt-28">
                 <p className="section-label">Inspection checklist</p>
-                <h2 className="section-heading">Inspection checklist for a used Swift Trawler.</h2>
+                <h2 className="section-heading">Inspection checklist for a used Astrea 42.</h2>
                 <p>
-                  You’re not buying a boat. You’re buying the next few years of maintenance decisions made by the previous
-                  owner. This checklist is designed to surface the expensive truths early.
+                  Use this as your walk-through list and to brief your surveyor. It’s designed to surface the expensive truths early.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
                     <div className="card-title">Buyer checklist</div>
-                    <div className="text-[12px] text-[#0a211f]/45">Use for survey + your own walk-through</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Survey + your checks</div>
                   </div>
                   <div className="row">
                     <ul className="mt-0">
@@ -811,23 +766,21 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  A smart buyer habit: write down <strong>every</strong> item you discover during inspection and price it.
-                  You’ll either negotiate better, or you’ll walk away early — both outcomes are wins.
+                  Negotiation method: price every defect. Then decide whether you’re negotiating or walking.
                 </p>
               </section>
 
               <section id="sea-trial" className="mt-20 scroll-mt-28">
                 <p className="section-label">Sea trial focus</p>
-                <h2 className="section-heading">Sea trial checklist: the fastest way to reveal risk.</h2>
+                <h2 className="section-heading">Sea trial checklist: test the boat under real load.</h2>
                 <p>
-                  A sea trial should be treated like a stress test. You’re not there to “feel the vibe”.
-                  You’re there to confirm performance, temps, load behaviour, stability, and any red flags under real use.
+                  You’re not there to “feel the vibe”. You’re there to confirm stability, temps, and system behaviour under sustained use.
                 </p>
 
                 <div className="card mt-8">
                   <div className="card-head">
-                    <div className="card-title">What to check during sea trial</div>
-                    <div className="text-[12px] text-[#0a211f]/45">Bring a notebook; don’t rely on memory</div>
+                    <div className="card-title">What to test during sea trial</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Don’t rely on memory</div>
                   </div>
                   <div className="row">
                     <ul className="mt-0">
@@ -839,37 +792,69 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  If the broker or seller resists a proper trial under load, treat it as information.
-                  The best boats welcome scrutiny because the truth is on their side.
+                  If the seller resists a proper trial under load, treat it as information.
                 </p>
               </section>
 
               <section id="paperwork" className="mt-20 scroll-mt-28">
                 <p className="section-label">Paperwork & VAT</p>
-                <h2 className="section-heading">Paperwork isn’t admin — it’s the transaction.</h2>
+                <h2 className="section-heading">Paperwork is the transaction.</h2>
                 <p>
-                  Swift Trawlers are often bought and sold internationally. That means your checklist must include the
-                  paperwork stack: ownership chain, registration, tax/VAT status, CE compliance (where relevant), and
-                  any finance liens. Your survey protects the boat. Your paperwork protects the transaction.
-                </p>
-                <p>
-                  If you’re unsure how to structure a cross-border purchase, work with a reputable broker and keep
-                  the process disciplined: written offer, deposit terms, survey contingencies, and clear closing timeline.
+                  Make sure the ownership chain is clean, VAT/tax status is clear, registration is correct, and any liens are cleared.
+                  Your survey protects the boat — your paperwork protects the deal.
                 </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
-                    href="/brokers"
+                    href="/buy/brand/fountaine-pajot/model/astrea-42"
                     className="inline-flex h-12 items-center justify-center rounded-xl bg-[#0a211f] px-7 text-[14.5px] font-semibold text-[#fff86c]"
                   >
-                    Find a broker →
+                    Browse Astrea 42 listings →
                   </Link>
                   <Link
-                    href="/buy/brand/beneteau"
+                    href="/buy/brand/fountaine-pajot"
                     className="inline-flex h-12 items-center justify-center rounded-xl border border-[#0a211f]/15 px-7 text-[14.5px] font-medium text-[#0a211f] hover:bg-[#0a211f]/5 transition-colors"
                   >
-                    Back to Beneteau inventory →
+                    Back to FP brand hub →
                   </Link>
+                </div>
+              </section>
+
+              <section id="charter" className="mt-20 scroll-mt-28">
+                <p className="section-label">Charter boats</p>
+                <h2 className="section-heading">Charter Astrea 42s can be bargains — if you buy the technical truth.</h2>
+                <p>
+                  Charter history isn’t automatically bad. The question is whether the documentation is real and whether
+                  the refit was technical — not only cosmetic.
+                </p>
+
+                <div className="card mt-8">
+                  <div className="card-head">
+                    <div className="card-title">How to judge charter history</div>
+                    <div className="text-[12px] text-[#0a211f]/45">Green vs red flags</div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                    <div className="row">
+                      <div className="row-title">Green flags</div>
+                      <ul className="mt-3">
+                        <li>Full service logs with invoices and yard names</li>
+                        <li>Rigging and saildrive maintenance documented</li>
+                        <li>Systems replaced on schedule, not only when broken</li>
+                        <li>Transparent survey results and defect list</li>
+                        <li>Inventory list matches what’s onboard</li>
+                      </ul>
+                    </div>
+                    <div className="row">
+                      <div className="row-title">Red flags</div>
+                      <ul className="mt-3">
+                        <li>Fresh cosmetics with weak technical history</li>
+                        <li>Messy wiring / undocumented lithium upgrades</li>
+                        <li>Persistent odours, damp lockers, recurring leaks</li>
+                        <li>Seller reluctance to load-test systems</li>
+                        <li>Unclear VAT status or paperwork gaps</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -877,18 +862,11 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                 <p className="section-label">Resale & liquidity</p>
                 <h2 className="section-heading">Resale is strongest when you buy the right history.</h2>
                 <p>
-                  Swift Trawlers tend to sell well when they are maintained properly, documented clearly, and presented
-                  honestly. The single biggest resale lever is a clean story: consistent servicing, evidence of care,
-                  and systems that work under load.
-                </p>
-                <p>
-                  If resale matters to you, choose a model with broad demand (often the 41–44 zone), keep your logs,
-                  and maintain proactively — not reactively. When you decide to sell later, you’ll thank yourself.
+                  Astrea 42 liquidity tends to be strong for clean, well-documented boats — especially owner-use examples with
+                  sensible autonomy spec and honest histories. Buyers pay for predictable ownership.
                 </p>
 
-                <div className="pull-quote">
-                  “Liquidity is earned. It’s the reward for maintenance discipline.”
-                </div>
+                <div className="pull-quote">“Resale day starts on purchase day: keep logs, keep receipts, keep it honest.”</div>
               </section>
 
               <section id="faq" className="mt-20 scroll-mt-28">
@@ -917,25 +895,24 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                   </p>
                   <h3 className="text-[clamp(26px,3.5vw,38px)] font-bold leading-[1.1] text-white tracking-tight">
                     Find your next{" "}
-                    <span className="text-[#fff86c]">Swift Trawler</span> with confidence.
+                    <span className="text-[#fff86c]">Astrea 42</span> with confidence.
                   </h3>
                   <p className="mx-auto mt-4 max-w-md text-[15px] text-white/50 leading-relaxed">
-                    Explore real listings, compare models, and keep the buying process clean — from first shortlist
-                    to survey day.
+                    Explore real listings, compare spec, and keep the buying process disciplined — from shortlist to survey day.
                   </p>
 
                   <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
                     <Link
-                      href="/buy/brand/beneteau"
+                      href="/buy/brand/fountaine-pajot/model/astrea-42"
                       className="inline-flex h-11 items-center justify-center rounded-xl bg-[#fff86c] px-6 text-sm font-semibold text-[#0a211f]"
                     >
-                      Browse Beneteau listings
+                      Browse Astrea 42 listings
                     </Link>
                     <Link
-                      href="/buy/brand/beneteau/model/swift-trawler-44"
+                      href="/buy/brand/fountaine-pajot"
                       className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 px-6 text-sm font-medium text-white/80 hover:bg-white/5 transition-colors"
                     >
-                      Swift Trawler 44 listings
+                      Fountaine Pajot brand hub
                     </Link>
                   </div>
                 </div>
@@ -950,7 +927,7 @@ export default function BeneteauSwiftTrawlerBuyingGuidePage() {
                     <span>/</span>
                     <span className="text-[#0a211f]/60">Guides</span>
                     <span>/</span>
-                    <span className="text-[#0a211f]/60">Beneteau Swift Trawler buying guide</span>
+                    <span className="text-[#0a211f]/60">Astrea 42 buying guide</span>
                   </nav>
                 </div>
               </div>

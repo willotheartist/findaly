@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 19/02/2026, 14:40:13*
+*Generated on: 21/02/2026, 08:29:29*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 207 |
-| 📁 Total Folders | 137 |
+| 📄 Total Files | 220 |
+| 📁 Total Folders | 148 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,15 +24,15 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 109 files (52.7%)
-- 🔷 **.ts** (TypeScript files): 44 files (21.3%)
-- 🖼️ **.jpg** (JPEG images): 13 files (6.3%)
-- 🖼️ **.png** (PNG images): 11 files (5.3%)
-- 📄 **.sql** (Other files): 7 files (3.4%)
-- 🎨 **.svg** (SVG images): 5 files (2.4%)
-- ⚙️ **.json** (JSON files): 4 files (1.9%)
+- ⚛️ **.tsx** (React TypeScript files): 121 files (55.0%)
+- 🔷 **.ts** (TypeScript files): 45 files (20.5%)
+- 🖼️ **.jpg** (JPEG images): 13 files (5.9%)
+- 🖼️ **.png** (PNG images): 11 files (5.0%)
+- 📄 **.sql** (Other files): 7 files (3.2%)
+- 🎨 **.svg** (SVG images): 5 files (2.3%)
+- ⚙️ **.json** (JSON files): 4 files (1.8%)
 - 📄 **.mjs** (Other files): 3 files (1.4%)
-- 📖 **.md** (Markdown files): 2 files (1.0%)
+- 📖 **.md** (Markdown files): 2 files (0.9%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.5%)
 - 📄 **.txt** (Text files): 1 files (0.5%)
 - 🖼️ **.ico** (Icon files): 1 files (0.5%)
@@ -45,19 +45,19 @@
 
 ### By Category
 
-- **React**: 109 files (52.7%)
-- **TypeScript**: 44 files (21.3%)
-- **Assets**: 30 files (14.5%)
-- **Other**: 13 files (6.3%)
-- **Config**: 6 files (2.9%)
+- **React**: 121 files (55.0%)
+- **TypeScript**: 45 files (20.5%)
+- **Assets**: 30 files (13.6%)
+- **Other**: 13 files (5.9%)
+- **Config**: 6 files (2.7%)
 - **Docs**: 3 files (1.4%)
 - **DevOps**: 1 files (0.5%)
 - **Styles**: 1 files (0.5%)
 
 ### 📁 Largest Directories
 
-- **root**: 207 files
-- **app**: 99 files
+- **root**: 220 files
+- **app**: 112 files
 - **components**: 29 files
 - **public**: 29 files
 - **app/add-listing**: 21 files
@@ -221,6 +221,30 @@ findaly/
 │   ├── 📂 finance/
 │   │   └── ⚛️ page.tsx
 │   ├── 🎨 globals.css
+│   ├── 📂 guides/
+│   │   ├── 🔷 _data.ts
+│   │   ├── 📂 beneteau-oceanis-vs-first/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 beneteau-price-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 beneteau-swift-trawler-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 buying-a-beneteau/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 catamaran-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 lagoon-42-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 lagoon-catamaran-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── ⚛️ layout.tsx
+│   │   ├── 📂 motor-yacht-buying-guide/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── ⚛️ page.tsx
+│   │   ├── 📂 used-beneteau-checklist/
+│   │   │   └── ⚛️ page.tsx
+│   │   └── 📂 yacht-types-explained/
+│   │   │   └── ⚛️ page.tsx
 │   ├── ⚛️ layout.tsx
 │   ├── 📂 login/
 │   │   ├── ⚛️ LoginClient.tsx
