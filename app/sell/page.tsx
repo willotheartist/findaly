@@ -1,5 +1,7 @@
+// app/sell/page.tsx
 import type { Metadata } from "next"
-import SellPageClient, { faqs } from "./SellPageClient"
+import SellPageClient from "./SellPageClient"
+import { faqs } from "./content"
 
 const CANONICAL = "https://www.findaly.co/sell"
 
