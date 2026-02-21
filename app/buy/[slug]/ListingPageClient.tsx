@@ -181,6 +181,9 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
           gridTemplateColumns: "3fr 2fr",
           gap: 6,
           height: 480,
+          // ✅ ensures mosaic doesn't visually collide with what follows
+          borderRadius: 12,
+          overflow: "hidden",
         }}
       >
         <button
@@ -1118,8 +1121,23 @@ export default function ListingPageClient({
         <PhotoMosaic images={listing.images} title={listing.title} />
       </div>
 
+      {/* ✅ Spacer to prevent any mosaic/title collision (including on load/layout shift) */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ height: 18 }} />
+      </div>
+
       {/* Title + actions */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 0" }}>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: "22px 24px 0",
+          // ✅ ensure title sits above anything if browser does weird stacking
+          position: "relative",
+          zIndex: 2,
+          backgroundColor: P.white,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1
@@ -1212,22 +1230,22 @@ export default function ListingPageClient({
           {/* LEFT */}
           <div style={{ minWidth: 0 }}>
             {/* Key specs */}
-            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4" style={{ paddingBottom: 22 }}>
-              <KeySpec icon={MapPin} label={listing.country || "Location"} value={listing.location || "—"} />
-              <KeySpec icon={Ruler} label="Length" value={listing.length ? `${listing.length} ft` : "—"} />
+            <div
+              className="grid grid-cols-2 gap-5 sm:grid-cols-4"
+              style={{ paddingBottom: 22 }}
+            >
+              <KeySpec
+                icon={MapPin}
+                label={listing.country || "Location"}
+                value={listing.location || "—"}
+              />
+              <KeySpec
+                icon={Ruler}
+                label="Length"
+                value={listing.length ? `${listing.length} ft` : "—"}
+              />
               <KeySpec icon={Bed} label="Cabins" value={listing.cabins || "—"} />
               <KeySpec icon={Calendar} label="Year" value={listing.year || "—"} />
-            </div>
-
-            {/* ✅ Waaza financing (inline Pretto-style) */}
-            <div style={{ marginBottom: 28 }}>
-              <WaazaFinancing
-                price={listing.price || null}
-                year={listing.year || null}
-                usage={"private"} // if you later add listing.usageType, pass it here
-                currency={listing.currency || "EUR"}
-                country={listing.country || null}
-              />
             </div>
 
             {/* Tabbed content */}
@@ -1299,9 +1317,7 @@ export default function ListingPageClient({
 
                 {tab === "specs" && (
                   <div>
-                    {(listing.length > 0 ||
-                      listing.beam > 0 ||
-                      listing.draft > 0) && (
+                    {(listing.length > 0 || listing.beam > 0 || listing.draft > 0) && (
                       <SpecGroup title="Dimensions" icon={Ruler}>
                         {listing.length > 0 && (
                           <SpecChip
@@ -1328,10 +1344,7 @@ export default function ListingPageClient({
                           />
                         )}
                         {listing.displacement && (
-                          <SpecChip
-                            label="Displacement"
-                            value={listing.displacement}
-                          />
+                          <SpecChip label="Displacement" value={listing.displacement} />
                         )}
                       </SpecGroup>
                     )}
@@ -1366,9 +1379,7 @@ export default function ListingPageClient({
                         {listing.engineHours && (
                           <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />
                         )}
-                        {listing.fuelType && (
-                          <SpecChip label="Fuel" value={listing.fuelType} />
-                        )}
+                        {listing.fuelType && <SpecChip label="Fuel" value={listing.fuelType} />}
                       </SpecGroup>
                     )}
 
@@ -1384,9 +1395,21 @@ export default function ListingPageClient({
 
                 {tab === "features" && (
                   <div>
-                    <Features title="Equipment & Features" items={listing.features} icon={Anchor} />
-                    <Features title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
-                    <Features title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
+                    <Features
+                      title="Equipment & Features"
+                      items={listing.features}
+                      icon={Anchor}
+                    />
+                    <Features
+                      title="Electronics & Navigation"
+                      items={listing.electronics}
+                      icon={Navigation}
+                    />
+                    <Features
+                      title="Safety Equipment"
+                      items={listing.safetyEquipment}
+                      icon={Shield}
+                    />
                     {!listing.features.length &&
                       !listing.electronics.length &&
                       !listing.safetyEquipment.length && (
@@ -1474,22 +1497,34 @@ export default function ListingPageClient({
               </div>
             </div>
 
-            {/* Safety tips */}
+            {/* ✅ Waaza moved BELOW location (requested) */}
+            <div style={{ marginTop: 24 }}>
+              <WaazaFinancing
+                price={listing.price || null}
+                year={listing.year || null}
+                usage={"private"}
+                currency={listing.currency || "EUR"}
+                country={listing.country || null}
+              />
+            </div>
+
+            {/* ✅ Safety tips — flat 2D #fef76b */}
             <div
               style={{
                 marginTop: 24,
-                padding: 24,
-                borderRadius: 12,
-                backgroundColor: "#fefce8",
-                border: "1px solid #fef08a",
+                padding: 20,
+                borderRadius: 14,
+                backgroundColor: "#fef76b",
+                border: "none",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <Shield style={{ width: 17, height: 17, color: "#a16207" }} />
-                <span style={{ ...f(500, 14), color: "#854d0e" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <Shield style={{ width: 18, height: 18, color: "#0a211f" }} />
+                <span style={{ ...f(600, 14), color: "#0a211f", letterSpacing: "0.01em" }}>
                   Safety tips
                 </span>
               </div>
+
               {[
                 "Always inspect the boat in person before purchase",
                 "Use a marine surveyor for pre-purchase inspection",
@@ -1500,14 +1535,23 @@ export default function ListingPageClient({
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
-                    gap: 8,
-                    ...f(400, 13),
-                    color: "#92400e",
-                    marginBottom: 6,
+                    gap: 10,
+                    ...f(400, 14, 20),
+                    color: "#0a211f",
+                    marginBottom: i === 2 ? 0 : 8,
                   }}
                 >
-                  <CircleDot style={{ width: 13, height: 13, marginTop: 3, flexShrink: 0 }} />
-                  {t}
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 999,
+                      backgroundColor: "#0a211f",
+                      marginTop: 6,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>{t}</span>
                 </div>
               ))}
             </div>

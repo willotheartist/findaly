@@ -189,16 +189,18 @@ export default async function BuyPage({ searchParams }: PageProps) {
   const [listings, totalCount] = await Promise.all([
     prisma.listing.findMany({
       where,
-      orderBy: [
-        { featured: "desc" },
-        orderBy,
-      ],
+      orderBy: [{ featured: "desc" }, orderBy],
       skip,
       take: ITEMS_PER_PAGE,
       include: {
+        // ✅ we need a handful of images to enable mini scrolling gallery
         media: {
           orderBy: { sort: "asc" },
-          take: 1,
+          take: 8,
+        },
+        // ✅ get true total count of images (even if we only take 8)
+        _count: {
+          select: { media: true },
         },
         profile: {
           select: {
@@ -258,7 +260,12 @@ export default async function BuyPage({ searchParams }: PageProps) {
     vesselCondition: listing.vesselCondition,
     featured: listing.featured,
     createdAt: listing.createdAt.toISOString(),
+
+    // ✅ new: gallery support
     thumbnailUrl: listing.media[0]?.url || null,
+    mediaUrls: listing.media.map((m) => m.url),
+    mediaCount: listing._count.media,
+
     seller: {
       id: listing.profile.id,
       name: listing.sellerName || listing.profile.name,

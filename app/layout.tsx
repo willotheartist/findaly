@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteHeaderOffsetClient from "@/components/SiteHeaderOffsetClient";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getSiteUrl, absoluteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -76,13 +77,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ─── JSON-LD Schema ───────────────────────────────────────────────────────────
-// Organization: registers Findaly as a named entity with Google.
-// WebSite: enables the Sitelinks Searchbox in branded search results.
-// Update sameAs[] as you create social profiles.
-// Update logo.url if your logo path differs from /logo.png.
-// ─────────────────────────────────────────────────────────────────────────────
-
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -96,12 +90,7 @@ const organizationSchema = {
   },
   description:
     "The everything marketplace for the maritime world. Buy, sell, and charter boats worldwide.",
-  sameAs: [
-    // Add your social profiles here as you create them, e.g.:
-    // "https://www.instagram.com/findaly",
-    // "https://www.linkedin.com/company/findaly",
-    // "https://twitter.com/findaly",
-  ],
+  sameAs: [],
 };
 
 const websiteSchema = {
@@ -127,6 +116,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={interTight.variable}>
       <head>
+        <GoogleAnalytics />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

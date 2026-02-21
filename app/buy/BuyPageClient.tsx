@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useMemo } from "react";
 import {
   MapPin,
   ChevronDown,
@@ -24,6 +24,8 @@ import {
   User,
   Search,
   Loader2,
+  Camera,
+  MessageCircle,
 } from "lucide-react";
 
 /* ─── palette (match ListingPageClient) ─── */
@@ -67,7 +69,12 @@ type ListingDTO = {
   vesselCondition: string | null;
   featured: boolean;
   createdAt: string;
+
+  // ✅ new: gallery support
   thumbnailUrl: string | null;
+  mediaUrls: string[];
+  mediaCount: number;
+
   seller: {
     id: string;
     name: string;
@@ -182,6 +189,13 @@ function getRelativeTime(dateStr: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+function isInteractiveTarget(el: HTMLElement) {
+  const tag = el.tagName.toLowerCase();
+  if (tag === "button" || tag === "a" || tag === "input") return true;
+  if (el.closest("button, a, input")) return true;
+  return false;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────────────────────────────────────
@@ -190,9 +204,8 @@ function Badge({ featured }: { featured: boolean }) {
   if (!featured) return null;
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-medium"
+      className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium"
       style={{
-        borderColor: "rgba(10,33,31,.16)",
         backgroundColor: P.accent,
         color: P.dark,
       }}
@@ -203,10 +216,6 @@ function Badge({ featured }: { featured: boolean }) {
   );
 }
 
-/**
- * Flat, rectangular filter button (no pills, no shadows, no green fills).
- * Light bg, dark text, simple border. Active = slightly darker border + subtle bg.
- */
 function FilterPill({
   label,
   active,
@@ -289,88 +298,202 @@ function FilterDropdown({
   );
 }
 
+/**
+ * ✅ Grid card redesigned to match the reference:
+ * - Price first
+ * - Title under price
+ * - Location small under title
+ * - Photo count badge (camera + number)
+ * - Scrollable snap gallery (handful of images)
+ * - Message icon (goes to /buy/[slug]#contact)
+ * - No phone icon
+ * - 2D clean look (no border / no shadow as default)
+ */
 function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid" }) {
+  const router = useRouter();
   const [isSaved, setIsSaved] = useState(false);
   const isPro = listing.seller.type === "PROFESSIONAL";
+
+  const images = useMemo(() => {
+    const arr = (listing.mediaUrls || []).filter(Boolean);
+    if (arr.length > 0) return arr;
+    if (listing.thumbnailUrl) return [listing.thumbnailUrl];
+    return [];
+  }, [listing.mediaUrls, listing.thumbnailUrl]);
 
   if (view === "grid") {
     return (
       <Link
         href={`/buy/${listing.slug}`}
-        className="group overflow-hidden rounded-2xl border bg-white no-underline transition-all hover:shadow-lg"
-        style={{ borderColor: "rgba(0,0,0,.10)" }}
+        className="group block overflow-hidden rounded-2xl bg-white no-underline"
+        style={{
+          // no stroke / 2D
+          boxShadow: "none",
+        }}
       >
+        {/* Image / Gallery */}
         <div
-          className="relative aspect-4/3"
+          className="relative overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${P.faint} 0%, rgba(245,245,244,.6) 100%)`,
+            aspectRatio: "4 / 3",
           }}
         >
-          {listing.thumbnailUrl ? (
-            <img
-              src={listing.thumbnailUrl}
-              alt={listing.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+          {/* Scrollable gallery */}
+          {images.length > 0 ? (
+            <div
+              className="absolute inset-0 flex snap-x snap-mandatory overflow-x-auto"
+              style={{
+                scrollBehavior: "smooth",
+                WebkitOverflowScrolling: "touch",
+              }}
+              onClick={(e) => {
+                // allow click on image area to open listing, but do not block
+              }}
+              onWheel={(e) => {
+                // allow trackpad horizontal; for vertical wheel, translate to horizontal
+                const el = e.currentTarget as HTMLDivElement;
+                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                  el.scrollLeft += e.deltaY;
+                  e.preventDefault();
+                }
+              }}
+            >
+              {images.map((src, idx) => (
+                <img
+                  key={`${listing.id}-${idx}`}
+                  src={src}
+                  alt={listing.title}
+                  className="h-full w-full shrink-0 snap-start object-cover"
+                  draggable={false}
+                />
+              ))}
+            </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <Sailboat className="h-12 w-12" style={{ color: "rgba(0,0,0,.12)" }} />
             </div>
           )}
 
+          {/* Photo count badge */}
+          <div className="absolute left-3 top-3">
+            <div
+              className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs"
+              style={{
+                backgroundColor: "rgba(10,33,31,.92)",
+                color: "rgba(255,255,255,.92)",
+              }}
+            >
+              <Camera className="h-3.5 w-3.5" />
+              <span style={{ fontWeight: 600 }}>{Math.max(1, listing.mediaCount || images.length)}</span>
+            </div>
+          </div>
+
+          {/* Featured badge (optional) */}
           {listing.featured && (
-            <div className="absolute left-3 top-3">
+            <div className="absolute right-3 top-3">
               <Badge featured={listing.featured} />
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setIsSaved(!isSaved);
-            }}
-            className="absolute right-3 top-3 rounded-full p-2 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
-            style={{
-              backgroundColor: "rgba(255,255,255,.88)",
-              border: "1px solid rgba(0,0,0,.10)",
-            }}
-          >
-            <Heart
-              className={cx("h-4 w-4", isSaved ? "fill-current" : "")}
-              style={{ color: isSaved ? P.rose : "rgba(0,0,0,.55)" }}
-            />
-          </button>
         </div>
 
-        <div className="p-4">
-          <div className="line-clamp-2 text-base font-semibold transition-colors" style={{ color: P.text }}>
-            <span className="group-hover:underline" style={{ textDecorationColor: "rgba(26,122,92,.35)" }}>
-              {listing.title}
-            </span>
-          </div>
-
-          <div className="mt-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
-            {listing.lengthFt ? `${listing.lengthFt} ft` : ""}
-            {listing.year ? ` • ${listing.year}` : ""}
-            {listing.location ? ` • ${listing.location}` : ""}
-          </div>
-
-          <div className="mt-3 text-lg font-semibold" style={{ color: P.text }}>
+        {/* Content */}
+        <div className="px-5 pb-4 pt-4">
+          {/* Price */}
+          <div className="text-[22px] leading-none" style={{ color: P.text, fontWeight: 500 }}>
             {formatPrice(listing.priceCents, listing.currency)}
           </div>
 
-          <div className="mt-2 flex items-center gap-2 text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
-            {isPro ? <Building2 className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
-            <span className="truncate">{listing.seller.name}</span>
-            {listing.seller.isVerified && <Shield className="h-3.5 w-3.5" style={{ color: P.green }} />}
+          {/* Title replaces “location line” */}
+          <div className="mt-2 line-clamp-1 text-[15px]" style={{ color: P.text, fontWeight: 500 }}>
+            {listing.title}
+          </div>
+
+          {/* Small location under title */}
+          <div className="mt-1 text-[13px]" style={{ color: "rgba(0,0,0,.55)" }}>
+            {listing.location ? (
+              <>
+                {listing.location}
+                {listing.country ? `, ${listing.country}` : ""}
+              </>
+            ) : (
+              <span style={{ color: "rgba(0,0,0,.35)" }}>Location unknown</span>
+            )}
+          </div>
+
+          {/* Specs row (compact, like the reference) */}
+          <div className="mt-2 text-[13px]" style={{ color: "rgba(0,0,0,.62)" }}>
+            {listing.lengthFt ? `${listing.lengthFt} ft` : ""}
+            {listing.year ? `${listing.lengthFt ? " — " : ""}${listing.year}` : ""}
+            {listing.boatCategory ? `${listing.lengthFt || listing.year ? " — " : ""}${listing.boatCategory}` : ""}
+          </div>
+
+          {/* Bottom actions row */}
+          <div className="mt-4 flex items-center justify-between">
+            {/* Seller */}
+            <div className="flex min-w-0 items-center gap-2">
+              {isPro ? (
+                <Building2 className="h-4 w-4 shrink-0" style={{ color: "rgba(0,0,0,.45)" }} />
+              ) : (
+                <User className="h-4 w-4 shrink-0" style={{ color: "rgba(0,0,0,.45)" }} />
+              )}
+              <span className="truncate text-[13px]" style={{ color: "rgba(0,0,0,.70)" }}>
+                {listing.seller.name}
+              </span>
+              {listing.seller.isVerified && (
+                <Shield className="h-4 w-4 shrink-0" style={{ color: P.green }} />
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              {/* Message */}
+              <button
+                type="button"
+                aria-label="Message seller"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{
+                  backgroundColor: "rgba(0,0,0,.04)",
+                  color: "rgba(0,0,0,.70)",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(`/buy/${listing.slug}#contact`);
+                }}
+              >
+                <MessageCircle className="h-4.5 w-4.5" />
+              </button>
+
+              {/* Heart */}
+              <button
+                type="button"
+                aria-label="Save listing"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl"
+                style={{
+                  backgroundColor: "rgba(0,0,0,.04)",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsSaved((v) => !v);
+                }}
+              >
+                <Heart
+                  className={cx("h-4.5 w-4.5", isSaved ? "fill-current" : "")}
+                  style={{ color: isSaved ? P.rose : "rgba(0,0,0,.70)" }}
+                />
+              </button>
+            </div>
           </div>
         </div>
       </Link>
     );
   }
 
-  // List view
+  // List view (kept as-is; we can restyle later if you want)
+  const [isSavedList, setIsSavedList] = useState(false);
+
   return (
     <Link
       href={`/buy/${listing.slug}`}
@@ -407,7 +530,7 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
           type="button"
           onClick={(e) => {
             e.preventDefault();
-            setIsSaved(!isSaved);
+            setIsSavedList(!isSavedList);
           }}
           className="absolute right-2 top-2 rounded-full p-1.5 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
           style={{
@@ -416,8 +539,8 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
           }}
         >
           <Heart
-            className={cx("h-4 w-4", isSaved ? "fill-current" : "")}
-            style={{ color: isSaved ? P.rose : "rgba(0,0,0,.55)" }}
+            className={cx("h-4 w-4", isSavedList ? "fill-current" : "")}
+            style={{ color: isSavedList ? P.rose : "rgba(0,0,0,.55)" }}
           />
         </button>
       </div>
@@ -514,7 +637,7 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
             className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{ backgroundColor: P.faint, border: "1px solid rgba(0,0,0,.10)" }}
           >
-            {isPro ? (
+            {listing.seller.type === "PROFESSIONAL" ? (
               <Building2 className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
             ) : (
               <User className="h-4 w-4" style={{ color: "rgba(0,0,0,.55)" }} />
@@ -526,7 +649,7 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
               <span className="truncate text-sm font-medium" style={{ color: P.text }}>
                 {listing.seller.name}
               </span>
-              {isPro && (
+              {listing.seller.type === "PROFESSIONAL" && (
                 <span
                   className="rounded-md px-2 py-0.5 text-xs"
                   style={{
@@ -607,8 +730,18 @@ function Pagination({
             className="flex h-10 w-10 items-center justify-center rounded-md text-sm transition-colors"
             style={
               page === currentPage
-                ? { backgroundColor: "rgba(0,0,0,.06)", color: P.text, border: "1px solid rgba(0,0,0,.22)", fontWeight: 500 }
-                : { border: "1px solid rgba(0,0,0,.14)", backgroundColor: P.white, color: P.text, fontWeight: 400 }
+                ? {
+                    backgroundColor: "rgba(0,0,0,.06)",
+                    color: P.text,
+                    border: "1px solid rgba(0,0,0,.22)",
+                    fontWeight: 500,
+                  }
+                : {
+                    border: "1px solid rgba(0,0,0,.14)",
+                    backgroundColor: P.white,
+                    color: P.text,
+                    fontWeight: 400,
+                  }
             }
           >
             {page}
@@ -813,7 +946,7 @@ export default function BuyPageClient({
   const countryOptions = aggregations.countries;
 
   return (
-    <main className="min-h-screen w-full" style={{ backgroundColor: P.white }}>
+    <main className="min-h-screen w-full" style={{ backgroundColor: P.faint }}>
       {/* Loading overlay */}
       {isPending && (
         <div
@@ -1399,7 +1532,7 @@ export default function BuyPageClient({
 
           {/* Sort & View row */}
           <div className="mt-3 flex items-center justify-between gap-4">
-            {/* Category quick links (rectangles, not pills) */}
+            {/* Category quick links */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               <Link
                 href="/buy"
@@ -1528,154 +1661,12 @@ export default function BuyPageClient({
           </Link>
         </div>
 
-        {/* Active filters (rectangles, no green) */}
-        {hasFilters && (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
-              Active filters:
-            </span>
-
-            {localFilters.q && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
-                style={{
-                  backgroundColor: "rgba(0,0,0,.03)",
-                  borderColor: "rgba(0,0,0,.18)",
-                  color: P.text,
-                  fontWeight: 400,
-                }}
-              >
-                &quot;{localFilters.q}&quot;
-                <button
-                  type="button"
-                  onClick={() => applyFilters({ q: "" })}
-                  className="ml-1 rounded-md p-0.5"
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                >
-                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
-                </button>
-              </span>
-            )}
-
-            {localFilters.location && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
-                style={{
-                  backgroundColor: "rgba(0,0,0,.03)",
-                  borderColor: "rgba(0,0,0,.18)",
-                  color: P.text,
-                  fontWeight: 400,
-                }}
-              >
-                <MapPin className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.55)" }} />
-                {localFilters.location}
-                <button
-                  type="button"
-                  onClick={() => applyFilters({ location: "" })}
-                  className="ml-1 rounded-md p-0.5"
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                >
-                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
-                </button>
-              </span>
-            )}
-
-            {(localFilters.priceMin || localFilters.priceMax) && (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
-                style={{
-                  backgroundColor: "rgba(0,0,0,.03)",
-                  borderColor: "rgba(0,0,0,.18)",
-                  color: P.text,
-                  fontWeight: 400,
-                }}
-              >
-                €{localFilters.priceMin?.toLocaleString() || "0"} - €{localFilters.priceMax?.toLocaleString() || "∞"}
-                <button
-                  type="button"
-                  onClick={() => applyFilters({ priceMin: undefined, priceMax: undefined })}
-                  className="ml-1 rounded-md p-0.5"
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                >
-                  <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
-                </button>
-              </span>
-            )}
-
-            {localFilters.categories.map((catId) => {
-              const cat = BOAT_CATEGORIES.find((c) => c.id === catId);
-              return (
-                <span
-                  key={catId}
-                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,.03)",
-                    borderColor: "rgba(0,0,0,.18)",
-                    color: P.text,
-                    fontWeight: 400,
-                  }}
-                >
-                  {cat?.label || catId}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(catId)}
-                    className="ml-1 rounded-md p-0.5"
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
-                  </button>
-                </span>
-              );
-            })}
-
-            {localFilters.brands.map((brandId) => {
-              const brand = brandOptions.find((b) => b.id === brandId);
-              return (
-                <span
-                  key={brandId}
-                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-sm"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,.03)",
-                    borderColor: "rgba(0,0,0,.18)",
-                    color: P.text,
-                    fontWeight: 400,
-                  }}
-                >
-                  {brand?.label || brandId}
-                  <button
-                    type="button"
-                    onClick={() => toggleBrand(brandId)}
-                    className="ml-1 rounded-md p-0.5"
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.05)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    <X className="h-3.5 w-3.5" style={{ color: "rgba(0,0,0,.65)" }} />
-                  </button>
-                </span>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="text-sm transition-colors"
-              style={{ color: "rgba(0,0,0,.62)", fontWeight: 500 }}
-            >
-              Clear all
-            </button>
-          </div>
-        )}
-
         {/* Results grid/list */}
         {listings.length > 0 ? (
           <div
             className={
               localFilters.view === "grid"
-                ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                ? "grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 : "flex flex-col gap-4"
             }
           >
@@ -1698,7 +1689,7 @@ export default function BuyPageClient({
         )}
       </div>
 
-      {/* Mobile: Floating save search button (left as-is, not part of filter system) */}
+      {/* Mobile: Floating save search button */}
       <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 sm:hidden">
         <Link
           href={`/searches/save?${searchParams.toString()}`}
