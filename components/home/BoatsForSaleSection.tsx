@@ -1,7 +1,14 @@
 // components/home/BoatsForSaleSection.tsx
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sailboat, Sparkles, Heart, Trash2, MessageCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Sailboat,
+  Sparkles,
+  Heart,
+  Trash2,
+  MessageCircle,
+} from "lucide-react";
 import { prisma } from "@/lib/db";
 
 type Card = {
@@ -11,6 +18,7 @@ type Card = {
   price?: string;
   badge?: string;
   image?: string;
+  sellerName?: string;
 };
 
 function formatMoney(priceCents: number | null, currency: string | null) {
@@ -58,7 +66,9 @@ function SectionHeader({
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {title}
         </h2>
-        {subtitle ? <p className="mt-1.5 text-base text-slate-500">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="mt-1.5 text-base text-slate-500">{subtitle}</p>
+        ) : null}
       </div>
 
       <Link
@@ -75,7 +85,10 @@ function SectionHeader({
 /** Shared “portal-style” listing card (same look as your homepage cards) */
 function ListingCard({ it }: { it: Card }) {
   const splitMeta = (meta: string) => {
-    const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
+    const parts = meta
+      .split("•")
+      .map((s) => s.trim())
+      .filter(Boolean);
     if (parts.length <= 1) return { specs: meta, location: "" };
     return {
       specs: parts.slice(0, -1).join(" • "),
@@ -149,9 +162,11 @@ function ListingCard({ it }: { it: Card }) {
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
-            F
+            {it.sellerName ? it.sellerName.trim().slice(0, 1).toUpperCase() : "F"}
           </div>
-          <div className="truncate text-sm text-slate-500">Findaly</div>
+          <div className="truncate text-sm text-slate-500">
+            {it.sellerName || "Findaly"}
+          </div>
         </div>
 
         <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
@@ -174,19 +189,22 @@ function CardRail({ items }: { items: Card[] }) {
   );
 }
 
-type FontsReady = Promise<unknown>;
-function getFontsReady(): FontsReady | undefined {
-  const maybe = document as unknown as { fonts?: { ready?: Promise<unknown> } };
-  return maybe.fonts?.ready;
-}
-
 export default async function BoatsForSaleSection() {
+  // ✅ Boats only (no services/parts), sale only, live only
   const listings = await prisma.listing.findMany({
+    where: {
+      status: "LIVE",
+      kind: "VESSEL",
+      intent: "SALE",
+    },
     orderBy: { createdAt: "desc" },
     take: 6,
     include: {
       profile: {
-        select: { isVerified: true },
+        select: {
+          name: true,
+          isVerified: true,
+        },
       },
       media: {
         orderBy: { sort: "asc" },
@@ -200,7 +218,7 @@ export default async function BoatsForSaleSection() {
     const image = media0?.url ?? undefined;
 
     return {
-      title: l.title ?? "Untitled listing",
+      title: l.title || "Untitled listing",
       href: `/buy/${l.slug}`,
       meta: formatMeta({
         lengthFt: l.lengthFt ?? null,
@@ -211,6 +229,7 @@ export default async function BoatsForSaleSection() {
       price: formatMoney(l.priceCents ?? null, l.currency ?? null),
       badge: l.profile?.isVerified ? "Verified" : undefined,
       image,
+      sellerName: l.profile?.name ?? undefined,
     };
   });
 

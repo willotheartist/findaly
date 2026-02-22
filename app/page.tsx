@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import {
   ArrowRight,
   MapPin,
@@ -20,6 +22,7 @@ import HomeSplitCtas from "@/components/home/HomeSplitCtas";
 
 type Tile = { title: string; href: string; subtitle?: string; emoji?: string };
 type DestinationTile = { title: string; href: string; subtitle?: string; image: string };
+
 type Card = {
   title: string;
   href: string;
@@ -27,33 +30,8 @@ type Card = {
   price?: string;
   badge?: string;
   image?: string;
+  sellerName?: string;
 };
-
-const CATEGORY_TILES: Tile[] = [
-  { title: "Sailboats", subtitle: "Cruisers, racers", href: "/buy/sailboats", emoji: "⛵️" },
-  { title: "Motor Yachts", subtitle: "Flybridge, sport", href: "/buy/motor-yachts", emoji: "🛥️" },
-  { title: "Catamarans", subtitle: "Family + charter", href: "/buy/catamarans", emoji: "🌊" },
-  { title: "RIBs", subtitle: "Tenders, day boats", href: "/buy/ribs", emoji: "🚤" },
-  { title: "Superyachts", subtitle: "50m+", href: "/buy/superyachts", emoji: "🧭" },
-  { title: "New Boats", subtitle: "From builders", href: "/buy/new", emoji: "✨" },
-  { title: "Charter", subtitle: "Weekly & day", href: "/charter", emoji: "🏝️" },
-  { title: "Services", subtitle: "Survey, finance", href: "/services", emoji: "🧰" },
-];
-
-const CHARTER: Card[] = [
-  { title: "Bali 4.6 Catamaran", meta: "8 guests • 4 cabins • Sardinia", price: "From €6,200/wk", href: "/charter/bali-46-sardinia", badge: "Available now" },
-  { title: "Pershing 62", meta: "10 guests • Day/Week • Monaco", price: "From €3,900/day", href: "/charter/pershing-62-monaco", badge: "Crewed" },
-  { title: "Dufour 470", meta: "8 guests • 4 cabins • Lefkada", price: "From €4,100/wk", href: "/charter/dufour-470-lefkada" },
-  { title: "Princess 45", meta: "12 guests • Day charter • Ibiza", price: "From €2,600/day", href: "/charter/princess-45-ibiza" },
-  { title: "Lagoon 450F", meta: "10 guests • 4 cabins • Trogir", price: "From €5,300/wk", href: "/charter/lagoon-450f-croatia" },
-  { title: "Sanlorenzo SL96", meta: "8 guests • 4 cabins • Côte d'Azur", price: "From €68,000/wk", href: "/charter/sanlorenzo-sl96", badge: "Luxury" },
-];
-
-const FEATURED: Card[] = [
-  { title: "2024 New — Axopar 37", meta: "37 ft • New • UK delivery", price: "From £245,000", href: "/buy/axopar-37-new", badge: "New" },
-  { title: "Custom Explorer 30m", meta: "98 ft • 2012 refit • Worldwide", price: "POA", href: "/buy/custom-explorer-30m", badge: "Featured" },
-  { title: "Riva Rivamare 38", meta: "38 ft • 2021 • Lake Como", price: "€890,000", href: "/buy/riva-rivamare-38", badge: "Icon" },
-];
 
 const DESTINATIONS: DestinationTile[] = [
   { title: "French Riviera", subtitle: "Cannes • Antibes • Monaco", href: "/destinations/french-riviera", image: "/destinations/FrenchRiviera.png" },
@@ -96,7 +74,7 @@ function SectionHeader({
   );
 }
 
-/** Shared “portal-style” listing card (used in rails + featured grid) */
+/** Shared “portal-style” listing card */
 function ListingCard({ it }: { it: Card }) {
   const splitMeta = (meta: string) => {
     const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
@@ -169,13 +147,13 @@ function ListingCard({ it }: { it: Card }) {
         </div>
       </div>
 
-      {/* Footer bar */}
+      {/* Footer */}
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
             F
           </div>
-          <div className="truncate text-sm text-slate-500">Findaly</div>
+          <div className="truncate text-sm text-slate-500">{it.sellerName || "—"}</div>
         </div>
 
         <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
@@ -187,6 +165,7 @@ function ListingCard({ it }: { it: Card }) {
 }
 
 function CardRail({ items }: { items: Card[] }) {
+  if (!items.length) return null;
   return (
     <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
       {items.map((it) => (
@@ -198,13 +177,172 @@ function CardRail({ items }: { items: Card[] }) {
   );
 }
 
-export default function Home() {
+function CardGrid5({ items }: { items: Card[] }) {
+  if (!items.length) return null;
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {items.slice(0, 5).map((it) => (
+        <ListingCard key={it.href} it={it} />
+      ))}
+    </div>
+  );
+}
+
+function fmtPrice(currency: string, priceCents: number | null) {
+  if (!priceCents || priceCents <= 0) return "POA";
+  const sym =
+    currency === "GBP" ? "£" : currency === "USD" ? "$" : currency === "AED" ? "AED " : "€";
+  return `${sym}${Math.round(priceCents / 100).toLocaleString("en-GB")}`;
+}
+
+function metaLine(it: {
+  lengthM: number | null;
+  year: number | null;
+  location: string | null;
+  country: string | null;
+}) {
+  const parts = [
+    it.lengthM ? `${it.lengthM.toFixed(1)}m` : null,
+    it.year ? String(it.year) : null,
+    it.location || it.country || null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" • ") : "—";
+}
+
+function toCard(it: {
+  slug: string;
+  title: string;
+  currency: string;
+  priceCents: number | null;
+  lengthM: number | null;
+  year: number | null;
+  location: string | null;
+  country: string | null;
+  media: { url: string }[];
+  profile: { name: string };
+}): Card {
+  return {
+    title: it.title,
+    href: `/buy/${it.slug}`,
+    meta: metaLine(it),
+    price: fmtPrice(it.currency, it.priceCents),
+    image: it.media?.[0]?.url || undefined,
+    sellerName: it.profile?.name || "—",
+  };
+}
+
+export default async function Home() {
+  const charterCount = await prisma.listing.count({
+    where: { status: "LIVE", kind: "VESSEL", intent: "CHARTER" },
+  });
+
+  const baseSelect = {
+    slug: true,
+    title: true,
+    currency: true,
+    priceCents: true,
+    lengthM: true,
+    year: true,
+    location: true,
+    country: true,
+    brand: true,
+    model: true,
+    boatCategory: true,
+    profile: { select: { name: true } },
+    media: { take: 1, orderBy: { sort: "asc" as const }, select: { url: true } },
+  };
+
+  // ✅ Boat-signal filter to avoid services showing as boats
+  const boatSignals: Prisma.ListingWhereInput = {
+    OR: [
+      { lengthM: { gt: 0 } },
+      { year: { gt: 0 } },
+      { brand: { not: null } },
+      { model: { not: null } },
+      { boatCategory: { not: null } },
+    ],
+  };
+
+  const [cats, yachts, under100k, recent] = await Promise.all([
+    prisma.listing.findMany({
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        ...boatSignals,
+        OR: [
+          { boatCategory: { contains: "catamaran", mode: "insensitive" } },
+          { boatCategory: { contains: "cat", mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: baseSelect,
+    }),
+
+    prisma.listing.findMany({
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        ...boatSignals,
+        OR: [
+          { boatCategory: { contains: "yacht", mode: "insensitive" } },
+          { boatCategory: { contains: "motor", mode: "insensitive" } },
+          { boatCategory: { contains: "super", mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: baseSelect,
+    }),
+
+    // ✅ Under €100k (only known price; excludes POA)
+    prisma.listing.findMany({
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        ...boatSignals,
+        priceCents: { gt: 0, lte: 100000 * 100 },
+      },
+      orderBy: { priceCents: "asc" },
+      take: 10,
+      select: baseSelect,
+    }),
+
+    // ✅ Recently added boats (not services)
+    prisma.listing.findMany({
+      where: {
+        status: "LIVE",
+        kind: "VESSEL",
+        intent: "SALE",
+        ...boatSignals,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: baseSelect,
+    }),
+  ]);
+
+  const CATEGORY_TILES: Tile[] = [
+    { title: "Sailboats", subtitle: "Cruisers, racers", href: "/buy/sailboats", emoji: "⛵️" },
+    { title: "Motor Yachts", subtitle: "Flybridge, sport", href: "/buy/motor-yachts", emoji: "🛥️" },
+    { title: "Catamarans", subtitle: "Family + cruising", href: "/buy/catamarans", emoji: "🌊" },
+    { title: "RIBs", subtitle: "Tenders, day boats", href: "/buy/ribs", emoji: "🚤" },
+    { title: "Superyachts", subtitle: "50m+", href: "/buy/superyachts", emoji: "🧭" },
+    { title: "New Boats", subtitle: "From builders", href: "/buy/new", emoji: "✨" },
+    ...(charterCount > 0
+      ? ([{ title: "Charter", subtitle: "Weekly & day", href: "/charter", emoji: "🏝️" }] as Tile[])
+      : []),
+    { title: "Services", subtitle: "Survey, finance", href: "/services", emoji: "🧰" },
+  ];
+
   return (
     <main className="w-full bg-white">
-      {/* HERO */}
       <HomeHero />
 
-      {/* Category tiles row */}
+      {/* Category tiles */}
       <section className="w-full border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -220,9 +358,7 @@ export default function Home() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-slate-900">{t.title}</div>
-                  {t.subtitle ? (
-                    <div className="truncate text-sm text-slate-500">{t.subtitle}</div>
-                  ) : null}
+                  {t.subtitle ? <div className="truncate text-sm text-slate-500">{t.subtitle}</div> : null}
                 </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-slate-500" />
               </Link>
@@ -231,34 +367,68 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ Boats for sale (moved into component) */}
+      {/* Your component (kept as-is) */}
       <BoatsForSaleSection />
 
-      {/* Charter available */}
-      <section className="w-full bg-linear-to-b from-slate-50 to-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <SectionHeader
-            title="Charter boats available"
-            subtitle="Day charters, weekly charters, crewed options"
-            href="/charter"
-          />
-          <CardRail items={CHARTER} />
-        </div>
-      </section>
-
-      {/* Featured yachts — NOW MATCHES THE SAME CARD STYLE */}
-      <section className="w-full">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <SectionHeader title="Featured yachts" subtitle="Hand-picked highlights" href="/featured" />
-          <div className="grid gap-6 md:grid-cols-3">
-            {FEATURED.map((it) => (
-              <ListingCard key={it.href} it={it} />
-            ))}
+      {/* Recently added boats */}
+      {recent.length > 0 ? (
+        <section className="w-full">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <SectionHeader
+              title="Recently added boats"
+              subtitle="Fresh listings from brokers and private sellers"
+              href="/buy"
+              cta="View all boats"
+            />
+            <CardRail items={recent.map((x) => ({ ...toCard(x as any), badge: "New" }))} />
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      {/* Popular destinations — Airbnb-style image cards */}
+      {/* Catamarans for sale */}
+      {cats.length > 0 ? (
+        <section className="w-full bg-linear-to-b from-slate-50 to-white">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <SectionHeader
+              title="Catamarans for sale"
+              subtitle="Popular family layouts, long-range comfort"
+              href="/buy/catamarans"
+            />
+            <CardRail items={cats.map((x) => toCard(x as any))} />
+          </div>
+        </section>
+      ) : null}
+
+      {/* Yachts for sale */}
+      {yachts.length > 0 ? (
+        <section className="w-full">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <SectionHeader
+              title="Yachts for sale"
+              subtitle="Motor yachts, flybridges, and larger cruisers"
+              href="/buy/motor-yachts"
+            />
+            <CardRail items={yachts.map((x) => toCard(x as any))} />
+          </div>
+        </section>
+      ) : null}
+
+      {/* Boats under €100k (5 across) */}
+      {under100k.length > 0 ? (
+        <section className="w-full bg-linear-to-b from-white to-slate-50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <SectionHeader
+              title="Boats under €100k"
+              subtitle="Known-price listings under €100,000"
+              href="/buy"
+              cta="Browse deals"
+            />
+            <CardGrid5 items={under100k.map((x) => toCard(x as any))} />
+          </div>
+        </section>
+      ) : null}
+
+      {/* Destinations */}
       <section className="w-full bg-linear-to-b from-white to-slate-50">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
           <SectionHeader
@@ -269,12 +439,7 @@ export default function Home() {
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {DESTINATIONS.map((d, idx) => (
-              <Link
-                key={d.href}
-                href={d.href}
-                className="group no-underline"
-                style={{ animationDelay: `${idx * 50}ms` }}
-              >
+              <Link key={d.href} href={d.href} className="group no-underline">
                 <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:ring-slate-300">
                   <div className="relative aspect-4/3 overflow-hidden rounded-2xl">
                     <Image
@@ -285,7 +450,6 @@ export default function Home() {
                       className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                       priority={idx < 4}
                     />
-
                     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
 
                     <div className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
@@ -306,11 +470,8 @@ export default function Home() {
                         <div className="truncate text-[15px] font-semibold tracking-tight text-slate-900">
                           {d.title}
                         </div>
-                        {d.subtitle ? (
-                          <div className="mt-1 truncate text-sm text-slate-500">{d.subtitle}</div>
-                        ) : null}
+                        {d.subtitle ? <div className="mt-1 truncate text-sm text-slate-500">{d.subtitle}</div> : null}
                       </div>
-
                       <div className="shrink-0 pt-0.5 text-xs font-medium text-slate-600 transition-colors group-hover:text-slate-900">
                         Explore
                       </div>
@@ -323,59 +484,77 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ Things to do (new section) */}
       <ThingsToDo />
 
-      {/* ✅ New split CTAs (button-only) */}
+      {/* Split CTAs (no dummy charter) */}
       <HomeSplitCtas
-        items={[
-          {
-            title: "Looking for a Charter?",
-            body: "Find day charters, weekly charters, and crewed options — all in one place.",
-            cta: "Book a Charter",
-            href: "/charter",
-            imageSrc: "/Charter.png",
-          },
-          {
-            title: "Looking for Holiday Ideas?",
-            body: "Browse destinations, routes and things to do — then match boats to the plan.",
-            cta: "Search for Holidays",
-            href: "/destinations",
-            imageSrc: "/Holiday.png",
-          },
-        ]}
+        items={
+          charterCount > 0
+            ? [
+                {
+                  title: "Looking for a Charter?",
+                  body: "Find day charters, weekly charters, and crewed options — all in one place.",
+                  cta: "Book a Charter",
+                  href: "/charter",
+                  imageSrc: "/Charter.png",
+                },
+                {
+                  title: "Looking for Holiday Ideas?",
+                  body: "Browse destinations, routes and things to do — then match boats to the plan.",
+                  cta: "Search for Holidays",
+                  href: "/destinations",
+                  imageSrc: "/Holiday.png",
+                },
+              ]
+            : [
+                {
+                  title: "Browse Boats for Sale",
+                  body: "Search by category, budget, and location — real listings only.",
+                  cta: "Explore boats",
+                  href: "/buy",
+                  imageSrc: "/Charter.png",
+                },
+                {
+                  title: "Looking for Holiday Ideas?",
+                  body: "Browse destinations, routes and things to do — then match boats to the plan.",
+                  cta: "Search for Holidays",
+                  href: "/destinations",
+                  imageSrc: "/Holiday.png",
+                },
+              ]
+        }
       />
 
-      {/* Bottom CTA */}
-      <section className="w-full bg-slate-50">
+      {/* Bottom CTA — updated to match your new L&F (Findaly palette) */}
+      <section className="w-full bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-8 sm:p-12">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[#0a211f] p-8 sm:p-12">
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[#ff6a00]/20 blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-sky-500/10 blur-3xl" />
+              <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-[#fff86c]/10 blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-white/5 blur-3xl" />
             </div>
 
             <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
               <div className="max-w-xl">
-                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                   Ready to list your yacht?
                 </h2>
-                <p className="mt-3 text-base text-slate-300">
-                  Join thousands of sellers. Create a listing in minutes and start getting inquiries today.
+                <p className="mt-3 text-base text-white/70">
+                  Create a listing in minutes and start getting inquiries today.
                 </p>
               </div>
 
               <div className="flex flex-wrap justify-center gap-3 sm:shrink-0">
                 <Link
                   href="/add-listing"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#ff6a00] px-6 py-3.5 text-sm font-semibold text-white no-underline transition-all hover:brightness-110"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#fff86c] px-6 py-3.5 text-sm font-semibold text-[#0a211f] no-underline transition-all hover:brightness-105"
                 >
                   List a yacht
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/buy"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-6 py-3.5 text-sm font-semibold text-white no-underline backdrop-blur-sm transition-all hover:bg-white/20"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white no-underline backdrop-blur-sm transition-all hover:bg-white/10"
                 >
                   Browse boats
                 </Link>
