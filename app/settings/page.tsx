@@ -16,12 +16,13 @@ export default async function SettingsPage({
 
   const user = await getCurrentUser();
 
-  // ✅ IMPORTANT FIX:
-  // Preserve where user is trying to go.
+  // ✅ Preserve where user is trying to go.
   if (!user) {
     const qp: string[] = [];
-    if (typeof sp.profile === "string" && sp.profile) qp.push(`profile=${encodeURIComponent(sp.profile)}`);
-    if (typeof sp.setup === "string" && sp.setup) qp.push(`setup=${encodeURIComponent(sp.setup)}`);
+    if (typeof sp.profile === "string" && sp.profile)
+      qp.push(`profile=${encodeURIComponent(sp.profile)}`);
+    if (typeof sp.setup === "string" && sp.setup)
+      qp.push(`setup=${encodeURIComponent(sp.setup)}`);
 
     const backTo = "/settings" + (qp.length ? `?${qp.join("&")}` : "");
     redirect(`/login?redirect=${encodeURIComponent(backTo)}`);
@@ -51,7 +52,8 @@ export default async function SettingsPage({
   }
 
   const active =
-    (wantedSlug && profiles.find((p) => p.slug === wantedSlug)?.slug) || profiles[0].slug;
+    (wantedSlug && profiles.find((p) => p.slug === wantedSlug)?.slug) ||
+    profiles[0].slug;
 
   return <SettingsClient profiles={profiles} activeSlug={active} />;
 }

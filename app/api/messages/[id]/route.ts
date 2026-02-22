@@ -1,3 +1,4 @@
+// app/api/messages/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";

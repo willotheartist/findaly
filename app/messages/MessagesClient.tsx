@@ -10,15 +10,34 @@ import {
   Send,
   Paperclip,
   Image as ImageIcon,
-  Phone,
-  Video,
   Info,
   CheckCheck,
   Sailboat,
   ArrowLeft,
   Filter,
   Loader2,
+  Shield,
 } from "lucide-react";
+
+/* ─── palette (match BuyPageClient) ─── */
+const P = {
+  dark: "#0a211f",
+  accent: "#fff86c",
+  text: "#1a1a1a",
+  sub: "#555",
+  muted: "#999",
+  light: "#ccc",
+  line: "#e5e5e5",
+  faint: "#f5f5f4",
+  white: "#fff",
+  green: "#1a7a5c",
+  rose: "#d94059",
+  blue: "#2196F3",
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
 
 type Conversation = {
   id: string;
@@ -71,17 +90,17 @@ type ConversationDetail = {
   messages: Message[];
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
 function formatPrice(cents: number | null, currency: string) {
   if (!cents) return "POA";
-  const amount = cents / 100;
-  const symbols: Record<string, string> = {
-    EUR: "€",
-    GBP: "£",
-    USD: "$",
-    AED: "AED ",
-  };
-  const symbol = symbols[currency] || "";
-  return `${symbol}${amount.toLocaleString()}`;
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
 }
 
 function formatTime(dateStr: string) {
@@ -101,6 +120,10 @@ function formatTime(dateStr: string) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
 function ConversationItem({
   convo,
   isActive,
@@ -113,51 +136,76 @@ function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-4 border-b border-slate-100 transition-colors hover:bg-slate-50 ${
-        isActive ? "bg-orange-50/50 border-l-2 border-l-[#ff6a00]" : ""
-      }`}
+      className="w-full text-left p-4 transition-colors"
+      style={{
+        borderBottom: "1px solid rgba(0,0,0,.06)",
+        backgroundColor: isActive ? "rgba(10,33,31,.03)" : "transparent",
+        borderLeft: isActive ? `3px solid ${P.dark}` : "3px solid transparent",
+      }}
     >
       <div className="flex gap-3">
         <div className="relative shrink-0">
-          <div className="h-12 w-12 rounded-full bg-linear-to-br from-slate-100 to-slate-50 flex items-center justify-center text-slate-400">
-            <Sailboat className="h-5 w-5" />
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{ backgroundColor: P.faint, border: "1px solid rgba(0,0,0,.08)" }}
+          >
+            <Sailboat className="h-5 w-5" style={{ color: "rgba(0,0,0,.25)" }} />
           </div>
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex min-w-0 items-center gap-1.5">
               <span
-                className={`truncate text-sm ${
-                  convo.unreadCount > 0 ? "font-semibold text-slate-900" : "font-medium text-slate-700"
-                }`}
+                className="truncate text-sm"
+                style={{
+                  color: P.text,
+                  fontWeight: convo.unreadCount > 0 ? 600 : 500,
+                }}
               >
                 {convo.otherUser.name}
               </span>
               {convo.otherUser.isVerified && (
-                <svg className="h-4 w-4 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" />
-                </svg>
+                <Shield className="h-3.5 w-3.5 shrink-0" style={{ color: P.green }} />
               )}
             </div>
-            <span className={`text-xs shrink-0 ${convo.unreadCount > 0 ? "text-[#ff6a00] font-medium" : "text-slate-400"}`}>
+            <span
+              className="shrink-0 text-xs"
+              style={{
+                color: convo.unreadCount > 0 ? P.dark : "rgba(0,0,0,.35)",
+                fontWeight: convo.unreadCount > 0 ? 600 : 400,
+              }}
+            >
               {formatTime(convo.lastMessage.createdAt)}
             </span>
           </div>
 
-          <p className={`mt-1 text-sm truncate ${convo.unreadCount > 0 ? "text-slate-900" : "text-slate-500"}`}>
-            {convo.lastMessage.isFromMe && <span className="text-slate-400">You: </span>}
+          <p
+            className="mt-1 truncate text-sm"
+            style={{ color: convo.unreadCount > 0 ? P.text : "rgba(0,0,0,.45)" }}
+          >
+            {convo.lastMessage.isFromMe && (
+              <span style={{ color: "rgba(0,0,0,.35)" }}>You: </span>
+            )}
             {convo.lastMessage.body}
           </p>
 
           {convo.listing && (
-            <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-slate-50">
-              <div className="h-8 w-8 rounded bg-slate-200 flex items-center justify-center">
-                <Sailboat className="h-4 w-4 text-slate-400" />
+            <div
+              className="mt-2 flex items-center gap-2 rounded-lg p-2"
+              style={{ backgroundColor: P.faint }}
+            >
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded"
+                style={{ backgroundColor: "rgba(0,0,0,.06)" }}
+              >
+                <Sailboat className="h-4 w-4" style={{ color: "rgba(0,0,0,.25)" }} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-slate-700 truncate">{convo.listing.title}</div>
-                <div className="text-xs text-[#ff6a00] font-medium">
+                <div className="truncate text-xs" style={{ color: P.text, fontWeight: 500 }}>
+                  {convo.listing.title}
+                </div>
+                <div className="text-xs" style={{ color: P.green, fontWeight: 600 }}>
                   {formatPrice(convo.listing.priceCents, convo.listing.currency)}
                 </div>
               </div>
@@ -166,8 +214,13 @@ function ConversationItem({
         </div>
 
         {convo.unreadCount > 0 && (
-          <div className="shrink-0 h-5 min-w-5 px-1.5 rounded-full bg-[#ff6a00] flex items-center justify-center">
-            <span className="text-xs font-semibold text-white">{convo.unreadCount}</span>
+          <div
+            className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5"
+            style={{ backgroundColor: P.dark }}
+          >
+            <span className="text-xs" style={{ color: P.accent, fontWeight: 700 }}>
+              {convo.unreadCount}
+            </span>
           </div>
         )}
       </div>
@@ -180,14 +233,23 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
-          isMe ? "bg-[#ff6a00] text-white rounded-br-md" : "bg-slate-100 text-slate-900 rounded-bl-md"
-        }`}
+        className="max-w-[70%] px-4 py-2.5"
+        style={{
+          borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+          backgroundColor: isMe ? P.dark : P.faint,
+          color: isMe ? P.white : P.text,
+        }}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.body}</p>
-        <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? "text-white/70" : "text-slate-400"}`}>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p>
+        <div
+          className="mt-1 flex items-center justify-end gap-1"
+          style={{ color: isMe ? "rgba(255,255,255,.50)" : "rgba(0,0,0,.30)" }}
+        >
           <span className="text-xs">
-            {new Date(message.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+            {new Date(message.createdAt).toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
           {isMe && <CheckCheck className="h-3.5 w-3.5" />}
         </div>
@@ -195,6 +257,10 @@ function MessageBubble({ message }: { message: Message }) {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function MessagesClient() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -319,22 +385,33 @@ export default function MessagesClient() {
     }
   };
 
+  // ── Loading state ──
   if (loading) {
     return (
-      <main className="flex h-[calc(100vh-64px)] items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <main
+        className="flex items-center justify-center"
+        style={{ height: "calc(100vh - 64px)", backgroundColor: P.white }}
+      >
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: "rgba(0,0,0,.25)" }} />
       </main>
     );
   }
 
+  // ── Error / auth state ──
   if (error) {
     return (
-      <main className="flex h-[calc(100vh-64px)] items-center justify-center bg-white">
+      <main
+        className="flex items-center justify-center"
+        style={{ height: "calc(100vh - 64px)", backgroundColor: P.white }}
+      >
         <div className="text-center">
-          <p className="text-slate-600 mb-4">{error}</p>
+          <p className="mb-4 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+            {error}
+          </p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#ff6a00] text-sm font-semibold text-white hover:bg-[#e55f00] transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm no-underline transition-all"
+            style={{ backgroundColor: P.dark, color: P.accent, fontWeight: 600 }}
           >
             Log in
           </Link>
@@ -344,47 +421,69 @@ export default function MessagesClient() {
   }
 
   return (
-    <main className="flex h-[calc(100vh-64px)] bg-white">
+    <main className="flex" style={{ height: "calc(100vh - 64px)", backgroundColor: P.white }}>
+      {/* ── Sidebar: Conversation List ── */}
       <div
-        className={`w-full md:w-96 border-r border-slate-200 flex flex-col bg-white ${
+        className={`w-full flex-col border-r md:w-96 ${
           showMobileChat ? "hidden md:flex" : "flex"
         }`}
+        style={{ borderColor: "rgba(0,0,0,.08)", backgroundColor: P.white }}
       >
-        <div className="p-4 border-b border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-slate-900">Messages</h1>
-            <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
+        {/* Header */}
+        <div className="p-4" style={{ borderBottom: "1px solid rgba(0,0,0,.08)" }}>
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-xl" style={{ color: P.text, fontWeight: 700 }}>
+              Messages
+            </h1>
+            <button
+              className="rounded-lg p-2 transition-colors"
+              style={{ color: "rgba(0,0,0,.45)" }}
+            >
               <Filter className="h-5 w-5" />
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              style={{ color: "rgba(0,0,0,.30)" }}
+            />
             <input
               type="text"
               placeholder="Search messages..."
-              className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-100 text-sm outline-none border-0 focus:ring-2 focus:ring-[#ff6a00]/20 transition-all"
+              className="h-10 w-full rounded-xl border-0 pl-10 pr-4 text-sm outline-none"
+              style={{ backgroundColor: P.faint, color: P.text }}
             />
           </div>
         </div>
 
-        <div className="flex border-b border-slate-100">
-          <button className="flex-1 py-3 text-sm font-medium text-[#ff6a00] border-b-2 border-[#ff6a00]">
-            All
-          </button>
-          <button className="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">
-            Unread
-          </button>
-          <button className="flex-1 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">
-            Archived
-          </button>
+        {/* Tabs */}
+        <div className="flex" style={{ borderBottom: "1px solid rgba(0,0,0,.08)" }}>
+          {["All", "Unread", "Archived"].map((tab, i) => (
+            <button
+              key={tab}
+              className="flex-1 py-3 text-sm transition-colors"
+              style={{
+                color: i === 0 ? P.text : "rgba(0,0,0,.45)",
+                fontWeight: i === 0 ? 600 : 400,
+                borderBottom: i === 0 ? `2px solid ${P.dark}` : "2px solid transparent",
+              }}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
+        {/* Conversation list */}
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
             <div className="p-8 text-center">
-              <Sailboat className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-              <p className="text-sm text-slate-500">No messages yet</p>
-              <p className="text-xs text-slate-400 mt-1">Start a conversation by contacting a seller</p>
+              <Sailboat className="mx-auto mb-3 h-12 w-12" style={{ color: "rgba(0,0,0,.12)" }} />
+              <p className="text-sm" style={{ color: "rgba(0,0,0,.45)" }}>
+                No messages yet
+              </p>
+              <p className="mt-1 text-xs" style={{ color: "rgba(0,0,0,.30)" }}>
+                Start a conversation by contacting a seller
+              </p>
             </div>
           ) : (
             conversations.map((convo) => (
@@ -402,74 +501,114 @@ export default function MessagesClient() {
         </div>
       </div>
 
-      <div className={`flex-1 flex flex-col ${!showMobileChat ? "hidden md:flex" : "flex"}`}>
+      {/* ── Chat Panel ── */}
+      <div className={`flex flex-1 flex-col ${!showMobileChat ? "hidden md:flex" : "flex"}`}>
         {convoDetail ? (
           <>
-            <div className="h-16 px-4 border-b border-slate-200 flex items-center justify-between bg-white">
+            {/* Chat header */}
+            <div
+              className="flex h-16 items-center justify-between px-4"
+              style={{
+                borderBottom: "1px solid rgba(0,0,0,.08)",
+                backgroundColor: P.white,
+              }}
+            >
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowMobileChat(false)}
-                  className="md:hidden p-2 -ml-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="rounded-lg p-2 transition-colors md:hidden"
+                  style={{ color: "rgba(0,0,0,.55)" }}
                 >
-                  <ArrowLeft className="h-5 w-5 text-slate-600" />
+                  <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="h-10 w-10 rounded-full bg-linear-to-br from-slate-100 to-slate-50 flex items-center justify-center text-slate-400">
-                  <Sailboat className="h-4 w-4" />
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: P.faint, border: "1px solid rgba(0,0,0,.08)" }}
+                >
+                  <Sailboat className="h-4 w-4" style={{ color: "rgba(0,0,0,.25)" }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-slate-900">{convoDetail.otherUser?.name ?? "Unknown"}</span>
+                    <span style={{ color: P.text, fontWeight: 600 }}>
+                      {convoDetail.otherUser?.name ?? "Unknown"}
+                    </span>
                     {convoDetail.otherUser?.isVerified && (
-                      <svg className="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" />
-                      </svg>
+                      <Shield className="h-4 w-4" style={{ color: P.green }} />
                     )}
                   </div>
-                  <span className="text-xs text-slate-500">{convoDetail.otherUser?.email}</span>
+                  {convoDetail.otherUser?.profileSlug && (
+                    <Link
+                      href={`/profile/${convoDetail.otherUser.profileSlug}`}
+                      className="text-xs no-underline"
+                      style={{ color: "rgba(0,0,0,.40)" }}
+                    >
+                      View profile
+                    </Link>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
-                  <Phone className="h-5 w-5" />
-                </button>
-                <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
-                  <Video className="h-5 w-5" />
-                </button>
-                <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
+                <button
+                  className="rounded-lg p-2 transition-colors"
+                  style={{ color: "rgba(0,0,0,.40)" }}
+                >
                   <Info className="h-5 w-5" />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
+                <button
+                  className="rounded-lg p-2 transition-colors"
+                  style={{ color: "rgba(0,0,0,.40)" }}
+                >
                   <MoreHorizontal className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
+            {/* Listing context bar */}
             {convoDetail.listing && (
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="h-14 w-20 rounded-lg bg-linear-to-br from-slate-200 to-slate-100 flex items-center justify-center">
-                    <Sailboat className="h-6 w-6 text-slate-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-slate-900">{convoDetail.listing.title}</div>
-                    <div className="text-sm font-bold text-[#ff6a00]">
-                      {formatPrice(convoDetail.listing.priceCents, convoDetail.listing.currency)}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/buy/${convoDetail.listing.slug}`}
-                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:border-slate-300 transition-colors"
-                  >
-                    View listing
-                  </Link>
+              <div
+                className="flex items-center gap-3 px-4 py-3"
+                style={{
+                  backgroundColor: P.faint,
+                  borderBottom: "1px solid rgba(0,0,0,.06)",
+                }}
+              >
+                <div
+                  className="flex h-14 w-20 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: "rgba(0,0,0,.06)" }}
+                >
+                  <Sailboat className="h-6 w-6" style={{ color: "rgba(0,0,0,.20)" }} />
                 </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm" style={{ color: P.text, fontWeight: 500 }}>
+                    {convoDetail.listing.title}
+                  </div>
+                  <div className="text-sm" style={{ color: P.green, fontWeight: 700 }}>
+                    {formatPrice(convoDetail.listing.priceCents, convoDetail.listing.currency)}
+                  </div>
+                </div>
+                <Link
+                  href={`/buy/${convoDetail.listing.slug}`}
+                  className="rounded-lg border px-3 py-1.5 text-xs no-underline transition-colors"
+                  style={{
+                    borderColor: "rgba(0,0,0,.14)",
+                    backgroundColor: P.white,
+                    color: P.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  View listing
+                </Link>
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+            {/* Messages */}
+            <div
+              className="flex-1 space-y-4 overflow-y-auto p-4"
+              style={{ backgroundColor: P.white }}
+            >
               {loadingMessages ? (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin" style={{ color: "rgba(0,0,0,.25)" }} />
                 </div>
               ) : (
                 <>
@@ -481,17 +620,24 @@ export default function MessagesClient() {
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-white">
+            {/* Compose */}
+            <div className="p-4" style={{ borderTop: "1px solid rgba(0,0,0,.08)", backgroundColor: P.white }}>
               <div className="flex items-end gap-3">
                 <div className="flex gap-1">
-                  <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
+                  <button
+                    className="rounded-lg p-2 transition-colors"
+                    style={{ color: "rgba(0,0,0,.35)" }}
+                  >
                     <Paperclip className="h-5 w-5" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
+                  <button
+                    className="rounded-lg p-2 transition-colors"
+                    style={{ color: "rgba(0,0,0,.35)" }}
+                  >
                     <ImageIcon className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="flex-1 relative">
+                <div className="flex-1">
                   <textarea
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
@@ -503,35 +649,46 @@ export default function MessagesClient() {
                     }}
                     placeholder="Type a message..."
                     rows={1}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-100 text-sm outline-none border-0 resize-none focus:ring-2 focus:ring-[#ff6a00]/20 transition-all"
+                    className="w-full resize-none rounded-2xl border-0 px-4 py-3 text-sm outline-none"
+                    style={{ backgroundColor: P.faint, color: P.text }}
                   />
                 </div>
                 <button
                   onClick={handleSend}
                   disabled={!messageText.trim() || sending}
-                  className="p-3 rounded-xl bg-[#ff6a00] text-white hover:bg-[#e55f00] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl p-3 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ backgroundColor: P.dark, color: P.accent }}
                 >
-                  {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  {sending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-            <div className="h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-              <Sailboat className="h-10 w-10 text-slate-300" />
+          /* ── Empty state ── */
+          <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+            <div
+              className="mb-4 flex h-20 w-20 items-center justify-center rounded-full"
+              style={{ backgroundColor: P.faint, border: "1px solid rgba(0,0,0,.08)" }}
+            >
+              <Sailboat className="h-10 w-10" style={{ color: "rgba(0,0,0,.15)" }} />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            <h3 className="mb-2 text-lg" style={{ color: P.text, fontWeight: 600 }}>
               {conversations.length > 0 ? "Select a conversation" : "No messages yet"}
             </h3>
-            <p className="text-sm text-slate-500 max-w-sm">
+            <p className="max-w-sm text-sm" style={{ color: "rgba(0,0,0,.45)" }}>
               {conversations.length > 0
                 ? "Choose a conversation from the list to view messages"
                 : "Start a conversation by contacting a seller on any listing"}
             </p>
             <Link
               href="/buy"
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#ff6a00] text-sm font-semibold text-white hover:bg-[#e55f00] transition-colors"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm no-underline transition-all"
+              style={{ backgroundColor: P.dark, color: P.accent, fontWeight: 600 }}
             >
               Browse boats
             </Link>

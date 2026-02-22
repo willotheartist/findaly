@@ -2,13 +2,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import * as React from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Heart,
   Share2,
   ChevronLeft,
-  ChevronRight, // ✅ FIX: used in Sidebar
+  ChevronRight,
   MapPin,
   Calendar,
   Ruler,
@@ -107,7 +108,7 @@ type BoatListing = {
   videoUrl?: string;
   seller: {
     id: string;
-    slug: string; // ✅ FIX: route is /profile/[slug]
+    slug: string;
     name: string;
     type: "pro" | "private";
     company?: string;
@@ -154,6 +155,97 @@ function fmtPrice(price: number, cur = "EUR") {
 ═══════════════════════════════════════════════════════ */
 function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
   const [lb, setLb] = useState<number | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const lastActiveRef = useRef<HTMLElement | null>(null);
+
+  const canPrev = lb !== null && images.length > 1;
+  const canNext = lb !== null && images.length > 1;
+
+  function closeLightbox() {
+    setLb(null);
+  }
+
+  function goPrev() {
+    setLb((cur) => {
+      if (cur === null) return cur;
+      return cur === 0 ? images.length - 1 : cur - 1;
+    });
+  }
+
+  function goNext() {
+    setLb((cur) => {
+      if (cur === null) return cur;
+      return cur === images.length - 1 ? 0 : cur + 1;
+    });
+  }
+
+  // ✅ Keyboard support + focus management
+  useEffect(() => {
+    if (lb === null) return;
+
+    // remember focus so we can restore it on close
+    lastActiveRef.current = document.activeElement as HTMLElement | null;
+
+    // focus close button so keyboard events are "in modal context"
+    const t = window.setTimeout(() => closeBtnRef.current?.focus(), 0);
+
+    function onKeyDown(e: KeyboardEvent) {
+      // ignore keybinds while typing in inputs/textareas/selects/contenteditable
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isTypingTarget =
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        Boolean(target?.isContentEditable);
+
+      if (isTypingTarget) return;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeLightbox();
+        return;
+      }
+
+      if (e.key === "ArrowLeft" && canPrev) {
+        e.preventDefault();
+        goPrev();
+        return;
+      }
+
+      if (e.key === "ArrowRight" && canNext) {
+        e.preventDefault();
+        goNext();
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown, { passive: false });
+
+    // optional: prevent background scroll while lightbox open
+    const prevOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("keydown", onKeyDown);
+      document.documentElement.style.overflow = prevOverflow;
+
+      // restore focus
+      const el = lastActiveRef.current;
+      if (el && typeof el.focus === "function") {
+        // small try/catch for safety
+        try {
+          el.focus();
+        } catch {
+          // ignore
+        }
+      }
+      lastActiveRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lb, images.length]);
+
   if (!images.length)
     return (
       <div
@@ -181,7 +273,6 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
           gridTemplateColumns: "3fr 2fr",
           gap: 6,
           height: 480,
-          // ✅ ensures mosaic doesn't visually collide with what follows
           borderRadius: 12,
           overflow: "hidden",
         }}
@@ -318,6 +409,9 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
 
       {lb !== null && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Photo viewer"
           onClick={() => setLb(null)}
           style={{
             position: "fixed",
@@ -330,8 +424,12 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
           }}
         >
           <button
+            ref={closeBtnRef}
             type="button"
-            onClick={() => setLb(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setLb(null);
+            }}
             style={{
               position: "absolute",
               top: 20,
@@ -368,7 +466,7 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setLb(lb === 0 ? images.length - 1 : lb - 1);
+                goPrev();
               }}
               style={{
                 position: "absolute",
@@ -409,7 +507,7 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setLb(lb === images.length - 1 ? 0 : lb + 1);
+                goNext();
               }}
               style={{
                 position: "absolute",
@@ -688,7 +786,7 @@ function Sidebar({ listing }: { listing: BoatListing }) {
 
       <div style={{ padding: "0 28px 20px", borderBottom: `1px solid ${P.faint}` }}>
         <Link
-          href={`/profile/${s.slug}`} // ✅ FIX: route is /profile/[slug]
+          href={`/profile/${s.slug}`}
           style={{
             textDecoration: "none",
             display: "flex",
@@ -777,7 +875,15 @@ function Sidebar({ listing }: { listing: BoatListing }) {
             </div>
           )}
           {s.responseTime && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4, ...f(400, 13), color: P.green }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                ...f(400, 13),
+                color: P.green,
+              }}
+            >
               <Clock style={{ width: 13, height: 13 }} />
               {s.responseTime}
             </div>
@@ -920,7 +1026,7 @@ function SimilarBoats({
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-50">
+            <div className="absolute inset-0 bg-linear-to-br from-slate-100 to-slate-50">
               <div className="absolute inset-0 bg-[radial-gradient(600px_300px_at_30%_40%,rgba(0,0,0,0.06),transparent)]" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <Sailboat className="h-16 w-16 text-slate-200 transition-transform duration-500 group-hover:scale-110" />
@@ -1043,7 +1149,6 @@ export default function ListingPageClient({
       if (!res) return;
 
       if (res.status === 401) {
-        // Not signed in -> keep false
         return;
       }
 
@@ -1121,7 +1226,7 @@ export default function ListingPageClient({
         <PhotoMosaic images={listing.images} title={listing.title} />
       </div>
 
-      {/* ✅ Spacer to prevent any mosaic/title collision (including on load/layout shift) */}
+      {/* ✅ Spacer */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
         <div style={{ height: 18 }} />
       </div>
@@ -1132,7 +1237,6 @@ export default function ListingPageClient({
           maxWidth: 1200,
           margin: "0 auto",
           padding: "22px 24px 0",
-          // ✅ ensure title sits above anything if browser does weird stacking
           position: "relative",
           zIndex: 2,
           backgroundColor: P.white,
@@ -1227,9 +1331,7 @@ export default function ListingPageClient({
       {/* Main grid */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 40px" }}>
         <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
-          {/* LEFT */}
           <div style={{ minWidth: 0 }}>
-            {/* Key specs */}
             <div
               className="grid grid-cols-2 gap-5 sm:grid-cols-4"
               style={{ paddingBottom: 22 }}
@@ -1248,7 +1350,6 @@ export default function ListingPageClient({
               <KeySpec icon={Calendar} label="Year" value={listing.year || "—"} />
             </div>
 
-            {/* Tabbed content */}
             <div
               style={{
                 border: `1px solid ${P.line}`,
@@ -1395,11 +1496,7 @@ export default function ListingPageClient({
 
                 {tab === "features" && (
                   <div>
-                    <Features
-                      title="Equipment & Features"
-                      items={listing.features}
-                      icon={Anchor}
-                    />
+                    <Features title="Equipment & Features" items={listing.features} icon={Anchor} />
                     <Features
                       title="Electronics & Navigation"
                       items={listing.electronics}
@@ -1413,16 +1510,13 @@ export default function ListingPageClient({
                     {!listing.features.length &&
                       !listing.electronics.length &&
                       !listing.safetyEquipment.length && (
-                        <p style={{ ...f(400, 15), color: P.light }}>
-                          No features listed.
-                        </p>
+                        <p style={{ ...f(400, 15), color: P.light }}>No features listed.</p>
                       )}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Listing details */}
             <div
               style={{
                 border: `1px solid ${P.line}`,
@@ -1434,9 +1528,7 @@ export default function ListingPageClient({
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                 <CircleDot style={{ width: 18, height: 18, color: P.muted }} />
-                <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>
-                  Listing details
-                </h3>
+                <h3 style={{ ...f(500, 16), color: P.text, margin: 0 }}>Listing details</h3>
               </div>
               <div
                 style={{
@@ -1459,11 +1551,8 @@ export default function ListingPageClient({
               </div>
             </div>
 
-            {/* Location */}
             <div style={{ marginTop: 24 }}>
-              <h3 style={{ ...f(500, 16), color: P.text, margin: "0 0 16px" }}>
-                Location
-              </h3>
+              <h3 style={{ ...f(500, 16), color: P.text, margin: "0 0 16px" }}>Location</h3>
               <div
                 style={{
                   height: 200,
@@ -1497,7 +1586,6 @@ export default function ListingPageClient({
               </div>
             </div>
 
-            {/* ✅ Waaza moved BELOW location (requested) */}
             <div style={{ marginTop: 24 }}>
               <WaazaFinancing
                 price={listing.price || null}
@@ -1508,7 +1596,6 @@ export default function ListingPageClient({
               />
             </div>
 
-            {/* ✅ Safety tips — flat 2D #fef76b */}
             <div
               style={{
                 marginTop: 24,
@@ -1557,19 +1644,16 @@ export default function ListingPageClient({
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="hidden lg:block" style={{ minWidth: 0 }}>
             <Sidebar listing={listing} />
           </div>
         </div>
 
-        {/* Similar section */}
         <div style={{ marginTop: 36, borderTop: `1px solid ${P.faint}`, paddingTop: 10 }}>
           <SimilarBoats items={similar} current={listing} />
         </div>
       </div>
 
-      {/* Mobile bottom bar */}
       <div
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
         style={{
