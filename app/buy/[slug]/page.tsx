@@ -54,8 +54,10 @@ function formatPrice(price: number, cur: string) {
 }
 
 /**
- * ✅ This is the missing piece:
- * dynamic, per-listing metadata + canonical + OG/Twitter.
+ * ✅ Dynamic, per-listing metadata + canonical + OG/Twitter.
+ * IMPORTANT:
+ * - DO NOT include "| Findaly" in the returned title string
+ *   because layout.tsx already applies title.template "%s | Findaly".
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -82,10 +84,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
   });
 
-  if (!listing) {
-    // Let Next render the 404 page with whatever default metadata exists.
-    return {};
-  }
+  if (!listing) return {};
 
   const base = getSiteUrl();
   const canonical = `${base}/buy/${listing.slug}`;
@@ -100,7 +99,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     cleanText([listing.brand, listing.model].filter(Boolean).join(" ")) ||
     "Boat";
 
-  const title = `${name}${yearPart} for Sale${locPart} | Findaly`;
+  // ✅ NO "| Findaly" here — layout template adds it once.
+  const title = `${name}${yearPart} for Sale${locPart}`;
 
   const price =
     listing.priceCents && listing.priceType !== "POA" ? listing.priceCents / 100 : 0;
@@ -122,14 +122,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       type: "website",
       url: canonical,
-      title,
+      title, // ✅ no brand suffix; siteName handles branding
       description,
       siteName: "Findaly",
       images: [{ url: ogImage, width: 1200, height: 630, alt: name }],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title, // ✅ no brand suffix; Twitter card still shows nicely
       description,
       images: [ogImage],
     },
