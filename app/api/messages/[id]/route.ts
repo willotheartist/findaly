@@ -8,9 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
 
@@ -46,10 +44,7 @@ export async function GET(
             select: {
               id: true,
               email: true,
-              profiles: {
-                take: 1,
-                select: { name: true },
-              },
+              profiles: { take: 1, select: { name: true } },
             },
           },
         },
@@ -61,58 +56,62 @@ export async function GET(
     return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
   }
 
-  // Must be a participant: either sent or received at least one message in this convo
-  const isParticipant = conversation.messages.some(
-    (m) => m.senderId === user.id || m.receiverId === user.id
-  );
+  // ✅ Authorize: user must be sender or receiver in this conversation
+  const isParticipant = await prisma.message.findFirst({
+    where: {
+      conversationId: id,
+      OR: [{ senderId: user.id }, { receiverId: user.id }],
+    },
+    select: { id: true },
+  });
 
   if (!isParticipant) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // ✅ Mark unread messages as read for this user
+  // ✅ Mark as read: all messages sent TO current user in this convo
+  // (safe to run even if none)
   await prisma.message.updateMany({
     where: {
       conversationId: id,
       receiverId: user.id,
       readAt: null,
     },
-    data: {
-      readAt: new Date(),
-    },
+    data: { readAt: new Date() },
   });
 
-  // Determine the other participant
-  const allParticipantIds = new Set<string>();
-  conversation.messages.forEach((m) => {
-    allParticipantIds.add(m.senderId);
-    allParticipantIds.add(m.receiverId);
-  });
+  // Get other participant (robust)
+  const otherUserId =
+    conversation.messages.find((m) => m.senderId !== user.id)?.senderId ??
+    conversation.messages.find((m) => m.receiverId !== user.id)?.receiverId ??
+    null;
 
-  const otherUserId = [...allParticipantIds].find((uid) => uid !== user.id);
+  let otherUser: {
+    id: string;
+    name: string;
+    email: string;
+    isVerified: boolean;
+    profileSlug: string | null;
+  } | null = null;
 
-  let otherUser = null;
   if (otherUserId) {
     const other = await prisma.user.findUnique({
       where: { id: otherUserId },
       select: {
         id: true,
         email: true,
-        profiles: {
-          take: 1,
-          select: { name: true, isVerified: true, slug: true },
-        },
+        profiles: { take: 1, select: { name: true, isVerified: true, slug: true } },
       },
     });
 
     if (other) {
-      const profile = other.profiles[0];
+      const p = other.profiles[0];
       otherUser = {
         id: other.id,
-        name: profile?.name ?? other.email.split("@")[0],
+        name: p?.name ?? other.email.split("@")[0],
         email: other.email,
-        isVerified: profile?.isVerified ?? false,
-        profileSlug: profile?.slug ?? null,
+        isVerified: p?.isVerified ?? false,
+        profileSlug: p?.slug ?? null,
       };
     }
   }

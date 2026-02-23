@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 23/02/2026, 10:49:42*
+*Generated on: 23/02/2026, 15:52:12*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 253 |
-| 📁 Total Folders | 181 |
+| 📄 Total Files | 257 |
+| 📁 Total Folders | 184 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,12 +24,12 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 143 files (56.5%)
-- 🔷 **.ts** (TypeScript files): 51 files (20.2%)
-- 🖼️ **.jpg** (JPEG images): 17 files (6.7%)
+- ⚛️ **.tsx** (React TypeScript files): 144 files (56.0%)
+- 🔷 **.ts** (TypeScript files): 52 files (20.2%)
+- 🖼️ **.jpg** (JPEG images): 17 files (6.6%)
 - 🖼️ **.png** (PNG images): 11 files (4.3%)
-- 📄 **.sql** (Other files): 8 files (3.2%)
-- 🎨 **.svg** (SVG images): 5 files (2.0%)
+- 📄 **.sql** (Other files): 10 files (3.9%)
+- 🎨 **.svg** (SVG images): 5 files (1.9%)
 - ⚙️ **.json** (JSON files): 4 files (1.6%)
 - 📄 **.mjs** (Other files): 3 files (1.2%)
 - 📖 **.md** (Markdown files): 2 files (0.8%)
@@ -45,19 +45,19 @@
 
 ### By Category
 
-- **React**: 143 files (56.5%)
-- **TypeScript**: 51 files (20.2%)
-- **Assets**: 34 files (13.4%)
-- **Other**: 14 files (5.5%)
-- **Config**: 6 files (2.4%)
+- **React**: 144 files (56.0%)
+- **TypeScript**: 52 files (20.2%)
+- **Assets**: 34 files (13.2%)
+- **Other**: 16 files (6.2%)
+- **Config**: 6 files (2.3%)
 - **Docs**: 3 files (1.2%)
 - **DevOps**: 1 files (0.4%)
 - **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 253 files
-- **app**: 133 files
+- **root**: 257 files
+- **app**: 135 files
 - **public**: 33 files
 - **components**: 32 files
 - **app/add-listing**: 21 files
@@ -122,6 +122,8 @@ findaly/
 │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 messages/
 │   │   │   ├── 📂 [id]/
+│   │   │   │   └── 🔷 route.ts
+│   │   │   ├── 📂 enquire/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   ├── 🔷 route.ts
 │   │   │   └── 📂 send/
@@ -280,6 +282,7 @@ findaly/
 │   │   ├── ⚛️ LogoutClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 messages/
+│   │   ├── ⚛️ layout.tsx
 │   │   ├── ⚛️ MessagesClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 my-listings/
@@ -436,6 +439,10 @@ findaly/
 │   │   ├── 📂 20260218135432_kompipay_monetization_v2/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20260221080138_add_saved_listings/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260223104736_add_message_read_at/
+│   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260223110100_add_message_read_at/
 │   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma

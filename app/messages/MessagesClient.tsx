@@ -183,7 +183,7 @@ function ConversationItem({
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 11,
-                fontWeight: 800,
+                fontWeight: 400,
                 border: "2px solid #fff",
               }}
             >
@@ -199,7 +199,7 @@ function ConversationItem({
                 className="truncate text-sm"
                 style={{
                   color: P.text,
-                  fontWeight: convo.unreadCount > 0 ? 700 : 600,
+                  fontWeight: convo.unreadCount > 0 ? 500 : 400,
                 }}
               >
                 {convo.otherUser.name}
@@ -212,7 +212,7 @@ function ConversationItem({
               className="shrink-0 text-xs"
               style={{
                 color: convo.unreadCount > 0 ? P.text : P.muted,
-                fontWeight: convo.unreadCount > 0 ? 700 : 500,
+                fontWeight: convo.unreadCount > 0 ? 500 : 400,
               }}
             >
               {formatTime(convo.lastMessage.createdAt)}
@@ -224,7 +224,7 @@ function ConversationItem({
             style={{ color: convo.unreadCount > 0 ? P.text : P.sub }}
           >
             {convo.lastMessage.isFromMe && (
-              <span style={{ color: P.muted, fontWeight: 600 }}>You: </span>
+              <span style={{ color: P.muted, fontWeight: 400 }}>You: </span>
             )}
             {convo.lastMessage.body}
           </p>
@@ -241,10 +241,10 @@ function ConversationItem({
                 <Sailboat className="h-4 w-4" style={{ color: "rgba(0,0,0,.22)" }} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-xs" style={{ color: P.text, fontWeight: 600 }}>
+                <div className="truncate text-xs" style={{ color: P.text, fontWeight: 400 }}>
                   {convo.listing.title}
                 </div>
-                <div className="text-xs" style={{ color: P.brandBlue, fontWeight: 800 }}>
+                <div className="text-xs" style={{ color: P.brandBlue, fontWeight: 500 }}>
                   {formatPrice(convo.listing.priceCents, convo.listing.currency)}
                 </div>
               </div>
@@ -505,7 +505,7 @@ export default function MessagesClient() {
           <Link
             href="/login"
             className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm no-underline transition-all"
-            style={{ backgroundColor: P.brandBlue, color: "#fff", fontWeight: 700 }}
+            style={{ backgroundColor: P.brandBlue, color: "#fff", fontWeight: 500 }}
           >
             Log in
           </Link>
@@ -542,7 +542,7 @@ export default function MessagesClient() {
             <div className="p-4">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl" style={{ color: P.text, fontWeight: 800 }}>
+                  <h1 className="text-xl" style={{ color: P.text, fontWeight: 500 }}>
                     Messages
                   </h1>
                   {totalUnread > 0 ? (
@@ -554,7 +554,7 @@ export default function MessagesClient() {
                         backgroundColor: "rgba(255,59,48,.12)",
                         color: P.danger,
                         fontSize: 12,
-                        fontWeight: 800,
+                        fontWeight: 500,
                         display: "inline-flex",
                         alignItems: "center",
                       }}
@@ -596,7 +596,7 @@ export default function MessagesClient() {
                   className="flex-1 py-3 text-sm transition-colors"
                   style={{
                     color: i === 0 ? P.text : P.muted,
-                    fontWeight: i === 0 ? 800 : 600,
+                    fontWeight: i === 0 ? 500 : 400,
                     borderBottom:
                       i === 0 ? `2px solid ${P.brandBlue}` : "2px solid transparent",
                   }}
@@ -666,7 +666,7 @@ export default function MessagesClient() {
 
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span style={{ color: P.text, fontWeight: 800 }}>
+                      <span style={{ color: P.text, fontWeight: 500 }}>
                         {convoDetail.otherUser?.name ?? "Unknown"}
                       </span>
                       {convoDetail.otherUser?.isVerified && (
@@ -677,7 +677,7 @@ export default function MessagesClient() {
                       <Link
                         href={`/profile/${convoDetail.otherUser.profileSlug}`}
                         className="text-xs no-underline"
-                        style={{ color: P.muted, fontWeight: 600 }}
+                        style={{ color: P.muted, fontWeight: 400 }}
                       >
                         View profile
                       </Link>
@@ -719,10 +719,10 @@ export default function MessagesClient() {
                     <Sailboat className="h-6 w-6" style={{ color: "rgba(0,0,0,.20)" }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm" style={{ color: P.text, fontWeight: 700 }}>
+                    <div className="text-sm" style={{ color: P.text, fontWeight: 500 }}>
                       {convoDetail.listing.title}
                     </div>
-                    <div className="text-sm" style={{ color: P.brandBlue, fontWeight: 900 }}>
+                    <div className="text-sm" style={{ color: P.brandBlue, fontWeight: 500 }}>
                       {formatPrice(convoDetail.listing.priceCents, convoDetail.listing.currency)}
                     </div>
                   </div>
@@ -733,7 +733,7 @@ export default function MessagesClient() {
                       borderColor: "rgba(0,0,0,.14)",
                       backgroundColor: P.panel,
                       color: P.text,
-                      fontWeight: 700,
+                      fontWeight: 500,
                     }}
                   >
                     View listing
@@ -827,7 +827,7 @@ export default function MessagesClient() {
               >
                 <Sailboat className="h-10 w-10" style={{ color: "rgba(0,0,0,.15)" }} />
               </div>
-              <h3 className="mb-2 text-lg" style={{ color: P.text, fontWeight: 800 }}>
+              <h3 className="mb-2 text-lg" style={{ color: P.text, fontWeight: 500 }}>
                 {conversations.length > 0 ? "Select a conversation" : "No messages yet"}
               </h3>
               <p className="max-w-sm text-sm" style={{ color: P.sub }}>
@@ -838,7 +838,7 @@ export default function MessagesClient() {
               <Link
                 href="/buy"
                 className="mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm no-underline transition-all"
-                style={{ backgroundColor: P.brandBlue, color: "#fff", fontWeight: 800 }}
+                style={{ backgroundColor: P.brandBlue, color: "#fff", fontWeight: 400 }}
               >
                 Browse boats
               </Link>
