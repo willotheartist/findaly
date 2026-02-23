@@ -36,6 +36,7 @@ import {
   Settings,
   ExternalLink,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 
 import WaazaFinancing from "@/components/WaazaFinancing";
@@ -107,7 +108,8 @@ type BoatListing = {
   images: string[];
   videoUrl?: string;
   seller: {
-    id: string;
+    profileId: string;
+    userId: string; // ✅ IMPORTANT: receiverId for messaging
     slug: string;
     name: string;
     type: "pro" | "private";
@@ -183,14 +185,10 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
   useEffect(() => {
     if (lb === null) return;
 
-    // remember focus so we can restore it on close
     lastActiveRef.current = document.activeElement as HTMLElement | null;
-
-    // focus close button so keyboard events are "in modal context"
     const t = window.setTimeout(() => closeBtnRef.current?.focus(), 0);
 
     function onKeyDown(e: KeyboardEvent) {
-      // ignore keybinds while typing in inputs/textareas/selects/contenteditable
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
       const isTypingTarget =
@@ -222,7 +220,6 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
 
     window.addEventListener("keydown", onKeyDown, { passive: false });
 
-    // optional: prevent background scroll while lightbox open
     const prevOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
 
@@ -231,10 +228,8 @@ function PhotoMosaic({ images, title }: { images: string[]; title: string }) {
       window.removeEventListener("keydown", onKeyDown);
       document.documentElement.style.overflow = prevOverflow;
 
-      // restore focus
       const el = lastActiveRef.current;
       if (el && typeof el.focus === "function") {
-        // small try/catch for safety
         try {
           el.focus();
         } catch {
@@ -747,8 +742,18 @@ function Features({
 /* ─── Seller card ─── */
 function Sidebar({ listing }: { listing: BoatListing }) {
   const s = listing.seller;
+
   const [showPhone, setShowPhone] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState(
+    `Hi, I'm interested in the ${listing.title}. Is it still available?`
+  );
+
   const isPro = s.type === "pro";
 
   const inp: React.CSSProperties = {
@@ -761,6 +766,57 @@ function Sidebar({ listing }: { listing: BoatListing }) {
     outline: "none",
     backgroundColor: P.white,
   };
+
+  async function submitEnquiry() {
+    if (sending) return;
+
+    // If they haven't typed anything, keep default message
+    const msg = (message || "").trim();
+
+    setSending(true);
+
+    const res = await fetch("/api/messages/enquire", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        listingId: listing.id,
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        message: msg,
+      }),
+    }).catch(() => null);
+
+    setSending(false);
+
+    if (!res) {
+      alert("Network error. Try again.");
+      return;
+    }
+
+    if (res.status === 401) {
+      window.location.href = `/login?next=${encodeURIComponent(`/buy/${listing.slug}`)}`;
+      return;
+    }
+
+    const data: unknown = await res.json().catch(() => ({}));
+    const obj =
+      data && typeof data === "object" ? (data as Record<string, unknown>) : {};
+
+    if (!res.ok) {
+      alert(String(obj?.error ?? "ENQUIRY_FAILED"));
+      return;
+    }
+
+    const conversationId = String(obj?.conversationId || "");
+    if (!conversationId) {
+      alert("ENQUIRY_FAILED");
+      return;
+    }
+
+    setSent(true);
+    window.location.href = `/messages?conversation=${encodeURIComponent(conversationId)}`;
+  }
 
   return (
     <div
@@ -835,12 +891,6 @@ function Sidebar({ listing }: { listing: BoatListing }) {
               )}
             </div>
 
-            {s.company && s.name && s.company !== s.name && (
-              <div style={{ ...f(400, 12), color: P.muted, marginTop: 2 }}>
-                {s.name}
-              </div>
-            )}
-
             <div
               style={{
                 display: "flex",
@@ -892,20 +942,40 @@ function Sidebar({ listing }: { listing: BoatListing }) {
       </div>
 
       <div style={{ padding: 28, display: "flex", flexDirection: "column", gap: 12 }}>
-        <input type="text" placeholder="Your name" style={inp} />
-        <input type="tel" placeholder="Your telephone no." style={inp} />
-        <input type="email" placeholder="Your email" style={inp} />
+        <input
+          type="text"
+          placeholder="Your name"
+          style={inp}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="tel"
+          placeholder="Your telephone no."
+          style={inp}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        <input
+          type="email"
+          placeholder="Your email"
+          style={inp}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <textarea
           id="contact-message"
           placeholder="Your message..."
           rows={4}
           style={{ ...inp, resize: "vertical" }}
-          defaultValue={`Hi, I'm interested in the ${listing.title}. Is it still available?`}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
         />
 
         <button
           type="button"
-          onClick={() => setSent(true)}
+          onClick={submitEnquiry}
+          disabled={sending}
           style={{
             width: "100%",
             padding: "14px 0",
@@ -914,11 +984,25 @@ function Sidebar({ listing }: { listing: BoatListing }) {
             border: "none",
             borderRadius: 10,
             ...f(500, 15),
-            cursor: "pointer",
+            cursor: sending ? "not-allowed" : "pointer",
             marginTop: 4,
+            opacity: sending ? 0.85 : 1,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
           }}
         >
-          {sent ? "Enquiry sent ✓" : "Send enquiry"}
+          {sending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : sent ? (
+            "Enquiry sent ✓"
+          ) : (
+            "Send enquiry"
+          )}
         </button>
 
         {s.phone && (
@@ -1148,9 +1232,7 @@ export default function ListingPageClient({
 
       if (!res) return;
 
-      if (res.status === 401) {
-        return;
-      }
+      if (res.status === 401) return;
 
       const data: unknown = await res.json().catch(() => ({}));
       const obj =
@@ -1273,7 +1355,7 @@ export default function ListingPageClient({
               onClick={async () => {
                 if (saving) return;
 
-                const next = !saved; // optimistic
+                const next = !saved;
                 setSaved(next);
                 setSaving(true);
 
@@ -1332,20 +1414,13 @@ export default function ListingPageClient({
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 40px" }}>
         <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
           <div style={{ minWidth: 0 }}>
-            <div
-              className="grid grid-cols-2 gap-5 sm:grid-cols-4"
-              style={{ paddingBottom: 22 }}
-            >
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4" style={{ paddingBottom: 22 }}>
               <KeySpec
                 icon={MapPin}
                 label={listing.country || "Location"}
                 value={listing.location || "—"}
               />
-              <KeySpec
-                icon={Ruler}
-                label="Length"
-                value={listing.length ? `${listing.length} ft` : "—"}
-              />
+              <KeySpec icon={Ruler} label="Length" value={listing.length ? `${listing.length} ft` : "—"} />
               <KeySpec icon={Bed} label="Cabins" value={listing.cabins || "—"} />
               <KeySpec icon={Calendar} label="Year" value={listing.year || "—"} />
             </div>
@@ -1375,9 +1450,7 @@ export default function ListingPageClient({
                         padding: "16px 12px",
                         background: "none",
                         border: "none",
-                        borderBottom: active
-                          ? `3px solid ${P.green}`
-                          : "3px solid transparent",
+                        borderBottom: active ? `3px solid ${P.green}` : "3px solid transparent",
                         cursor: "pointer",
                         ...f(active ? 500 : 400, 14),
                         color: active ? P.green : P.muted,
@@ -1409,9 +1482,7 @@ export default function ListingPageClient({
                         </p>
                       ))
                     ) : (
-                      <p style={{ ...f(400, 15), color: P.light }}>
-                        No description provided.
-                      </p>
+                      <p style={{ ...f(400, 15), color: P.light }}>No description provided.</p>
                     )}
                   </div>
                 )}
@@ -1423,44 +1494,30 @@ export default function ListingPageClient({
                         {listing.length > 0 && (
                           <SpecChip
                             label="Length"
-                            value={`${listing.length} ft${
-                              listing.lengthM > 0 ? ` (${listing.lengthM}m)` : ""
-                            }`}
+                            value={`${listing.length} ft${listing.lengthM > 0 ? ` (${listing.lengthM}m)` : ""}`}
                           />
                         )}
                         {listing.beam > 0 && (
                           <SpecChip
                             label="Beam"
-                            value={`${listing.beam} ft${
-                              listing.beamM > 0 ? ` (${listing.beamM}m)` : ""
-                            }`}
+                            value={`${listing.beam} ft${listing.beamM > 0 ? ` (${listing.beamM}m)` : ""}`}
                           />
                         )}
                         {listing.draft > 0 && (
                           <SpecChip
                             label="Draft"
-                            value={`${listing.draft} ft${
-                              listing.draftM > 0 ? ` (${listing.draftM}m)` : ""
-                            }`}
+                            value={`${listing.draft} ft${listing.draftM > 0 ? ` (${listing.draftM}m)` : ""}`}
                           />
                         )}
-                        {listing.displacement && (
-                          <SpecChip label="Displacement" value={listing.displacement} />
-                        )}
+                        {listing.displacement && <SpecChip label="Displacement" value={listing.displacement} />}
                       </SpecGroup>
                     )}
 
                     {(listing.hullMaterial || listing.hullType) && (
                       <SpecGroup title="Hull & Construction" icon={Ship}>
-                        {listing.hullMaterial && (
-                          <SpecChip label="Material" value={listing.hullMaterial} />
-                        )}
-                        {listing.hullType && (
-                          <SpecChip label="Hull type" value={listing.hullType} />
-                        )}
-                        {listing.hullColor && (
-                          <SpecChip label="Colour" value={listing.hullColor} />
-                        )}
+                        {listing.hullMaterial && <SpecChip label="Material" value={listing.hullMaterial} />}
+                        {listing.hullType && <SpecChip label="Hull type" value={listing.hullType} />}
+                        {listing.hullColor && <SpecChip label="Colour" value={listing.hullColor} />}
                       </SpecGroup>
                     )}
 
@@ -1469,17 +1526,11 @@ export default function ListingPageClient({
                         {listing.engineMake && (
                           <SpecChip
                             label="Engine"
-                            value={`${listing.engineMake}${
-                              listing.engineModel ? ` ${listing.engineModel}` : ""
-                            }`}
+                            value={`${listing.engineMake}${listing.engineModel ? ` ${listing.engineModel}` : ""}`}
                           />
                         )}
-                        {listing.enginePower && (
-                          <SpecChip label="Power" value={`${listing.enginePower} HP`} />
-                        )}
-                        {listing.engineHours && (
-                          <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />
-                        )}
+                        {listing.enginePower && <SpecChip label="Power" value={`${listing.enginePower} HP`} />}
+                        {listing.engineHours && <SpecChip label="Engine hours" value={`${listing.engineHours} hrs`} />}
                         {listing.fuelType && <SpecChip label="Fuel" value={listing.fuelType} />}
                       </SpecGroup>
                     )}
@@ -1497,16 +1548,8 @@ export default function ListingPageClient({
                 {tab === "features" && (
                   <div>
                     <Features title="Equipment & Features" items={listing.features} icon={Anchor} />
-                    <Features
-                      title="Electronics & Navigation"
-                      items={listing.electronics}
-                      icon={Navigation}
-                    />
-                    <Features
-                      title="Safety Equipment"
-                      items={listing.safetyEquipment}
-                      icon={Shield}
-                    />
+                    <Features title="Electronics & Navigation" items={listing.electronics} icon={Navigation} />
+                    <Features title="Safety Equipment" items={listing.safetyEquipment} icon={Shield} />
                     {!listing.features.length &&
                       !listing.electronics.length &&
                       !listing.safetyEquipment.length && (

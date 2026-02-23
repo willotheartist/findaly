@@ -35,10 +35,7 @@ function toAbs(urlOrPath: string) {
 }
 
 function cleanText(s: string) {
-  return (s || "")
-    .replace(/\s+/g, " ")
-    .replace(/\u0000/g, "")
-    .trim();
+  return (s || "").replace(/\s+/g, " ").replace(/\u0000/g, "").trim();
 }
 
 function truncate(s: string, n: number) {
@@ -93,13 +90,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const loc = cleanText(listing.location || listing.country || "");
   const locPart = loc ? ` in ${loc}` : "";
 
-  // Prefer title field, but if it’s weak and brand/model exist, build a cleaner name.
   const name =
     cleanText(listing.title) ||
     cleanText([listing.brand, listing.model].filter(Boolean).join(" ")) ||
     "Boat";
 
-  // ✅ NO "| Findaly" here — layout template adds it once.
   const title = `${name}${yearPart} for Sale${locPart}`;
 
   const price =
@@ -122,14 +117,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       type: "website",
       url: canonical,
-      title, // ✅ no brand suffix; siteName handles branding
+      title,
       description,
       siteName: "Findaly",
       images: [{ url: ogImage, width: 1200, height: 630, alt: name }],
     },
     twitter: {
       card: "summary_large_image",
-      title, // ✅ no brand suffix; Twitter card still shows nicely
+      title,
       description,
       images: [ogImage],
     },
@@ -147,6 +142,7 @@ export default async function BoatListingPage({ params }: PageProps) {
         profile: {
           select: {
             id: true,
+            userId: true, // ✅ IMPORTANT: needed for messaging
             name: true,
             slug: true,
             location: true,
@@ -154,14 +150,10 @@ export default async function BoatListingPage({ params }: PageProps) {
             website: true,
             isVerified: true,
             createdAt: true,
-            _count: {
-              select: { listings: true },
-            },
+            _count: { select: { listings: true } },
           },
         },
-        media: {
-          orderBy: { sort: "asc" },
-        },
+        media: { orderBy: { sort: "asc" } },
       },
     }),
   ]);
@@ -316,7 +308,8 @@ export default async function BoatListingPage({ params }: PageProps) {
     updatedAt: listing.updatedAt.toISOString(),
 
     seller: {
-      id: listing.profile.id,
+      profileId: listing.profile.id,
+      userId: listing.profile.userId, // ✅ used as receiverId in messages
       slug: listing.profile.slug,
       name: listing.sellerName || listing.profile.name,
       type: listing.sellerType === "PROFESSIONAL" ? ("pro" as const) : ("private" as const),
@@ -388,7 +381,11 @@ export default async function BoatListingPage({ params }: PageProps) {
       {jsonLd(breadcrumb)}
       {jsonLd(product)}
 
-      <ListingPageClient listing={transformedListing} isAdmin={isAdmin} similar={transformedSimilar} />
+      <ListingPageClient
+        listing={transformedListing}
+        isAdmin={isAdmin}
+        similar={transformedSimilar}
+      />
     </>
   );
 }
