@@ -19,6 +19,7 @@ import HomeHero from "@/components/home/HomeHero";
 import ThingsToDo from "@/components/home/ThingsToDo";
 import BoatsForSaleSection from "@/components/home/BoatsForSaleSection";
 import HomeSplitCtas from "@/components/home/HomeSplitCtas";
+import GuidesRowSection from "@/components/home/GuidesRowSection";
 
 type Tile = { title: string; href: string; subtitle?: string; emoji?: string };
 type DestinationTile = { title: string; href: string; subtitle?: string; image: string };
@@ -252,7 +253,6 @@ export default async function Home() {
     media: { take: 1, orderBy: { sort: "asc" as const }, select: { url: true } },
   };
 
-  // ✅ Boat-signal filter to avoid services showing as boats
   const boatSignals: Prisma.ListingWhereInput = {
     OR: [
       { lengthM: { gt: 0 } },
@@ -297,7 +297,6 @@ export default async function Home() {
       select: baseSelect,
     }),
 
-    // ✅ Under €100k (only known price; excludes POA)
     prisma.listing.findMany({
       where: {
         status: "LIVE",
@@ -311,7 +310,6 @@ export default async function Home() {
       select: baseSelect,
     }),
 
-    // ✅ Recently added boats (not services)
     prisma.listing.findMany({
       where: {
         status: "LIVE",
@@ -367,8 +365,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Your component (kept as-is) */}
+      {/* Featured boats */}
       <BoatsForSaleSection />
+
 
       {/* Recently added boats */}
       {recent.length > 0 ? (
@@ -525,7 +524,11 @@ export default async function Home() {
         }
       />
 
-      {/* Bottom CTA — updated to match your new L&F (Findaly palette) */}
+
+      {/* ✅ NEW: Guides row */}
+      <GuidesRowSection />
+
+      {/* Bottom CTA */}
       <section className="w-full bg-white">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[#0a211f] p-8 sm:p-12">

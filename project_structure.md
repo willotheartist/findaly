@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 22/02/2026, 12:32:46*
+*Generated on: 23/02/2026, 08:06:38*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 239 |
-| 📁 Total Folders | 159 |
+| 📄 Total Files | 249 |
+| 📁 Total Folders | 161 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,14 +24,14 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 137 files (57.3%)
-- 🔷 **.ts** (TypeScript files): 47 files (19.7%)
-- 🖼️ **.jpg** (JPEG images): 13 files (5.4%)
-- 🖼️ **.png** (PNG images): 11 files (4.6%)
-- 📄 **.sql** (Other files): 8 files (3.3%)
-- 🎨 **.svg** (SVG images): 5 files (2.1%)
-- ⚙️ **.json** (JSON files): 4 files (1.7%)
-- 📄 **.mjs** (Other files): 3 files (1.3%)
+- ⚛️ **.tsx** (React TypeScript files): 139 files (55.8%)
+- 🔷 **.ts** (TypeScript files): 51 files (20.5%)
+- 🖼️ **.jpg** (JPEG images): 17 files (6.8%)
+- 🖼️ **.png** (PNG images): 11 files (4.4%)
+- 📄 **.sql** (Other files): 8 files (3.2%)
+- 🎨 **.svg** (SVG images): 5 files (2.0%)
+- ⚙️ **.json** (JSON files): 4 files (1.6%)
+- 📄 **.mjs** (Other files): 3 files (1.2%)
 - 📖 **.md** (Markdown files): 2 files (0.8%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.4%)
 - 📄 **.txt** (Text files): 1 files (0.4%)
@@ -45,21 +45,21 @@
 
 ### By Category
 
-- **React**: 137 files (57.3%)
-- **TypeScript**: 47 files (19.7%)
-- **Assets**: 30 files (12.6%)
-- **Other**: 14 files (5.9%)
-- **Config**: 6 files (2.5%)
-- **Docs**: 3 files (1.3%)
+- **React**: 139 files (55.8%)
+- **TypeScript**: 51 files (20.5%)
+- **Assets**: 34 files (13.7%)
+- **Other**: 14 files (5.6%)
+- **Config**: 6 files (2.4%)
+- **Docs**: 3 files (1.2%)
 - **DevOps**: 1 files (0.4%)
 - **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 239 files
+- **root**: 249 files
 - **app**: 129 files
-- **components**: 30 files
-- **public**: 29 files
+- **public**: 33 files
+- **components**: 32 files
 - **app/add-listing**: 21 files
 
 ## 🌳 Directory Structure
@@ -333,12 +333,14 @@ findaly/
 │   ├── ⚛️ HeaderDropdownClient.tsx
 │   ├── 📂 home/
 │   │   ├── ⚛️ BoatsForSaleSection.tsx
+│   │   ├── ⚛️ GuidesRowSection.tsx
 │   │   ├── ⚛️ HomeHero.tsx
 │   │   ├── ⚛️ HomeSplitCtas.tsx
 │   │   └── ⚛️ ThingsToDo.tsx
 │   ├── 📂 kompipay/
 │   │   └── ⚛️ CheckoutButton.tsx
 │   ├── 📂 listing/
+│   │   ├── ⚛️ SaveListingButtonClient.tsx
 │   │   └── ⚛️ SellerCard.tsx
 │   ├── ⚛️ LogoutButtonClient.tsx
 │   ├── 📂 maps/
@@ -434,6 +436,11 @@ findaly/
 │   ├── 📂 fonts/
 │   │   └── 📂 inter-tight/
 │   ├── 🎨 globe.svg
+│   ├── 📂 guides/
+│   │   ├── 🖼️ lagoon-catamaran.jpg
+│   │   ├── 🖼️ motor-yacht.jpg
+│   │   ├── 🖼️ swift-trawler.jpg
+│   │   └── 🖼️ yacht-types.jpg
 │   ├── 🖼️ hero-buy.jpg
 │   ├── 🖼️ hero-charter.jpg
 │   ├── 🖼️ hero-pros.jpg
@@ -452,7 +459,11 @@ findaly/
 │   └── 🎨 window.svg
 ├── 🔴 📖 **README.md**
 ├── 📂 scripts/
-│   └── 📂 findaly/
+│   ├── 📂 eyb/
+│   │   ├── 🔷 backfill-eyb.ts
+│   │   ├── 🔷 debug-one.ts
+│   │   └── 🔷 enrich-eyb.ts
+│   ├── 📂 findaly/
 │   │   ├── 📂 enrich/
 │   │   │   ├── 🔷 discover.ts
 │   │   │   ├── 🔷 extract.ts
@@ -460,6 +471,7 @@ findaly/
 │   │   └── 📂 rating/
 │   │   │   ├── 🔷 checklists.ts
 │   │   │   └── 🔷 score.ts
+│   └── 🔷 fix-services-kind.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
 ├── 🟡 🔷 **tsconfig.json**

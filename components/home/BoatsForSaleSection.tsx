@@ -1,14 +1,7 @@
 // components/home/BoatsForSaleSection.tsx
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ArrowRight,
-  Sailboat,
-  Sparkles,
-  Heart,
-  Trash2,
-  MessageCircle,
-} from "lucide-react";
+import { ArrowRight, Sailboat, Heart, Trash2, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db";
 
 type Card = {
@@ -34,19 +27,31 @@ function formatMoney(priceCents: number | null, currency: string | null) {
   }
 }
 
+function safeTrim(s: string | null | undefined) {
+  return (s || "").trim();
+}
+
 function formatMeta(args: {
+  lengthM: number | null;
   lengthFt: number | null;
   year: number | null;
   location: string | null;
   country: string | null;
 }) {
-  const { lengthFt, year, location, country } = args;
+  const { lengthM, lengthFt, year, location, country } = args;
 
-  const a = lengthFt ? `${Math.round(lengthFt)} ft` : "— ft";
-  const b = year ? `${year}` : "—";
-  const c = location || country || "—";
+  const len =
+    typeof lengthM === "number" && lengthM > 0
+      ? `${lengthM.toFixed(1)}m`
+      : typeof lengthFt === "number" && lengthFt > 0
+        ? `${Math.round(lengthFt)}ft`
+        : null;
 
-  return `${a} • ${b} • ${c}`;
+  const yr = year && year > 0 ? String(year) : null;
+  const loc = safeTrim(location) || safeTrim(country) || null;
+
+  const parts = [len, yr, loc].filter(Boolean) as string[];
+  return parts.length ? parts.join(" • ") : "—";
 }
 
 function SectionHeader({
@@ -66,9 +71,7 @@ function SectionHeader({
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {title}
         </h2>
-        {subtitle ? (
-          <p className="mt-1.5 text-base text-slate-500">{subtitle}</p>
-        ) : null}
+        {subtitle ? <p className="mt-1.5 text-base text-slate-500">{subtitle}</p> : null}
       </div>
 
       <Link
@@ -82,7 +85,7 @@ function SectionHeader({
   );
 }
 
-/** Shared “portal-style” listing card (same look as your homepage cards) */
+/** Shared “portal-style” listing card */
 function ListingCard({ it }: { it: Card }) {
   const splitMeta = (meta: string) => {
     const parts = meta
@@ -122,12 +125,16 @@ function ListingCard({ it }: { it: Card }) {
           </div>
         )}
 
-        {it.badge ? (
-          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
-            <Sparkles className="h-3 w-3 text-[#ff6a00]" />
-            {it.badge}
-          </div>
-        ) : null}
+        {/* Premium featured tag (NOT a pill) */}
+        <div
+          className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 bg-[#0a211f] px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-[#fff86c] shadow-sm ring-1 ring-black/10"
+          style={{
+            clipPath: "polygon(0% 0%, 92% 0%, 100% 50%, 92% 100%, 0% 100%, 6% 50%)",
+          }}
+        >
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#fff86c]" />
+          FEATURED
+        </div>
       </div>
 
       {/* Body */}
@@ -148,17 +155,17 @@ function ListingCard({ it }: { it: Card }) {
         </div>
 
         <div className="mt-1.5 text-sm text-slate-700">
-          {location ? location : <span className="text-slate-500">Location</span>}
+          {location ? location : <span className="text-slate-500">—</span>}
         </div>
 
-        <div className="mt-2 text-sm text-slate-500">{specs}</div>
+        <div className="mt-2 text-sm text-slate-500">{specs && specs !== "—" ? specs : "—"}</div>
 
         <div className="mt-3 line-clamp-1 text-[15px] font-medium text-slate-900">
           {it.title}
         </div>
       </div>
 
-      {/* Footer bar */}
+      {/* Footer */}
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
@@ -178,6 +185,7 @@ function ListingCard({ it }: { it: Card }) {
 }
 
 function CardRail({ items }: { items: Card[] }) {
+  if (!items.length) return null;
   return (
     <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
       {items.map((it) => (
@@ -190,26 +198,32 @@ function CardRail({ items }: { items: Card[] }) {
 }
 
 export default async function BoatsForSaleSection() {
-  // ✅ Boats only (no services/parts), sale only, live only
+  /**
+   * “Featured” selection logic (no DB flag needed):
+   * - LIVE + VESSEL + SALE only
+   * - must look like a real boat (signals)
+   * - oldest first so it doesn’t duplicate “Recently added”
+   * - only 3
+   */
   const listings = await prisma.listing.findMany({
     where: {
       status: "LIVE",
       kind: "VESSEL",
       intent: "SALE",
+      OR: [
+        { lengthM: { gt: 0 } },
+        { lengthFt: { gt: 0 } },
+        { year: { gt: 0 } },
+        { brand: { not: null } },
+        { model: { not: null } },
+        { boatCategory: { not: null } },
+      ],
     },
-    orderBy: { createdAt: "desc" },
-    take: 6,
+    orderBy: { createdAt: "asc" }, // ✅ avoids duplicating "Recently added"
+    take: 3,
     include: {
-      profile: {
-        select: {
-          name: true,
-          isVerified: true,
-        },
-      },
-      media: {
-        orderBy: { sort: "asc" },
-        take: 1,
-      },
+      profile: { select: { name: true } },
+      media: { orderBy: { sort: "asc" }, take: 1 },
     },
   });
 
@@ -221,13 +235,13 @@ export default async function BoatsForSaleSection() {
       title: l.title || "Untitled listing",
       href: `/buy/${l.slug}`,
       meta: formatMeta({
-        lengthFt: l.lengthFt ?? null,
-        year: l.year ?? null,
-        location: l.location ?? null,
-        country: l.country ?? null,
+        lengthM: (l as any).lengthM ?? null,
+        lengthFt: (l as any).lengthFt ?? null,
+        year: (l as any).year ?? null,
+        location: (l as any).location ?? null,
+        country: (l as any).country ?? null,
       }),
-      price: formatMoney(l.priceCents ?? null, l.currency ?? null),
-      badge: l.profile?.isVerified ? "Verified" : undefined,
+      price: formatMoney((l as any).priceCents ?? null, (l as any).currency ?? null),
       image,
       sellerName: l.profile?.name ?? undefined,
     };
@@ -237,9 +251,10 @@ export default async function BoatsForSaleSection() {
     <section className="w-full">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <SectionHeader
-          title="Boats for sale"
-          subtitle="Fresh listings from brokers and private sellers"
+          title="Featured boats for sale"
+          subtitle="Hand-picked listings worth a closer look"
           href="/buy"
+          cta="View all boats"
         />
 
         <CardRail items={items} />
