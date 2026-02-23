@@ -1,10 +1,13 @@
 // app/buy/[slug]/page.tsx
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
-import ListingPageClient from "./ListingPageClient";
 import { absoluteUrl, getSiteUrl } from "@/lib/site";
-import type { Prisma } from "@prisma/client";
+
+import ListingPageClient from "./ListingPageClient";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -19,6 +22,118 @@ function jsonLd(obj: JsonLdObject) {
       dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
     />
   );
+}
+
+/**
+ * Some of your media URLs are already absolute (WP URLs),
+ * and some assets may be relative. This keeps things safe.
+ */
+function toAbs(urlOrPath: string) {
+  if (!urlOrPath) return absoluteUrl("/hero-buy.jpg");
+  if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) return urlOrPath;
+  return absoluteUrl(urlOrPath.startsWith("/") ? urlOrPath : `/${urlOrPath}`);
+}
+
+function cleanText(s: string) {
+  return (s || "")
+    .replace(/\s+/g, " ")
+    .replace(/\u0000/g, "")
+    .trim();
+}
+
+function truncate(s: string, n: number) {
+  const t = cleanText(s);
+  if (t.length <= n) return t;
+  return `${t.slice(0, n - 1).trim()}…`;
+}
+
+function formatPrice(price: number, cur: string) {
+  if (!price) return "";
+  const sym = cur === "GBP" ? "£" : cur === "USD" ? "$" : "€";
+  return `${sym}${Math.round(price).toLocaleString("en")}`;
+}
+
+/**
+ * ✅ This is the missing piece:
+ * dynamic, per-listing metadata + canonical + OG/Twitter.
+ */
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  const listing = await prisma.listing.findUnique({
+    where: { slug },
+    select: {
+      slug: true,
+      title: true,
+      year: true,
+      description: true,
+      priceCents: true,
+      priceType: true,
+      currency: true,
+      location: true,
+      country: true,
+      brand: true,
+      model: true,
+      media: {
+        orderBy: { sort: "asc" },
+        take: 1,
+        select: { url: true },
+      },
+    },
+  });
+
+  if (!listing) {
+    // Let Next render the 404 page with whatever default metadata exists.
+    return {};
+  }
+
+  const base = getSiteUrl();
+  const canonical = `${base}/buy/${listing.slug}`;
+
+  const yearPart = listing.year ? ` (${listing.year})` : "";
+  const loc = cleanText(listing.location || listing.country || "");
+  const locPart = loc ? ` in ${loc}` : "";
+
+  // Prefer title field, but if it’s weak and brand/model exist, build a cleaner name.
+  const name =
+    cleanText(listing.title) ||
+    cleanText([listing.brand, listing.model].filter(Boolean).join(" ")) ||
+    "Boat";
+
+  const title = `${name}${yearPart} for Sale${locPart} | Findaly`;
+
+  const price =
+    listing.priceCents && listing.priceType !== "POA" ? listing.priceCents / 100 : 0;
+
+  const descBase =
+    listing.description && cleanText(listing.description).length > 0
+      ? cleanText(listing.description)
+      : `${name}${yearPart} for sale on Findaly.`;
+
+  const priceHint = price ? ` Price: ${formatPrice(price, listing.currency || "EUR")}.` : "";
+  const description = truncate(`${descBase}${priceHint}`, 160);
+
+  const ogImage = toAbs(listing.media?.[0]?.url || "/hero-buy.jpg");
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "website",
+      url: canonical,
+      title,
+      description,
+      siteName: "Findaly",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function BoatListingPage({ params }: PageProps) {
@@ -136,14 +251,15 @@ export default async function BoatListingPage({ params }: PageProps) {
     };
   });
 
-  const features =
-    Array.isArray(listing.features) ? listing.features.filter((x): x is string => typeof x === "string") : [];
-  const electronics =
-    Array.isArray(listing.electronics) ? listing.electronics.filter((x): x is string => typeof x === "string") : [];
-  const safetyEquipment =
-    Array.isArray(listing.safetyEquipment)
-      ? listing.safetyEquipment.filter((x): x is string => typeof x === "string")
-      : [];
+  const features = Array.isArray(listing.features)
+    ? listing.features.filter((x): x is string => typeof x === "string")
+    : [];
+  const electronics = Array.isArray(listing.electronics)
+    ? listing.electronics.filter((x): x is string => typeof x === "string")
+    : [];
+  const safetyEquipment = Array.isArray(listing.safetyEquipment)
+    ? listing.safetyEquipment.filter((x): x is string => typeof x === "string")
+    : [];
 
   const transformedListing = {
     id: listing.id,
@@ -221,8 +337,8 @@ export default async function BoatListingPage({ params }: PageProps) {
   const base = getSiteUrl();
   const url = `${base}/buy/${transformedListing.slug}`;
   const primaryImage = transformedListing.images?.[0]
-    ? absoluteUrl(transformedListing.images[0])
-    : absoluteUrl("/hero-buy.jpg");
+    ? toAbs(transformedListing.images[0])
+    : toAbs("/hero-buy.jpg");
 
   const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
@@ -254,12 +370,8 @@ export default async function BoatListingPage({ params }: PageProps) {
     name: transformedListing.title,
     url,
     image: [primaryImage],
-    description: transformedListing.description
-      ? transformedListing.description.slice(0, 500)
-      : undefined,
-    brand: transformedListing.brand
-      ? { "@type": "Brand", name: transformedListing.brand }
-      : undefined,
+    description: transformedListing.description ? transformedListing.description.slice(0, 500) : undefined,
+    brand: transformedListing.brand ? { "@type": "Brand", name: transformedListing.brand } : undefined,
     offers: offer,
     seller: transformedListing.seller?.name
       ? {
@@ -276,11 +388,7 @@ export default async function BoatListingPage({ params }: PageProps) {
       {jsonLd(breadcrumb)}
       {jsonLd(product)}
 
-      <ListingPageClient
-        listing={transformedListing}
-        isAdmin={isAdmin}
-        similar={transformedSimilar}
-      />
+      <ListingPageClient listing={transformedListing} isAdmin={isAdmin} similar={transformedSimilar} />
     </>
   );
 }
