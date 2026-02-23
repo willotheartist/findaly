@@ -1,5 +1,4 @@
-// app/page.tsx
-
+//·app/page.tsx
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/db";
@@ -11,7 +10,6 @@ import {
   Sparkles,
   ChevronRight,
   Heart,
-  Trash2,
   MessageCircle,
 } from "lucide-react";
 
@@ -20,11 +18,13 @@ import ThingsToDo from "@/components/home/ThingsToDo";
 import BoatsForSaleSection from "@/components/home/BoatsForSaleSection";
 import HomeSplitCtas from "@/components/home/HomeSplitCtas";
 import GuidesRowSection from "@/components/home/GuidesRowSection";
+import SaveListingButtonClient from "@/components/listing/SaveListingButtonClient";
 
 type Tile = { title: string; href: string; subtitle?: string; emoji?: string };
 type DestinationTile = { title: string; href: string; subtitle?: string; image: string };
 
 type Card = {
+  id: string;
   title: string;
   href: string;
   meta: string;
@@ -35,14 +35,54 @@ type Card = {
 };
 
 const DESTINATIONS: DestinationTile[] = [
-  { title: "French Riviera", subtitle: "Cannes • Antibes • Monaco", href: "/destinations/french-riviera", image: "/destinations/FrenchRiviera.png" },
-  { title: "Balearics", subtitle: "Ibiza • Mallorca", href: "/destinations/balearics", image: "/destinations/Balearics.png" },
-  { title: "Amalfi Coast", subtitle: "Capri • Positano", href: "/destinations/amalfi-coast", image: "/destinations/Amalfi Coast.png" },
-  { title: "Greece", subtitle: "Cyclades • Ionian", href: "/destinations/greece", image: "/destinations/Greece.png" },
-  { title: "Croatia", subtitle: "Split • Hvar", href: "/destinations/croatia", image: "/destinations/Croatia.png" },
-  { title: "Caribbean", subtitle: "BVI • St Barths", href: "/destinations/caribbean", image: "/destinations/Caribbean.png" },
-  { title: "Dubai", subtitle: "Marina • Palm", href: "/destinations/dubai", image: "/destinations/Dubai.png" },
-  { title: "Turkey", subtitle: "Bodrum • Göcek", href: "/destinations/turkey", image: "/destinations/Turkey.png" },
+  {
+    title: "French Riviera",
+    subtitle: "Cannes • Antibes • Monaco",
+    href: "/destinations/french-riviera",
+    image: "/destinations/FrenchRiviera.png",
+  },
+  {
+    title: "Balearics",
+    subtitle: "Ibiza • Mallorca",
+    href: "/destinations/balearics",
+    image: "/destinations/Balearics.png",
+  },
+  {
+    title: "Amalfi Coast",
+    subtitle: "Capri • Positano",
+    href: "/destinations/amalfi-coast",
+    image: "/destinations/Amalfi Coast.png",
+  },
+  {
+    title: "Greece",
+    subtitle: "Cyclades • Ionian",
+    href: "/destinations/greece",
+    image: "/destinations/Greece.png",
+  },
+  {
+    title: "Croatia",
+    subtitle: "Split • Hvar",
+    href: "/destinations/croatia",
+    image: "/destinations/Croatia.png",
+  },
+  {
+    title: "Caribbean",
+    subtitle: "BVI • St Barths",
+    href: "/destinations/caribbean",
+    image: "/destinations/Caribbean.png",
+  },
+  {
+    title: "Dubai",
+    subtitle: "Marina • Palm",
+    href: "/destinations/dubai",
+    image: "/destinations/Dubai.png",
+  },
+  {
+    title: "Turkey",
+    subtitle: "Bodrum • Göcek",
+    href: "/destinations/turkey",
+    image: "/destinations/Turkey.png",
+  },
 ];
 
 function SectionHeader({
@@ -62,7 +102,9 @@ function SectionHeader({
         <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {title}
         </h2>
-        {subtitle ? <p className="mt-1.5 text-base text-slate-500">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="mt-1.5 text-base text-slate-500">{subtitle}</p>
+        ) : null}
       </div>
       <Link
         href={href}
@@ -78,8 +120,13 @@ function SectionHeader({
 /** Shared “portal-style” listing card */
 function ListingCard({ it }: { it: Card }) {
   const splitMeta = (meta: string) => {
-    const parts = meta.split("•").map((s) => s.trim()).filter(Boolean);
+    const parts = meta
+      .split("•")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     if (parts.length <= 1) return { specs: meta, location: "" };
+
     return {
       specs: parts.slice(0, -1).join(" • "),
       location: parts[parts.length - 1],
@@ -127,13 +174,9 @@ function ListingCard({ it }: { it: Card }) {
             {it.price ?? "POA"}
           </div>
 
+          {/* ✅ Working save button (no trash) */}
           <div className="flex items-center gap-2">
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
-              <Trash2 className="h-4 w-4 text-slate-500" />
-            </div>
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
-              <Heart className="h-4 w-4 text-slate-600" />
-            </div>
+            <SaveListingButtonClient listingId={it.id} />
           </div>
         </div>
 
@@ -210,19 +253,28 @@ function metaLine(it: {
   return parts.length ? parts.join(" • ") : "—";
 }
 
-function toCard(it: {
-  slug: string;
-  title: string;
-  currency: string;
-  priceCents: number | null;
-  lengthM: number | null;
-  year: number | null;
-  location: string | null;
-  country: string | null;
-  media: { url: string }[];
-  profile: { name: string };
-}): Card {
+const baseSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  currency: true,
+  priceCents: true,
+  lengthM: true,
+  year: true,
+  location: true,
+  country: true,
+  brand: true,
+  model: true,
+  boatCategory: true,
+  profile: { select: { name: true } },
+  media: { take: 1, orderBy: { sort: "asc" as const }, select: { url: true } },
+} satisfies Prisma.ListingSelect;
+
+type ListingRow = Prisma.ListingGetPayload<{ select: typeof baseSelect }>;
+
+function toCard(it: ListingRow): Card {
   return {
+    id: it.id,
     title: it.title,
     href: `/buy/${it.slug}`,
     meta: metaLine(it),
@@ -236,22 +288,6 @@ export default async function Home() {
   const charterCount = await prisma.listing.count({
     where: { status: "LIVE", kind: "VESSEL", intent: "CHARTER" },
   });
-
-  const baseSelect = {
-    slug: true,
-    title: true,
-    currency: true,
-    priceCents: true,
-    lengthM: true,
-    year: true,
-    location: true,
-    country: true,
-    brand: true,
-    model: true,
-    boatCategory: true,
-    profile: { select: { name: true } },
-    media: { take: 1, orderBy: { sort: "asc" as const }, select: { url: true } },
-  };
 
   const boatSignals: Prisma.ListingWhereInput = {
     OR: [
@@ -356,7 +392,9 @@ export default async function Home() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-slate-900">{t.title}</div>
-                  {t.subtitle ? <div className="truncate text-sm text-slate-500">{t.subtitle}</div> : null}
+                  {t.subtitle ? (
+                    <div className="truncate text-sm text-slate-500">{t.subtitle}</div>
+                  ) : null}
                 </div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-slate-500" />
               </Link>
@@ -368,7 +406,6 @@ export default async function Home() {
       {/* Featured boats */}
       <BoatsForSaleSection />
 
-
       {/* Recently added boats */}
       {recent.length > 0 ? (
         <section className="w-full">
@@ -379,7 +416,7 @@ export default async function Home() {
               href="/buy"
               cta="View all boats"
             />
-            <CardRail items={recent.map((x) => ({ ...toCard(x as any), badge: "New" }))} />
+            <CardRail items={recent.map((x) => ({ ...toCard(x), badge: "New" }))} />
           </div>
         </section>
       ) : null}
@@ -393,7 +430,7 @@ export default async function Home() {
               subtitle="Popular family layouts, long-range comfort"
               href="/buy/catamarans"
             />
-            <CardRail items={cats.map((x) => toCard(x as any))} />
+            <CardRail items={cats.map((x) => toCard(x))} />
           </div>
         </section>
       ) : null}
@@ -407,12 +444,12 @@ export default async function Home() {
               subtitle="Motor yachts, flybridges, and larger cruisers"
               href="/buy/motor-yachts"
             />
-            <CardRail items={yachts.map((x) => toCard(x as any))} />
+            <CardRail items={yachts.map((x) => toCard(x))} />
           </div>
         </section>
       ) : null}
 
-      {/* Boats under €100k (5 across) */}
+      {/* Boats under €100k */}
       {under100k.length > 0 ? (
         <section className="w-full bg-linear-to-b from-white to-slate-50">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
@@ -422,7 +459,7 @@ export default async function Home() {
               href="/buy"
               cta="Browse deals"
             />
-            <CardGrid5 items={under100k.map((x) => toCard(x as any))} />
+            <CardGrid5 items={under100k.map((x) => toCard(x))} />
           </div>
         </section>
       ) : null}
@@ -469,7 +506,9 @@ export default async function Home() {
                         <div className="truncate text-[15px] font-semibold tracking-tight text-slate-900">
                           {d.title}
                         </div>
-                        {d.subtitle ? <div className="mt-1 truncate text-sm text-slate-500">{d.subtitle}</div> : null}
+                        {d.subtitle ? (
+                          <div className="mt-1 truncate text-sm text-slate-500">{d.subtitle}</div>
+                        ) : null}
                       </div>
                       <div className="shrink-0 pt-0.5 text-xs font-medium text-slate-600 transition-colors group-hover:text-slate-900">
                         Explore
@@ -485,7 +524,6 @@ export default async function Home() {
 
       <ThingsToDo />
 
-      {/* Split CTAs (no dummy charter) */}
       <HomeSplitCtas
         items={
           charterCount > 0
@@ -524,8 +562,7 @@ export default async function Home() {
         }
       />
 
-
-      {/* ✅ NEW: Guides row */}
+      {/* Guides row */}
       <GuidesRowSection />
 
       {/* Bottom CTA */}

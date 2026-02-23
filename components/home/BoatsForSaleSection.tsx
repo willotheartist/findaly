@@ -1,10 +1,12 @@
-// components/home/BoatsForSaleSection.tsx
+//·components/home/BoatsForSaleSection.tsx
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sailboat, Heart, Trash2, MessageCircle } from "lucide-react";
+import { ArrowRight, Sailboat, Sparkles, MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db";
+import SaveListingButtonClient from "@/components/listing/SaveListingButtonClient";
 
 type Card = {
+  id: string;
   title: string;
   href: string;
   meta: string;
@@ -85,7 +87,6 @@ function SectionHeader({
   );
 }
 
-/** Shared “portal-style” listing card */
 function ListingCard({ it }: { it: Card }) {
   const splitMeta = (meta: string) => {
     const parts = meta
@@ -125,16 +126,12 @@ function ListingCard({ it }: { it: Card }) {
           </div>
         )}
 
-        {/* Premium featured tag (NOT a pill) */}
-        <div
-          className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 bg-[#0a211f] px-2.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-[#fff86c] shadow-sm ring-1 ring-black/10"
-          style={{
-            clipPath: "polygon(0% 0%, 92% 0%, 100% 50%, 92% 100%, 0% 100%, 6% 50%)",
-          }}
-        >
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#fff86c]" />
-          FEATURED
-        </div>
+        {it.badge ? (
+          <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
+            <Sparkles className="h-3 w-3 text-[#ff6a00]" />
+            {it.badge}
+          </div>
+        ) : null}
       </div>
 
       {/* Body */}
@@ -145,12 +142,7 @@ function ListingCard({ it }: { it: Card }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
-              <Trash2 className="h-4 w-4 text-slate-500" />
-            </div>
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
-              <Heart className="h-4 w-4 text-slate-600" />
-            </div>
+            <SaveListingButtonClient listingId={it.id} />
           </div>
         </div>
 
@@ -171,9 +163,7 @@ function ListingCard({ it }: { it: Card }) {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-[10px] font-semibold text-white">
             {it.sellerName ? it.sellerName.trim().slice(0, 1).toUpperCase() : "F"}
           </div>
-          <div className="truncate text-sm text-slate-500">
-            {it.sellerName || "Findaly"}
-          </div>
+          <div className="truncate text-sm text-slate-500">{it.sellerName || "Findaly"}</div>
         </div>
 
         <div className="inline-flex h-9 w-11 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200/80 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition group-hover:ring-slate-300">
@@ -198,31 +188,48 @@ function CardRail({ items }: { items: Card[] }) {
 }
 
 export default async function BoatsForSaleSection() {
-  /**
-   * “Featured” selection logic (no DB flag needed):
-   * - LIVE + VESSEL + SALE only
-   * - must look like a real boat (signals)
-   * - oldest first so it doesn’t duplicate “Recently added”
-   * - only 3
-   */
+  const TAKE = 3;
+
   const listings = await prisma.listing.findMany({
     where: {
       status: "LIVE",
       kind: "VESSEL",
       intent: "SALE",
-      OR: [
-        { lengthM: { gt: 0 } },
-        { lengthFt: { gt: 0 } },
-        { year: { gt: 0 } },
-        { brand: { not: null } },
-        { model: { not: null } },
-        { boatCategory: { not: null } },
+
+      // ✅ filter out obvious dummy/test titles
+      NOT: [
+        { title: { contains: "test", mode: "insensitive" } },
+        { title: { contains: "dummy", mode: "insensitive" } },
+        { title: { contains: "sample", mode: "insensitive" } },
+        { title: { contains: "lorem", mode: "insensitive" } },
+      ],
+
+      // ✅ ensure there is at least 1 media item (so featured looks real)
+      media: { some: {} },
+
+      // ✅ basic “real listing signals”
+      AND: [
+        {
+          OR: [
+            { priceCents: { gt: 0 } },
+            { year: { gt: 0 } },
+            { lengthM: { gt: 0 } },
+            { lengthFt: { gt: 0 } },
+            { brand: { not: null } },
+            { model: { not: null } },
+            { boatCategory: { not: null } },
+          ],
+        },
       ],
     },
-    orderBy: { createdAt: "asc" }, // ✅ avoids duplicating "Recently added"
-    take: 3,
+
+    // ✅ newest first (avoid the earliest dummy content)
+    orderBy: [{ createdAt: "desc" }],
+
+    take: TAKE,
+
     include: {
-      profile: { select: { name: true } },
+      profile: { select: { name: true, isVerified: true } },
       media: { orderBy: { sort: "asc" }, take: 1 },
     },
   });
@@ -232,16 +239,18 @@ export default async function BoatsForSaleSection() {
     const image = media0?.url ?? undefined;
 
     return {
+      id: l.id,
       title: l.title || "Untitled listing",
       href: `/buy/${l.slug}`,
       meta: formatMeta({
-        lengthM: (l as any).lengthM ?? null,
-        lengthFt: (l as any).lengthFt ?? null,
-        year: (l as any).year ?? null,
-        location: (l as any).location ?? null,
-        country: (l as any).country ?? null,
+        lengthM: l.lengthM ?? null,
+        lengthFt: l.lengthFt ?? null,
+        year: l.year ?? null,
+        location: l.location ?? null,
+        country: l.country ?? null,
       }),
-      price: formatMoney((l as any).priceCents ?? null, (l as any).currency ?? null),
+      price: formatMoney(l.priceCents ?? null, l.currency ?? null),
+      badge: l.profile?.isVerified ? "Verified" : undefined,
       image,
       sellerName: l.profile?.name ?? undefined,
     };

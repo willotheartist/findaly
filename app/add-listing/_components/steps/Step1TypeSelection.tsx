@@ -1,5 +1,5 @@
-// app/add-listing/_components/steps/Step1TypeSelection.tsx
-`use client`;
+//·app/add-listing/_components/steps/Step1TypeSelection.tsx
+"use client";
 
 import { Check } from "lucide-react";
 import { LISTING_TYPES } from "../../_data/options";
@@ -32,6 +32,7 @@ export default function Step1TypeSelection({
           return (
             <button
               key={type.id}
+              type="button"
               onClick={() => onSelect(type.id)}
               className={`group relative flex flex-col items-start rounded-2xl border p-6 text-left transition-all ${
                 isSelected

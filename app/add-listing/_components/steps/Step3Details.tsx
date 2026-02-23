@@ -1,4 +1,4 @@
-// app/add-listing/_components/steps/Step3Details.tsx
+//·app/add-listing/_components/steps/Step3Details.tsx
 "use client";
 
 import * as React from "react";
@@ -14,16 +14,14 @@ import {
   HULL_MATERIALS,
   HULL_TYPES,
 } from "../../_data/options";
-import type { FormData, ListingType, BoatCategory, CharterType } from "../../_types/listing";
+import type { FormData, ListingType } from "../../_types/listing";
 
 /* ─── Styled radio ─── */
 function RadioOption({
-  name,
   label,
   checked,
   onChange,
 }: {
-  name: string;
   label: string;
   checked: boolean;
   onChange: () => void;
@@ -88,7 +86,16 @@ export default function Step3Details({
         <FormSection title="Service Areas">
           <CheckboxGroup
             label="Where do you operate?"
-            options={["French Riviera", "Balearics", "Italy", "Croatia", "Greece", "UK", "Caribbean", "Worldwide"]}
+            options={[
+              "French Riviera",
+              "Balearics",
+              "Italy",
+              "Croatia",
+              "Greece",
+              "UK",
+              "Caribbean",
+              "Worldwide",
+            ]}
             selected={formData.serviceAreas}
             onChange={(v) => updateForm({ serviceAreas: v })}
             columns={2}
@@ -134,13 +141,11 @@ export default function Step3Details({
           {listingType === "sale" && (
             <div className="flex gap-5">
               <RadioOption
-                name="condition"
                 label="New"
                 checked={formData.condition === "new"}
                 onChange={() => updateForm({ condition: "new" })}
               />
               <RadioOption
-                name="condition"
                 label="Used"
                 checked={formData.condition === "used"}
                 onChange={() => updateForm({ condition: "used" })}

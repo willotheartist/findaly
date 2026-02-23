@@ -1,7 +1,7 @@
+//·components/WaazaFinancing.tsx
 /**
  * WaazaFinancing — Drop-in React component for Findaly
  */
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -17,12 +17,23 @@ interface WaazaFinancingProps {
   className?: string;
 }
 
+type WaazaResizeMessage = {
+  type: "waaza:resize";
+  height: number;
+};
+
 function safeOrigin(input: string) {
   try {
     return new URL(input).origin;
   } catch {
     return "https://www.waaza.co";
   }
+}
+
+function isWaazaResizeMessage(data: unknown): data is WaazaResizeMessage {
+  if (!data || typeof data !== "object") return false;
+  const rec = data as Record<string, unknown>;
+  return rec.type === "waaza:resize" && typeof rec.height === "number";
 }
 
 export default function WaazaFinancing({
@@ -45,7 +56,7 @@ export default function WaazaFinancing({
       : null;
 
   const validUsage = ["private", "charter", "commercial"].includes(usage ?? "")
-    ? usage
+    ? (usage as "private" | "charter" | "commercial")
     : "private";
 
   const validCurrency = ["EUR", "USD", "GBP"].includes((currency ?? "").toUpperCase())
@@ -60,7 +71,7 @@ export default function WaazaFinancing({
     const qs = new URLSearchParams();
     qs.set("price", String(validPrice));
     qs.set("year", String(validYear));
-    qs.set("usage", String(validUsage ?? "private"));
+    qs.set("usage", String(validUsage));
     qs.set("currency", String(validCurrency));
     if (country) qs.set("country", country);
     return `${waazaOrigin}/widget/findaly?${qs.toString()}`;
@@ -69,25 +80,18 @@ export default function WaazaFinancing({
   useEffect(() => {
     if (!canRender) return;
 
-    function handleMessage(e: MessageEvent) {
+    function handleMessage(e: MessageEvent<unknown>) {
       // Only accept messages from the Waaza origin (strict)
       if (e.origin !== waazaOrigin) return;
 
-      const data = e.data as unknown;
+      if (!isWaazaResizeMessage(e.data)) return;
 
-      if (
-        data &&
-        typeof data === "object" &&
-        (data as any).type === "waaza:resize" &&
-        typeof (data as any).height === "number"
-      ) {
-        const h = Math.max(260, Math.min(1200, (data as any).height));
-        setIframeHeight(h);
-      }
+      const h = Math.max(260, Math.min(1200, e.data.height));
+      setIframeHeight(h);
     }
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    window.addEventListener("message", handleMessage as EventListener);
+    return () => window.removeEventListener("message", handleMessage as EventListener);
   }, [canRender, waazaOrigin]);
 
   useEffect(() => {
