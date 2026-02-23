@@ -73,6 +73,44 @@ function IconLink({
   );
 }
 
+function IconLinkWithBadge({
+  href,
+  label,
+  badge,
+  children,
+}: {
+  href: string;
+  label: string;
+  badge?: number;
+  children: React.ReactNode;
+}) {
+  const show = typeof badge === "number" && badge > 0;
+
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className="relative flex flex-col items-center justify-center gap-1 rounded-lg px-2.5 py-1 text-[#555] no-underline transition-colors hover:bg-[#f5f5f4] hover:text-[#0a211f]"
+    >
+      {children}
+
+      {show ? (
+        <span
+          className="absolute right-1 top-1 inline-flex min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white"
+          style={{
+            backgroundColor: "#ff3b30",
+            height: 18,
+            lineHeight: "18px",
+            border: "2px solid white",
+          }}
+        >
+          {badge! > 99 ? "99+" : badge}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
 async function getPrimaryProfileForUser(userId: string) {
   const p = await prisma.profile.findFirst({
     where: { userId },
@@ -119,12 +157,8 @@ function MenuItem({
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-[#1a1a1a]">
-          {title}
-        </div>
-        {subtitle ? (
-          <div className="truncate text-xs text-[#999]">{subtitle}</div>
-        ) : null}
+        <div className="truncate text-sm font-medium text-[#1a1a1a]">{title}</div>
+        {subtitle ? <div className="truncate text-xs text-[#999]">{subtitle}</div> : null}
       </div>
       <ExternalLink className="h-4 w-4 text-[#ccc] transition-colors group-hover:text-[#999]" />
     </Link>
@@ -145,17 +179,25 @@ export default async function Header() {
   const displayAccount = accountLabel(user?.accountType ?? null);
   const avatarUrl = profile?.avatarUrl ?? null;
 
+  // ✅ NEW: total unread messages (requires Message.readAt)
+  const unreadMessagesCount =
+    isAuthed && user?.id
+      ? await prisma.message.count({
+          where: {
+            receiverId: user.id,
+            readAt: null,
+          },
+        })
+      : 0;
+
   return (
     <header
       data-site-header="true"
       className="sticky top-0 z-50 w-full border-b border-[#e5e5e5] bg-white"
     >
-      {/* Accent line — yellow instead of old yellow-green */}
       <div className="h-px w-full bg-[#fff86c]" />
 
-      {/* Row 1 */}
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-        {/* Logo */}
         <Link
           href="/"
           className="mr-1 inline-flex items-center gap-2 rounded-lg px-2 py-1 no-underline hover:bg-[#f5f5f4]"
@@ -166,7 +208,6 @@ export default async function Header() {
           </span>
         </Link>
 
-        {/* CTA */}
         <Link
           href="/add-listing"
           className="hidden items-center gap-2 rounded-full bg-[#0a211f] px-5 py-2 text-sm font-medium text-[#fff86c] no-underline transition-opacity hover:opacity-90 md:inline-flex"
@@ -175,7 +216,6 @@ export default async function Header() {
           List a yacht
         </Link>
 
-        {/* Search */}
         <div className="flex flex-1 items-center">
           <form action="/search" className="w-full">
             <div className="relative w-full">
@@ -195,7 +235,6 @@ export default async function Header() {
           </form>
         </div>
 
-        {/* Right icons (desktop) */}
         <div className="hidden items-center gap-1 md:flex">
           <IconLink href="/searches" label="My searches">
             <Search className="h-5 w-5" />
@@ -207,10 +246,11 @@ export default async function Header() {
             <span className="text-[11px] leading-none">Saved</span>
           </IconLink>
 
-          <IconLink href="/messages" label="Messages">
+          {/* ✅ badge on messages */}
+          <IconLinkWithBadge href="/messages" label="Messages" badge={unreadMessagesCount}>
             <MessageCircle className="h-5 w-5" />
             <span className="text-[11px] leading-none">Messages</span>
-          </IconLink>
+          </IconLinkWithBadge>
 
           <IconLink href="/alerts" label="Alerts">
             <Bell className="h-5 w-5" />
@@ -251,7 +291,6 @@ export default async function Header() {
               }
             >
               <div className="p-3">
-                {/* Top identity block */}
                 <div className="flex items-center gap-3 rounded-2xl border border-[#e5e5e5] bg-white p-3">
                   <div className="relative h-12 w-12 overflow-hidden rounded-full border border-[#e5e5e5] bg-[#0a211f]">
                     {avatarUrl ? (
@@ -279,7 +318,6 @@ export default async function Header() {
                   </div>
                 </div>
 
-                {/* Primary CTA row */}
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Link
                     href={myProfileHref}
@@ -299,7 +337,6 @@ export default async function Header() {
 
                 <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
-                {/* Menu items */}
                 <div className="grid gap-1">
                   <MenuItem
                     href="/my-listings"
@@ -335,7 +372,6 @@ export default async function Header() {
 
                 <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
-                {/* Secondary */}
                 <div className="grid gap-1">
                   <MenuItem
                     href="/settings"
@@ -353,11 +389,8 @@ export default async function Header() {
 
                 <div className="my-3 h-px w-full bg-[#e5e5e5]" />
 
-                {/* Logout */}
                 <div className="rounded-2xl border border-[#e5e5e5] bg-white p-1">
-                  <LogoutButtonClient
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#1a1a1a] transition-colors hover:bg-[#f5f5f4]"
-                  />
+                  <LogoutButtonClient className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#1a1a1a] transition-colors hover:bg-[#f5f5f4]" />
                   <div className="pointer-events-none -mt-[34px] ml-3 flex h-9 w-9 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555]">
                     <LogOut className="h-4 w-4" />
                   </div>
@@ -368,7 +401,6 @@ export default async function Header() {
         </div>
       </div>
 
-      {/* Row 2 */}
       <div className="hidden border-t border-[#f5f5f4] md:block">
         <div className="mx-auto flex max-w-7xl items-center gap-0.5 px-4 sm:px-6">
           {TOP_NAV.map((i, idx) => (

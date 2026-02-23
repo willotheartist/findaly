@@ -9,7 +9,6 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get all conversations where user has sent or received messages
   const conversations = await prisma.conversation.findMany({
     where: {
       messages: {
@@ -63,7 +62,7 @@ export async function GET() {
           messages: {
             where: {
               receiverId: user.id,
-              // TODO: add `readAt` field to Message model for proper unread tracking
+              readAt: null, // ✅ unread
             },
           },
         },
@@ -74,44 +73,43 @@ export async function GET() {
     },
   });
 
-  // Transform data for frontend
-  const result = conversations.map((convo) => {
-    const lastMessage = convo.messages[0];
-    if (!lastMessage) return null;
+  const result = conversations
+    .map((convo) => {
+      const lastMessage = convo.messages[0];
+      if (!lastMessage) return null;
 
-    // Determine the other party in the conversation
-    const otherUser =
-      lastMessage.senderId === user.id ? lastMessage.receiver : lastMessage.sender;
+      const otherUser =
+        lastMessage.senderId === user.id ? lastMessage.receiver : lastMessage.sender;
 
-    const otherProfile = otherUser.profiles[0];
+      const otherProfile = otherUser.profiles[0];
 
-    return {
-      id: convo.id,
-      otherUser: {
-        id: otherUser.id,
-        name: otherProfile?.name ?? otherUser.email.split("@")[0],
-        email: otherUser.email,
-        isVerified: otherProfile?.isVerified ?? false,
-      },
-      listing: convo.listing
-        ? {
-            id: convo.listing.id,
-            title: convo.listing.title,
-            slug: convo.listing.slug,
-            priceCents: convo.listing.priceCents,
-            currency: convo.listing.currency,
-          }
-        : null,
-      lastMessage: {
-        id: lastMessage.id,
-        body: lastMessage.body,
-        createdAt: lastMessage.createdAt,
-        isFromMe: lastMessage.senderId === user.id,
-      },
-      // TODO: proper unread count once readAt is added
-      unreadCount: 0,
-    };
-  }).filter(Boolean);
+      return {
+        id: convo.id,
+        otherUser: {
+          id: otherUser.id,
+          name: otherProfile?.name ?? otherUser.email.split("@")[0],
+          email: otherUser.email,
+          isVerified: otherProfile?.isVerified ?? false,
+        },
+        listing: convo.listing
+          ? {
+              id: convo.listing.id,
+              title: convo.listing.title,
+              slug: convo.listing.slug,
+              priceCents: convo.listing.priceCents,
+              currency: convo.listing.currency,
+            }
+          : null,
+        lastMessage: {
+          id: lastMessage.id,
+          body: lastMessage.body,
+          createdAt: lastMessage.createdAt,
+          isFromMe: lastMessage.senderId === user.id,
+        },
+        unreadCount: convo._count.messages ?? 0,
+      };
+    })
+    .filter(Boolean);
 
   return NextResponse.json(result);
 }

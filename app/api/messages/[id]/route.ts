@@ -14,7 +14,6 @@ export async function GET(
 
   const { id } = await params;
 
-  // Verify user is part of this conversation
   const conversation = await prisma.conversation.findUnique({
     where: { id },
     include: {
@@ -42,6 +41,7 @@ export async function GET(
           body: true,
           createdAt: true,
           senderId: true,
+          receiverId: true,
           sender: {
             select: {
               id: true,
@@ -61,33 +61,35 @@ export async function GET(
     return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
   }
 
-  // Check user is a participant
+  // Must be a participant: either sent or received at least one message in this convo
   const isParticipant = conversation.messages.some(
-    (m) => m.senderId === user.id || m.sender.id === user.id
+    (m) => m.senderId === user.id || m.receiverId === user.id
   );
 
-  // Also check if user received any messages in this convo
-  const receivedMessage = await prisma.message.findFirst({
-    where: {
-      conversationId: id,
-      receiverId: user.id,
-    },
-  });
-
-  if (!isParticipant && !receivedMessage) {
+  if (!isParticipant) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Get the other participant
+  // ✅ Mark unread messages as read for this user
+  await prisma.message.updateMany({
+    where: {
+      conversationId: id,
+      receiverId: user.id,
+      readAt: null,
+    },
+    data: {
+      readAt: new Date(),
+    },
+  });
+
+  // Determine the other participant
   const allParticipantIds = new Set<string>();
   conversation.messages.forEach((m) => {
     allParticipantIds.add(m.senderId);
+    allParticipantIds.add(m.receiverId);
   });
-  if (receivedMessage) {
-    allParticipantIds.add(receivedMessage.senderId);
-  }
 
-  const otherUserId = [...allParticipantIds].find((id) => id !== user.id);
+  const otherUserId = [...allParticipantIds].find((uid) => uid !== user.id);
 
   let otherUser = null;
   if (otherUserId) {
@@ -102,6 +104,7 @@ export async function GET(
         },
       },
     });
+
     if (other) {
       const profile = other.profiles[0];
       otherUser = {

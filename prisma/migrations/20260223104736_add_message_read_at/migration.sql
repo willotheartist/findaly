@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Message" ADD COLUMN     "readAt" TIMESTAMP(3);
+
+-- CreateIndex
+CREATE INDEX "Message_receiverId_readAt_idx" ON "Message"("receiverId", "readAt");
+
+-- CreateIndex
+CREATE INDEX "Message_conversationId_receiverId_readAt_idx" ON "Message"("conversationId", "receiverId", "readAt");

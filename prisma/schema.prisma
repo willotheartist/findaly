@@ -369,9 +369,16 @@ model Message {
 
   body String
 
+  // ✅ NEW: read receipts
+  readAt DateTime?
+
   @@index([conversationId, createdAt])
   @@index([senderId, createdAt])
   @@index([receiverId, createdAt])
+
+  // ✅ NEW: fast unread queries
+  @@index([receiverId, readAt])
+  @@index([conversationId, receiverId, readAt])
 }
 
 model SavedListing {
