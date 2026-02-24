@@ -1,11 +1,15 @@
-// app/buy/brand/[brand]/page.tsx
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
-import { brandFromParam, slugifyLoose, countrySlugFromValue } from "@/lib/seoParam";
+import {
+  brandFromParam,
+  slugifyLoose,
+  countrySlugFromValue,
+  modelSlugFromValue,
+} from "@/lib/seoParam";
 
 type PageProps = {
   params: Promise<{ brand: string }>;
@@ -21,6 +25,58 @@ function jsonLd(obj: JsonLdObject) {
       dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
     />
   );
+}
+
+/**
+ * Proper, durable brand normalization:
+ * - trims
+ * - lowercases
+ * - collapses whitespace
+ * - replaces & -> and
+ * - strips punctuation
+ * - strips accents/diacritics (Bénéteau -> beneteau)
+ */
+function normalizeBrandKey(input: string) {
+  const s = (input || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove diacritics
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return s;
+}
+
+function isGarbageBrand(input: string) {
+  const k = normalizeBrandKey(input);
+  if (!k) return true;
+  if (k.length < 2) return true;
+
+  // must contain at least one letter to be a "brand"
+  if (!/[a-z]/.test(k)) return true;
+
+  // blacklist common junk values
+  const bad = new Set([
+    "other",
+    "unknown",
+    "n a",
+    "na",
+    "n a a",
+    "none",
+    "misc",
+    "various",
+    "tbd",
+    "to be confirmed",
+    "undefined",
+    "null",
+  ]);
+  if (bad.has(k)) return true;
+
+  return false;
 }
 
 function buildSeoIntro(opts: {
@@ -43,7 +99,9 @@ function buildSeoIntro(opts: {
   );
 
   if (m.length) {
-    bits.push(`Popular models include ${m.map((x) => `${brandDisplay} ${x}`).join(", ")}.`);
+    bits.push(
+      `Popular models include ${m.map((x) => `${brandDisplay} ${x}`).join(", ")}.`
+    );
   }
 
   if (c.length) {
@@ -53,23 +111,12 @@ function buildSeoIntro(opts: {
       )} and beyond — with transparent details, photos, and direct enquiries.`
     );
   } else {
-    bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
+    bits.push(
+      `Compare specs, pricing, and location — then enquire directly with sellers and brokers.`
+    );
   }
 
   return bits.join(" ");
-}
-
-function buildBrandWhere(b: ReturnType<typeof brandFromParam>): Prisma.ListingWhereInput {
-  return {
-    status: "LIVE",
-    kind: "VESSEL",
-    intent: "SALE",
-    OR: [
-      { brand: { equals: b.spaced, mode: "insensitive" } },
-      { brand: { equals: b.raw, mode: "insensitive" } },
-      { brand: { equals: b.display, mode: "insensitive" } },
-    ],
-  };
 }
 
 function fmtPrice(cents: number | null | undefined, cur: string) {
@@ -107,11 +154,91 @@ function fmtNumber(n: number | null | undefined, suffix = "") {
   return `${rounded.toLocaleString()}${suffix}`;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+/**
+ * ✅ Proper fix: map normalized brand → list of actual DB brand strings.
+ * Then build Prisma OR equals for those exact raw values.
+ */
+async function resolveBrandVariantsForHub(b: ReturnType<typeof brandFromParam>) {
+  // Pull distinct brands + counts from DB
+  const rows = await prisma.listing.groupBy({
+    by: ["brand"],
+    where: {
+      status: "LIVE",
+      kind: "VESSEL",
+      intent: "SALE",
+      brand: { not: null },
+    },
+    _count: { brand: true },
+    orderBy: { _count: { brand: "desc" } },
+    take: 20000,
+  });
+
+  // Build bucket map
+  const buckets = new Map<string, string[]>();
+  for (const r of rows) {
+    const raw = (r.brand || "").trim();
+    if (!raw) continue;
+    if (isGarbageBrand(raw)) continue;
+
+    const key = normalizeBrandKey(raw);
+    if (!key) continue;
+
+    const existing = buckets.get(key) || [];
+    // keep unique raw variants
+    if (!existing.some((x) => x.toLowerCase() === raw.toLowerCase())) {
+      existing.push(raw);
+      buckets.set(key, existing);
+    }
+  }
+
+  const keysToTry = [
+    normalizeBrandKey(b.spaced),
+    normalizeBrandKey(b.raw),
+    normalizeBrandKey(b.display),
+  ].filter(Boolean);
+
+  // gather variants
+  const variants: string[] = [];
+  for (const k of keysToTry) {
+    const hit = buckets.get(k) || [];
+    for (const v of hit) variants.push(v);
+  }
+
+  // unique
+  const uniq = Array.from(new Set(variants.map((x) => x.trim()))).filter(Boolean);
+
+  // Fallback: if nothing found, keep original candidates (trimmed)
+  if (uniq.length === 0) {
+    const fallback = Array.from(
+      new Set([b.spaced, b.raw, b.display].map((x) => (x || "").trim()))
+    ).filter(Boolean);
+    return fallback;
+  }
+
+  return uniq;
+}
+
+function buildBrandWhereFromVariants(variants: string[]): Prisma.ListingWhereInput {
+  return {
+    status: "LIVE",
+    kind: "VESSEL",
+    intent: "SALE",
+    brand: { not: null },
+    OR: variants.map((v) => ({
+      brand: { equals: v, mode: "insensitive" },
+    })),
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { brand } = await params;
   const b = brandFromParam(brand);
 
-  const where = buildBrandWhere(b);
+  const variants = await resolveBrandVariantsForHub(b);
+  const where = buildBrandWhereFromVariants(variants);
+
   const total = await prisma.listing.count({ where });
 
   const title = total > 0 ? `${b.display} Boats for Sale` : `${b.display} Boats`;
@@ -122,7 +249,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           `Browse ${total.toLocaleString()} ${b.display} boats for sale worldwide. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
           160
         )
-      : truncate(`Explore ${b.display} boats and listings on Findaly. New inventory is added regularly.`, 160);
+      : truncate(
+          `Explore ${b.display} boats and listings on Findaly. New inventory is added regularly.`,
+          160
+        );
 
   const canonical = `/buy/brand/${slugifyLoose(b.spaced)}`;
 
@@ -130,7 +260,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots:
+      total > 0
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
     openGraph: {
       title: `${title} | Findaly`,
       description,
@@ -151,9 +284,17 @@ export default async function BrandHubPage({ params }: PageProps) {
   const { brand } = await params;
   const b = brandFromParam(brand);
 
-  const where = buildBrandWhere(b);
+  const variants = await resolveBrandVariantsForHub(b);
+  const where = buildBrandWhereFromVariants(variants);
 
-  const [total, listings, modelsGrouped, countriesGrouped, agg, distinctCountries] = await Promise.all([
+  const [
+    total,
+    listings,
+    modelsGrouped,
+    countriesGrouped,
+    agg,
+    distinctCountries,
+  ] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({
       where,
@@ -176,22 +317,26 @@ export default async function BrandHubPage({ params }: PageProps) {
       orderBy: [{ featured: "desc" }, { updatedAt: "desc" }],
       take: 36,
     }),
+
     prisma.listing.groupBy({
       by: ["model"],
       where: { ...where, model: { not: null } },
       _count: { model: true },
     }),
+
     prisma.listing.groupBy({
       by: ["country"],
       where: { ...where, country: { not: null } },
       _count: { country: true },
     }),
+
     prisma.listing.aggregate({
       where,
       _avg: { priceCents: true, lengthM: true, lengthFt: true },
       _min: { priceCents: true, lengthM: true, lengthFt: true },
       _max: { priceCents: true, lengthM: true, lengthFt: true },
     }),
+
     prisma.listing.findMany({
       where: { ...where, country: { not: null } },
       distinct: ["country"],
@@ -200,13 +345,18 @@ export default async function BrandHubPage({ params }: PageProps) {
   ]);
 
   const topModels = modelsGrouped
-    .filter((x): x is { model: string; _count: { model: number } } => Boolean(x.model))
+    .filter(
+      (x): x is { model: string; _count: { model: number } } => Boolean(x.model)
+    )
     .map((x) => ({ key: x.model, count: x._count.model ?? 0 }))
     .sort((a, b2) => b2.count - a.count)
     .slice(0, 12);
 
   const topCountries = countriesGrouped
-    .filter((x): x is { country: string; _count: { country: number } } => Boolean(x.country))
+    .filter(
+      (x): x is { country: string; _count: { country: number } } =>
+        Boolean(x.country)
+    )
     .map((x) => ({ key: x.country, count: x._count.country ?? 0 }))
     .sort((a, b2) => b2.count - a.count)
     .slice(0, 12);
@@ -222,8 +372,7 @@ export default async function BrandHubPage({ params }: PageProps) {
   });
 
   const base = getSiteUrl();
-  const safeBrandSlug = slugifyLoose(b.spaced);
-  const pageUrl = `${base}/buy/brand/${safeBrandSlug}`;
+  const pageUrl = `${base}/buy/brand/${slugifyLoose(b.spaced)}`;
 
   const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
@@ -231,7 +380,12 @@ export default async function BrandHubPage({ params }: PageProps) {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Findaly", item: `${base}/` },
       { "@type": "ListItem", position: 2, name: "Buy", item: `${base}/buy` },
-      { "@type": "ListItem", position: 3, name: `Brand: ${b.display}`, item: pageUrl },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `Brand: ${b.display}`,
+        item: pageUrl,
+      },
     ],
   };
 
@@ -252,97 +406,54 @@ export default async function BrandHubPage({ params }: PageProps) {
     },
   };
 
-  const faq: JsonLdObject = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `How much do ${b.display} boats cost?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Prices vary by model, year, size, and condition. Use the market overview on this page to see realistic averages and ranges from currently priced listings.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Which ${b.display} models are most popular?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Popularity depends on your use case, but the most frequently listed models typically combine strong resale demand with practical layouts and manageable running costs. See the Popular models section above.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Where are ${b.display} boats typically listed?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Listings cluster around major boating markets and cruising regions. Browse inventory by location using the Top countries links on this page.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What should I check before buying a ${b.display}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Focus on hull/deck condition, engines and servicing history, moisture ingress, and documentation. A pre-purchase survey is strongly recommended before committing.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I contact the seller or broker directly?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text:
-            "Yes — Findaly lets you enquire directly on each listing and connect with sellers and brokers.",
-        },
-      },
-    ],
-  };
-
+  const safeBrandSlug = slugifyLoose(b.spaced);
   const isBeneteau = safeBrandSlug === "beneteau";
 
-  // ✅ Matches your current GUIDES slugs exactly (no dead links)
-  const beneteauGuides: Array<{ title: string; desc: string; href: string }> = [
+  const beneteauGuides: Array<{
+    title: string;
+    desc: string;
+    href: string;
+  }> = [
     {
       title: "Buying a Beneteau",
-      desc: "How to pick the right model, year, and spec.",
+      desc: "The complete buyer guide — models, prices, common mistakes, and what to check.",
       href: "/guides/buying-a-beneteau",
     },
     {
-      title: "Beneteau Swift Trawler buying guide",
-      desc: "Pricing, model comparison, and what to inspect.",
-      href: "/guides/beneteau-swift-trawler-buying-guide",
-    },
-    {
-      title: "Beneteau price guide",
-      desc: "What affects value, pricing bands, and negotiation.",
+      title: "Beneteau Price Guide",
+      desc: "Realistic price ranges by size, condition, year, and region — plus what moves value.",
       href: "/guides/beneteau-price-guide",
     },
     {
-      title: "Beneteau Oceanis vs First",
-      desc: "Cruising vs performance — which fits your lifestyle.",
-      href: "/guides/beneteau-oceanis-vs-first",
+      title: "Beneteau vs Jeanneau",
+      desc: "Which brand fits your use case? Layouts, build, resale, maintenance, and buyer profiles.",
+      href: "/guides/beneteau-vs-jeanneau",
     },
     {
-      title: "Used Beneteau checklist",
-      desc: "Inspection checklist + survey priorities.",
-      href: "/guides/used-beneteau-checklist",
+      title: "Buying a Used Beneteau",
+      desc: "A checklist-style guide for viewings, surveys, red flags, and negotiation angles.",
+      href: "/guides/buying-a-used-beneteau",
     },
   ];
 
-  const countriesListed = distinctCountries.map((x) => x.country).filter((x): x is string => Boolean(x)).length;
+  const countriesListed = distinctCountries
+    .map((x) => x.country)
+    .filter((x): x is string => Boolean(x)).length;
 
-  const avgPriceCents = agg._avg.priceCents ? Math.round(agg._avg.priceCents) : null;
-  const minPriceCents = agg._min.priceCents ? Math.round(agg._min.priceCents) : null;
-  const maxPriceCents = agg._max.priceCents ? Math.round(agg._max.priceCents) : null;
+  const avgPriceCents = agg._avg.priceCents
+    ? Math.round(agg._avg.priceCents)
+    : null;
+  const minPriceCents = agg._min.priceCents
+    ? Math.round(agg._min.priceCents)
+    : null;
+  const maxPriceCents = agg._max.priceCents
+    ? Math.round(agg._max.priceCents)
+    : null;
 
-  const avgLengthM = typeof agg._avg.lengthM === "number" ? agg._avg.lengthM : null;
-  const avgLengthFt = typeof agg._avg.lengthFt === "number" ? agg._avg.lengthFt : null;
+  const avgLengthM =
+    typeof agg._avg.lengthM === "number" ? agg._avg.lengthM : null;
+  const avgLengthFt =
+    typeof agg._avg.lengthFt === "number" ? agg._avg.lengthFt : null;
 
   const marketAvgLengthText =
     avgLengthM && avgLengthM > 0
@@ -355,7 +466,6 @@ export default async function BrandHubPage({ params }: PageProps) {
     <main className="w-full bg-white">
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
-      {jsonLd(faq)}
 
       {/* Hero */}
       <section className="w-full border-b border-slate-100">
@@ -368,21 +478,28 @@ export default async function BrandHubPage({ params }: PageProps) {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 {b.display} boats for sale
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
-
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
+                {intro}
+              </p>
               <div className="mt-4 text-sm text-slate-500">
                 {total > 0 ? (
                   <>
                     Showing{" "}
-                    <span className="font-semibold text-slate-700">{Math.min(36, total)}</span>{" "}
+                    <span className="font-semibold text-slate-700">
+                      {Math.min(36, total)}
+                    </span>{" "}
                     of{" "}
-                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span>{" "}
+                    <span className="font-semibold text-slate-700">
+                      {total.toLocaleString()}
+                    </span>{" "}
                     listings.
                   </>
                 ) : (
                   <>
                     No live listings found for{" "}
-                    <span className="font-semibold text-slate-700">{b.display}</span>{" "}
+                    <span className="font-semibold text-slate-700">
+                      {b.display}
+                    </span>{" "}
                     right now.
                   </>
                 )}
@@ -392,7 +509,9 @@ export default async function BrandHubPage({ params }: PageProps) {
               {total > 0 ? (
                 <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-slate-900">Market overview</div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      Market overview
+                    </div>
                     <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
                       Live listings
                     </div>
@@ -406,7 +525,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                       <div className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                         {fmtMoneyEURFromCents(avgPriceCents)}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">Based on listings with prices</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Based on listings with prices
+                      </div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
@@ -415,10 +536,14 @@ export default async function BrandHubPage({ params }: PageProps) {
                       </div>
                       <div className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                         {minPriceCents && maxPriceCents
-                          ? `${fmtMoneyEURFromCents(minPriceCents)} – ${fmtMoneyEURFromCents(maxPriceCents)}`
+                          ? `${fmtMoneyEURFromCents(
+                              minPriceCents
+                            )} – ${fmtMoneyEURFromCents(maxPriceCents)}`
                           : "—"}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">Min–max of priced listings</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Min–max of priced listings
+                      </div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
@@ -428,7 +553,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                       <div className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                         {marketAvgLengthText}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">Uses metres when available</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Uses metres when available
+                      </div>
                     </div>
 
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4">
@@ -438,7 +565,9 @@ export default async function BrandHubPage({ params }: PageProps) {
                       <div className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
                         {fmtNumber(countriesListed)}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">Distinct listing countries</div>
+                      <div className="mt-1 text-xs text-slate-500">
+                        Distinct listing countries
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -449,9 +578,12 @@ export default async function BrandHubPage({ params }: PageProps) {
                 <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">Beneteau buying guides</div>
+                      <div className="text-sm font-semibold text-slate-900">
+                        Beneteau buying guides
+                      </div>
                       <div className="mt-1 text-sm text-slate-600">
-                        Research the brand, understand pricing, and learn what to check before you view a boat.
+                        Research the brand, understand pricing, and learn what to
+                        check before you view a boat.
                       </div>
                     </div>
                     <div className="hidden sm:block text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
@@ -470,9 +602,13 @@ export default async function BrandHubPage({ params }: PageProps) {
                           <div className="text-[15px] font-semibold tracking-tight text-slate-900">
                             {g.title}
                           </div>
-                          <div className="text-sm font-semibold text-slate-900">→</div>
+                          <div className="text-sm font-semibold text-slate-900">
+                            →
+                          </div>
                         </div>
-                        <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{g.desc}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                          {g.desc}
+                        </p>
                         <div className="mt-3 text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
                           Read guide
                         </div>
@@ -508,12 +644,16 @@ export default async function BrandHubPage({ params }: PageProps) {
             {(modelsTop.length > 0 || countriesTop.length > 0) && (
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Popular models</div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Popular models
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {modelsTop.slice(0, 10).map((m) => (
                       <Link
                         key={m}
-                        href={`/buy/brand/${safeBrandSlug}/model/${slugifyLoose(m)}`}
+                        href={`/buy/model/${modelSlugFromValue(
+                          `${b.spaced} ${m}`
+                        )}`}
                         className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
                       >
                         {b.display} {m}
@@ -523,12 +663,16 @@ export default async function BrandHubPage({ params }: PageProps) {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
-                  <div className="text-sm font-semibold text-slate-900">Top countries</div>
+                  <div className="text-sm font-semibold text-slate-900">
+                    Top countries
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {countriesTop.slice(0, 10).map((c) => (
                       <Link
                         key={c}
-                        href={`/buy/brand/${safeBrandSlug}/country/${countrySlugFromValue(c)}`}
+                        href={`/buy/brand/${safeBrandSlug}/country/${countrySlugFromValue(
+                          c
+                        )}`}
                         className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
                       >
                         {c}
@@ -547,9 +691,12 @@ export default async function BrandHubPage({ params }: PageProps) {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
           {total === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8">
-              <div className="text-lg font-semibold text-slate-900">No {b.display} listings live yet.</div>
+              <div className="text-lg font-semibold text-slate-900">
+                No {b.display} listings live yet.
+              </div>
               <p className="mt-2 text-slate-600">
-                Try browsing all boats, or check back soon — inventory updates regularly.
+                Try browsing all boats, or check back soon — inventory updates
+                regularly.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
@@ -573,7 +720,11 @@ export default async function BrandHubPage({ params }: PageProps) {
                 const price = fmtPrice(l.priceCents, l.currency);
                 const specs = [
                   l.year ? `${l.year}` : null,
-                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
+                  l.lengthM
+                    ? `${Math.round(l.lengthM)}m`
+                    : l.lengthFt
+                    ? `${Math.round(l.lengthFt)}ft`
+                    : null,
                   l.country || l.location || null,
                 ].filter((x): x is string => Boolean(x));
 
@@ -597,7 +748,9 @@ export default async function BrandHubPage({ params }: PageProps) {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-lg font-semibold tracking-tight text-slate-900">{price}</div>
+                        <div className="text-lg font-semibold tracking-tight text-slate-900">
+                          {price}
+                        </div>
                         {l.featured ? (
                           <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             Featured
@@ -605,13 +758,21 @@ export default async function BrandHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {specs.join(" • ")}
+                      </div>
 
-                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
+                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
+                        {l.title}
+                      </div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Findaly</div>
-                        <div className="text-sm font-semibold text-slate-900">View →</div>
+                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
+                          Findaly
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          View →
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -619,6 +780,16 @@ export default async function BrandHubPage({ params }: PageProps) {
               })}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Small debug footer (safe to keep, but you can remove) */}
+      <section className="w-full border-t border-slate-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+          <div className="text-xs text-slate-500">
+            Matching DB brand variants for <span className="font-semibold text-slate-700">{b.display}</span>:{" "}
+            {variants.length ? variants.join(" · ") : "—"}
+          </div>
         </div>
       </section>
     </main>
