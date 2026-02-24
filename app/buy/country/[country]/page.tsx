@@ -16,6 +16,8 @@ type PageProps = {
   params: Promise<{ country: string }>;
 };
 
+type JsonLdObject = Record<string, unknown>;
+
 function buildSeoIntro(opts: {
   countryDisplay: string;
   total: number;
@@ -34,13 +36,11 @@ function buildSeoIntro(opts: {
   );
   if (b.length) bits.push(`Popular brands include ${b.join(", ")}.`);
   if (m.length) bits.push(`Common models include ${m.join(", ")}.`);
-  bits.push(
-    `Compare specs, prices, and location — then enquire directly with sellers and brokers.`
-  );
+  bits.push(`Compare specs, prices, and location — then enquire directly with sellers and brokers.`);
   return bits.join(" ");
 }
 
-function jsonLd(obj: unknown) {
+function jsonLd(obj: JsonLdObject) {
   return (
     <script
       type="application/ld+json"
@@ -85,8 +85,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const where = buildWhere(c);
   const total = await prisma.listing.count({ where });
 
-  const title =
-    total > 0 ? `Boats for Sale in ${c.display}` : `Boats in ${c.display}`;
+  const title = total > 0 ? `Boats for Sale in ${c.display}` : `Boats in ${c.display}`;
 
   const description =
     total > 0
@@ -94,10 +93,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           `Browse ${total.toLocaleString()} boats for sale in ${c.display}. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
           160
         )
-      : truncate(
-          `Explore boats and listings in ${c.display} on Findaly. New inventory is added regularly.`,
-          160
-        );
+      : truncate(`Explore boats and listings in ${c.display} on Findaly. New inventory is added regularly.`, 160);
 
   const canonical = `/buy/country/${slugifyLoose(c.spaced)}`;
 
@@ -176,13 +172,8 @@ export default async function CountryHubPage({ params }: PageProps) {
     getMarketStats(where),
   ]);
 
-  const brandsTop = topBrands
-    .map((x) => x.brand)
-    .filter((x): x is string => !!x);
-
-  const modelsTop = topModels
-    .map((x) => x.model)
-    .filter((x): x is string => !!x);
+  const brandsTop = topBrands.map((x) => x.brand).filter((x): x is string => !!x);
+  const modelsTop = topModels.map((x) => x.model).filter((x): x is string => !!x);
 
   const yearsTop = topYears
     .map((x) => x.year)
@@ -200,7 +191,7 @@ export default async function CountryHubPage({ params }: PageProps) {
   const safeCountrySlug = slugifyLoose(c.spaced);
   const pageUrl = `${base}/buy/country/${safeCountrySlug}`;
 
-  const breadcrumb = {
+  const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
@@ -210,7 +201,7 @@ export default async function CountryHubPage({ params }: PageProps) {
     ],
   };
 
-  const itemList = {
+  const itemList: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `Boats for Sale in ${c.display}`,
@@ -227,10 +218,63 @@ export default async function CountryHubPage({ params }: PageProps) {
     },
   };
 
+  const faq: JsonLdObject = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `How much do boats cost in ${c.display}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Prices vary by type, size, year, and condition. Use the market overview on this page to see realistic ranges from current listings.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Which brands are most common in ${c.display}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Inventory depends on local demand and cruising patterns. See the popular brands links on this page to browse the most common builders.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Which models are common in ${c.display}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Model availability changes over time. Use the model links on this page to explore frequently listed models in this market.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Is ${c.display} a good place to buy a boat?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "It can be — depending on survey standards, documentation, and pricing. Always verify paperwork and arrange a pre-purchase survey before buying.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I contact sellers and brokers directly?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes — each listing includes direct enquiry options so you can speak with sellers and brokers.",
+        },
+      },
+    ],
+  };
+
   return (
     <main className="w-full bg-white">
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
+      {jsonLd(faq)}
 
       <section className="w-full border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
@@ -242,43 +286,71 @@ export default async function CountryHubPage({ params }: PageProps) {
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                 Boats for sale in {c.display}
               </h1>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
-                {intro}
-              </p>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">{intro}</p>
 
               <div className="mt-4 text-sm text-slate-500">
                 {total > 0 ? (
                   <>
                     Showing{" "}
-                    <span className="font-semibold text-slate-700">
-                      {Math.min(36, total)}
-                    </span>{" "}
+                    <span className="font-semibold text-slate-700">{Math.min(36, total)}</span>{" "}
                     of{" "}
-                    <span className="font-semibold text-slate-700">
-                      {total.toLocaleString()}
-                    </span>{" "}
+                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span>{" "}
                     listings.
                   </>
                 ) : (
                   <>
                     No live listings found in{" "}
-                    <span className="font-semibold text-slate-700">
-                      {c.display}
-                    </span>{" "}
+                    <span className="font-semibold text-slate-700">{c.display}</span>{" "}
                     right now.
                   </>
                 )}
               </div>
 
-              {/* Market Overview */}
               {total > 0 ? (
                 <div className="mt-8">
                   <MarketOverview stats={stats} />
                 </div>
               ) : null}
+
+              {(brandsTop.length > 0 || modelsTop.length > 0) && total > 0 ? (
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {brandsTop.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                      <div className="text-sm font-semibold text-slate-900">Popular brands</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {brandsTop.slice(0, 10).map((b) => (
+                          <Link
+                            key={b}
+                            href={`/buy/brand/${slugifyLoose(b)}/country/${safeCountrySlug}`}
+                            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                          >
+                            {b} in {c.display}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {modelsTop.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                      <div className="text-sm font-semibold text-slate-900">Common models</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {modelsTop.slice(0, 10).map((m) => (
+                          <Link
+                            key={m}
+                            href={`/buy/model/${slugifyLoose(m)}`}
+                            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                          >
+                            {m}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
-            {/* Related searches */}
             {total > 0 ? (
               <RelatedSearches
                 kind="country"
@@ -297,9 +369,7 @@ export default async function CountryHubPage({ params }: PageProps) {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
           {total === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8">
-              <div className="text-lg font-semibold text-slate-900">
-                No listings live in {c.display} yet.
-              </div>
+              <div className="text-lg font-semibold text-slate-900">No listings live in {c.display} yet.</div>
               <p className="mt-2 text-slate-600">
                 Try browsing all boats, or check back soon — inventory updates regularly.
               </p>
@@ -326,11 +396,7 @@ export default async function CountryHubPage({ params }: PageProps) {
                 const specs = [
                   l.brand || null,
                   l.year ? `${l.year}` : null,
-                  l.lengthM
-                    ? `${Math.round(l.lengthM)}m`
-                    : l.lengthFt
-                      ? `${Math.round(l.lengthFt)}ft`
-                      : null,
+                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
                   l.location || l.country || null,
                 ].filter(Boolean) as string[];
 
@@ -354,9 +420,7 @@ export default async function CountryHubPage({ params }: PageProps) {
 
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-lg font-semibold tracking-tight text-slate-900">
-                          {price}
-                        </div>
+                        <div className="text-lg font-semibold tracking-tight text-slate-900">{price}</div>
                         {l.featured ? (
                           <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
                             Featured
@@ -364,21 +428,13 @@ export default async function CountryHubPage({ params }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="mt-1 text-sm text-slate-600">
-                        {specs.join(" • ")}
-                      </div>
+                      <div className="mt-1 text-sm text-slate-600">{specs.join(" • ")}</div>
 
-                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">
-                        {l.title}
-                      </div>
+                      <div className="mt-2 line-clamp-2 text-[15px] font-medium text-slate-900">{l.title}</div>
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">
-                          Findaly
-                        </div>
-                        <div className="text-sm font-semibold text-slate-900">
-                          View →
-                        </div>
+                        <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-500">Findaly</div>
+                        <div className="text-sm font-semibold text-slate-900">View →</div>
                       </div>
                     </div>
                   </Link>

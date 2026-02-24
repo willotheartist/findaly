@@ -10,8 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-
-        // Private / non-index pages
         disallow: [
           "/api/",
           "/login",
@@ -21,8 +19,8 @@ export default function robots(): MetadataRoute.Robots {
           "/messages",
           "/my-listings",
           "/upgrade",
-          "/stack", // if this is internal tooling, keep blocked
-          "/searches", // optional: if these are user-specific query replays, keep blocked
+          "/stack",
+          "/searches",
         ],
       },
     ],

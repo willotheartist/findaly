@@ -295,6 +295,8 @@ model Listing {
   serviceDescription String?
   serviceExperience  String?
   serviceAreas       Json    @default("[]")
+  serviceTags        Json    @default("[]")
+  
 
   // PARTS SPECIFIC
   partsCategory      String?

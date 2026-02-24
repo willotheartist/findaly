@@ -26,6 +26,7 @@ import {
   PenTool,
   ShieldCheck,
   ArrowUpDown,
+  MessageCircle,
 } from "lucide-react";
 
 /* ─── palette (match BuyPageClient / ListingPageClient) ─── */
@@ -56,6 +57,11 @@ type ServiceDTO = {
   serviceName: string | null;
   serviceCategory: string | null;
   serviceDescription: string | null;
+  serviceExperience?: string | null;
+
+  // Prisma Json comes through as unknown at the edge
+  serviceAreas?: unknown;
+
   location: string | null;
   country: string | null;
   featured: boolean;
@@ -127,6 +133,34 @@ const SORT_OPTIONS = [
 
 function cx(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="inline-flex items-center rounded-md px-2 py-1 text-xs"
+      style={{
+        backgroundColor: "rgba(0,0,0,.03)",
+        border: "1px solid rgba(0,0,0,.10)",
+        color: "rgba(0,0,0,.70)",
+        fontWeight: 500,
+      }}
+    >
+      {children}
+    </span>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -237,13 +271,17 @@ function ServiceCard({ listing }: { listing: ServiceDTO }) {
   const logoUrl =
     listing.profile.companyLogoUrl || listing.profile.avatarUrl || null;
 
+  const areas = toStringArray(listing.serviceAreas);
+  const pills: string[] = areas.slice(0, 6);
+
+  const profileHref = `/profile/${listing.profile.slug}`;
+  const enquireHref = `/profile/${listing.profile.slug}#contact`;
+
   return (
-    <Link
-      href={`/profile/${listing.profile.slug}`}
-      className="group flex gap-5 overflow-hidden rounded-2xl border bg-white p-5 no-underline transition-all hover:shadow-lg"
+    <div
+      className="group flex gap-5 overflow-hidden rounded-2xl border bg-white p-5 transition-all hover:shadow-lg"
       style={{ borderColor: "rgba(0,0,0,.10)" }}
     >
-      {/* Icon / Logo */}
       <div
         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
         style={{
@@ -262,31 +300,35 @@ function ServiceCard({ listing }: { listing: ServiceDTO }) {
         )}
       </div>
 
-      {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top row: name + badge */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="line-clamp-1 text-base font-semibold" style={{ color: P.text }}>
-              {listing.serviceName || listing.profile.name}
-            </h3>
-            <div
-              className="mt-0.5 flex items-center gap-2 text-sm"
-              style={{ color: "rgba(0,0,0,.55)" }}
-            >
-              <span
-                className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs"
-                style={{
-                  backgroundColor: "rgba(0,0,0,.04)",
-                  border: "1px solid rgba(0,0,0,.10)",
-                  color: P.text,
-                  fontWeight: 500,
-                }}
-              >
-                {listing.serviceCategory}
-              </span>
+            <Link href={profileHref} className="no-underline">
+              <h3 className="line-clamp-1 text-base font-semibold" style={{ color: P.text }}>
+                {listing.serviceName || listing.profile.name}
+              </h3>
+            </Link>
+
+            <div className="mt-0.5 flex items-center gap-2 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
+              {listing.serviceCategory && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,.04)",
+                    border: "1px solid rgba(0,0,0,.10)",
+                    color: P.text,
+                    fontWeight: 500,
+                  }}
+                >
+                  {listing.serviceCategory}
+                </span>
+              )}
+
               {listing.profile.isVerified && (
-                <Shield className="h-3.5 w-3.5" style={{ color: P.green }} />
+                <span className="inline-flex items-center gap-1 text-xs" style={{ color: P.green, fontWeight: 600 }}>
+                  <Shield className="h-3.5 w-3.5" style={{ color: P.green }} />
+                  Verified
+                </span>
               )}
             </div>
           </div>
@@ -294,28 +336,46 @@ function ServiceCard({ listing }: { listing: ServiceDTO }) {
           {listing.featured && <Badge featured={listing.featured} />}
         </div>
 
-        {/* Description */}
+        {pills.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {pills.map((p, idx) => (
+              <Pill key={`${p}-${idx}`}>{p}</Pill>
+            ))}
+          </div>
+        )}
+
         {description && (
-          <p
-            className="mt-2 line-clamp-2 text-sm leading-relaxed"
-            style={{ color: "rgba(0,0,0,.55)" }}
-          >
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed" style={{ color: "rgba(0,0,0,.55)" }}>
             {description}
           </p>
         )}
 
-        {/* Bottom row */}
-        <div className="mt-3 flex items-center justify-between">
-          {/* Location */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1 text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
             <MapPin className="h-3.5 w-3.5" />
-            <span>{listing.location || listing.profile.location || "Mediterranean"}</span>
+            <span className="truncate">
+              {listing.location || listing.profile.location || "Mediterranean"}
+              {listing.country ? ` · ${listing.country}` : ""}
+            </span>
           </div>
 
-          {/* CTA */}
           <div className="flex items-center gap-2">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-colors group-hover:shadow-sm"
+            <Link
+              href={enquireHref}
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs no-underline transition-colors"
+              style={{
+                backgroundColor: P.dark,
+                color: P.accent,
+                fontWeight: 600,
+              }}
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Enquire
+            </Link>
+
+            <Link
+              href={profileHref}
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs no-underline transition-colors"
               style={{
                 backgroundColor: P.faint,
                 border: "1px solid rgba(0,0,0,.10)",
@@ -325,11 +385,11 @@ function ServiceCard({ listing }: { listing: ServiceDTO }) {
             >
               View profile
               <ChevronRight className="h-3 w-3" />
-            </span>
+            </Link>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -511,9 +571,7 @@ export default function ServicesPageClient({
   const clearFilters = useCallback(() => {
     const cleared: FilterValues = { q: "", categories: [], country: "", sort: "newest" };
     setLocalFilters(cleared);
-    startTransition(() => {
-      router.push("/services");
-    });
+    startTransition(() => router.push("/services"));
   }, [router]);
 
   const toggleDropdown = (id: string) => {
@@ -563,7 +621,7 @@ export default function ServicesPageClient({
         style={{ borderColor: "rgba(0,0,0,.10)" }}
       >
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
-          {/* Search bar */}
+          {/* Search */}
           <div className="mb-3">
             <form
               onSubmit={(e) => {
@@ -607,7 +665,6 @@ export default function ServicesPageClient({
 
           {/* Filter row */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Category */}
             <div className="relative">
               <FilterPill
                 label={
@@ -636,7 +693,9 @@ export default function ServicesPageClient({
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")
                         }
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = "transparent")
+                        }
                       >
                         <div className="flex items-center gap-3">
                           <div
@@ -663,7 +722,6 @@ export default function ServicesPageClient({
               </FilterDropdown>
             </div>
 
-            {/* Country */}
             <div className="relative">
               <FilterPill
                 label={localFilters.country || "Country"}
@@ -690,7 +748,9 @@ export default function ServicesPageClient({
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")
                       }
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
                     >
                       <span>{c.label}</span>
                       <span style={{ color: "rgba(0,0,0,.35)" }}>{c.count}</span>
@@ -700,7 +760,6 @@ export default function ServicesPageClient({
               </FilterDropdown>
             </div>
 
-            {/* Clear */}
             {hasFilters && (
               <button
                 type="button"
@@ -719,7 +778,6 @@ export default function ServicesPageClient({
             )}
           </div>
 
-          {/* Category quick links + Sort */}
           <div className="mt-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               <button
@@ -775,7 +833,6 @@ export default function ServicesPageClient({
               })}
             </div>
 
-            {/* Sort */}
             <div className="relative hidden sm:block">
               <button
                 type="button"
@@ -815,7 +872,9 @@ export default function ServicesPageClient({
                         onMouseEnter={(e) =>
                           (e.currentTarget.style.backgroundColor = "rgba(0,0,0,.03)")
                         }
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = "transparent")
+                        }
                       >
                         {option.label}
                         {localFilters.sort === option.id && (
@@ -831,7 +890,6 @@ export default function ServicesPageClient({
         </div>
       </div>
 
-      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         <div className="mb-5">
           <h1 className="text-2xl font-semibold" style={{ color: P.text }}>
@@ -846,7 +904,7 @@ export default function ServicesPageClient({
         </div>
 
         {listings.length > 0 ? (
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {listings.map((listing) => (
               <ServiceCard key={listing.id} listing={listing} />
             ))}
@@ -857,11 +915,7 @@ export default function ServicesPageClient({
 
         {totalPages > 1 && (
           <div className="mt-8">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             <div className="mt-4 text-center text-sm" style={{ color: "rgba(0,0,0,.55)" }}>
               Page {currentPage} of {totalPages} • {totalCount} providers total
             </div>
@@ -876,16 +930,8 @@ export default function ServicesPageClient({
             Find Marine Professionals
           </h2>
           <p className="mt-3 text-sm leading-relaxed" style={{ color: "rgba(0,0,0,.55)" }}>
-            Findaly&apos;s marine services directory connects boat owners and buyers with trusted
-            professionals across the Mediterranean. Whether you need a pre-purchase yacht survey
-            before buying, marine insurance for your vessel, yacht financing, legal advice on
-            registration and VAT, or a boatyard for maintenance and refit — find the right experts
-            here.
-          </p>
-          <p className="mt-2 text-sm leading-relaxed" style={{ color: "rgba(0,0,0,.55)" }}>
-            All service providers are verified and cover key Mediterranean markets including Greece,
-            Croatia, France, Spain, Italy, Turkey, Malta, and beyond. Looking for something
-            specific? Use the search and category filters above to narrow down your results.
+            Findaly&apos;s marine services directory connects boat owners and buyers with professionals across the Mediterranean.
+            Whether you need a pre-purchase yacht survey, marine insurance, yacht financing, legal advice, or a boatyard — find the right experts here.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
@@ -894,11 +940,7 @@ export default function ServicesPageClient({
                 key={cat.id}
                 href={`/services?category=${encodeURIComponent(cat.id)}`}
                 className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs no-underline transition-colors hover:bg-gray-50"
-                style={{
-                  borderColor: "rgba(0,0,0,.10)",
-                  color: P.text,
-                  fontWeight: 400,
-                }}
+                style={{ borderColor: "rgba(0,0,0,.10)", color: P.text, fontWeight: 400 }}
               >
                 {cat.label}
                 <span style={{ color: "rgba(0,0,0,.35)" }}>({cat.count})</span>

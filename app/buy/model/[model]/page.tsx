@@ -16,6 +16,8 @@ type PageProps = {
   params: Promise<{ model: string }>;
 };
 
+type JsonLdObject = Record<string, unknown>;
+
 function buildSeoIntro(opts: {
   modelDisplay: string;
   total: number;
@@ -43,7 +45,9 @@ function buildSeoIntro(opts: {
   if (y.length) bits.push(`Popular years include ${y.join(", ")}.`);
 
   if (c.length) {
-    bits.push(`Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`);
+    bits.push(
+      `Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`
+    );
   } else {
     bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
   }
@@ -51,7 +55,7 @@ function buildSeoIntro(opts: {
   return bits.join(" ");
 }
 
-function jsonLd(obj: unknown) {
+function jsonLd(obj: JsonLdObject) {
   return (
     <script
       type="application/ld+json"
@@ -101,10 +105,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           `Browse ${total.toLocaleString()} ${m.display} boats for sale worldwide. Compare specs, prices, and locations — then enquire directly with sellers and brokers on Findaly.`,
           160
         )
-      : truncate(
-          `Explore ${m.display} boats and listings on Findaly. New inventory is added regularly.`,
-          160
-        );
+      : truncate(`Explore ${m.display} boats and listings on Findaly. New inventory is added regularly.`, 160);
 
   const canonical = `/buy/model/${slugifyLoose(m.canonicalSpaced)}`;
 
@@ -202,7 +203,7 @@ export default async function ModelHubPage({ params }: PageProps) {
   const safeModelSlug = slugifyLoose(m.canonicalSpaced);
   const pageUrl = `${base}/buy/model/${safeModelSlug}`;
 
-  const breadcrumb = {
+  const breadcrumb: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
@@ -212,7 +213,7 @@ export default async function ModelHubPage({ params }: PageProps) {
     ],
   };
 
-  const itemList = {
+  const itemList: JsonLdObject = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `${m.display} Boats for Sale`,
@@ -229,10 +230,63 @@ export default async function ModelHubPage({ params }: PageProps) {
     },
   };
 
+  const faq: JsonLdObject = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `How much do ${m.display} boats cost?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Pricing varies by brand, year, size, and condition. Use the market overview on this page to see realistic bands from currently available listings.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Which brands make ${m.display} models?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "This model name is used across different builders in the market. See “Top brands” on this page and browse listings by brand for more precise results.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `What years are most common for ${m.display} listings?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Popularity varies by generation and spec. Use the “Popular years” links on this page to browse inventory by year.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: `Where are ${m.display} boats typically listed?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Inventory clusters around major boating markets and cruising regions. Use the country links on this page to browse by location.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Can I contact the seller or broker directly?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Yes — each listing lets you enquire directly and connect with sellers and brokers.",
+        },
+      },
+    ],
+  };
+
   return (
     <main className="w-full bg-white">
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
+      {jsonLd(faq)}
 
       <section className="w-full border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
@@ -249,8 +303,10 @@ export default async function ModelHubPage({ params }: PageProps) {
               <div className="mt-4 text-sm text-slate-500">
                 {total > 0 ? (
                   <>
-                    Showing <span className="font-semibold text-slate-700">{Math.min(36, total)}</span> of{" "}
-                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span> listings.
+                    Showing{" "}
+                    <span className="font-semibold text-slate-700">{Math.min(36, total)}</span> of{" "}
+                    <span className="font-semibold text-slate-700">{total.toLocaleString()}</span>{" "}
+                    listings.
                   </>
                 ) : (
                   <>
@@ -263,6 +319,44 @@ export default async function ModelHubPage({ params }: PageProps) {
               {total > 0 ? (
                 <div className="mt-8">
                   <MarketOverview stats={stats} />
+                </div>
+              ) : null}
+
+              {(brandsTop.length > 0 || countriesTop.length > 0) && total > 0 ? (
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {brandsTop.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                      <div className="text-sm font-semibold text-slate-900">Top brands</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {brandsTop.slice(0, 10).map((b) => (
+                          <Link
+                            key={b}
+                            href={`/buy/brand/${slugifyLoose(b)}/model/${safeModelSlug}`}
+                            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                          >
+                            {b} {m.display}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {countriesTop.length > 0 ? (
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5">
+                      <div className="text-sm font-semibold text-slate-900">Top countries</div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {countriesTop.slice(0, 10).map((c) => (
+                          <Link
+                            key={c}
+                            href={`/buy/country/${slugifyLoose(c)}`}
+                            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 no-underline hover:border-slate-300 hover:text-slate-900"
+                          >
+                            {c}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

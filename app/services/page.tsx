@@ -1,7 +1,9 @@
 // app/services/page.tsx
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import type { Metadata } from "next";
 import ServicesPageClient from "./ServicesPageClient";
+import { absoluteUrl, truncate } from "@/lib/site";
 
 type SearchParams = {
   q?: string;
@@ -16,6 +18,20 @@ type PageProps = {
 };
 
 const ITEMS_PER_PAGE = 24;
+
+function hasAnyFilters(params: SearchParams) {
+  const q = (params.q || "").trim();
+  const category = (params.category || "").trim();
+  const country = (params.country || "").trim();
+  const sort = (params.sort || "").trim();
+  const page = (params.page || "").trim();
+
+  const pageNum = page ? parseInt(page, 10) : 1;
+  const pageIsFiltered = Number.isFinite(pageNum) && pageNum > 1;
+  const sortIsFiltered = !!sort && sort !== "newest";
+
+  return Boolean(q || category || country || sortIsFiltered || pageIsFiltered);
+}
 
 export default async function ServicesPage({ searchParams }: PageProps) {
   const params = await Promise.resolve(searchParams);
@@ -116,6 +132,8 @@ export default async function ServicesPage({ searchParams }: PageProps) {
     serviceName: listing.serviceName,
     serviceCategory: listing.serviceCategory,
     serviceDescription: listing.serviceDescription,
+    serviceExperience: listing.serviceExperience,
+    serviceAreas: listing.serviceAreas, // Prisma Json
     location: listing.location,
     country: listing.country,
     featured: listing.featured,
@@ -170,15 +188,38 @@ export default async function ServicesPage({ searchParams }: PageProps) {
   );
 }
 
-export function generateMetadata() {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams> | SearchParams;
+}): Promise<Metadata> {
+  const params = await Promise.resolve(searchParams);
+  const filtered = hasAnyFilters(params);
+
+  const title = "Marine Services Directory | Findaly";
+  const description = truncate(
+    "Find yacht surveyors, marine insurance, yacht finance, boatyards, marine lawyers, crew agencies and more across the Mediterranean. The complete marine services directory.",
+    160
+  );
+
+  const canonical = absoluteUrl("/services");
+
   return {
-    title: "Marine Services Directory | Findaly",
-    description:
-      "Find yacht surveyors, marine insurance, yacht finance, boatyards, marine lawyers, crew agencies and more across the Mediterranean. The complete marine services directory.",
+    title,
+    description,
+    alternates: { canonical },
+    robots: filtered ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: {
-      title: "Marine Services Directory | Findaly",
-      description:
-        "Find trusted marine professionals across the Mediterranean — surveyors, insurance, finance, legal, management, and more.",
+      title,
+      description,
+      url: canonical,
+      images: [{ url: absoluteUrl("/hero-pros.jpg") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [absoluteUrl("/hero-pros.jpg")],
     },
   };
 }

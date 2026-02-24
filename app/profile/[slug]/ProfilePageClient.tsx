@@ -32,7 +32,6 @@ import {
   ExternalLink,
   Zap,
   ThumbsUp,
-  Camera,
   Sparkles,
 } from "lucide-react";
 
@@ -303,27 +302,23 @@ function ListingCard({ listing, isOwner }: { listing: ListingDTO; isOwner: boole
 
       {/* Content */}
       <div className="p-4">
-        {/* Price */}
         <div className="text-lg" style={{ color: P.text, fontWeight: 600 }}>
           {formatPrice(listing.priceCents, listing.currency)}
         </div>
 
-        {/* Title */}
-        <h3
-          className="mt-1 line-clamp-2 text-sm"
-          style={{ color: P.text, fontWeight: 500 }}
-        >
+        <h3 className="mt-1 line-clamp-2 text-sm" style={{ color: P.text, fontWeight: 500 }}>
           {listing.title}
         </h3>
 
-        {/* Meta */}
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" style={{ color: "rgba(0,0,0,.55)" }}>
+        <div
+          className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+          style={{ color: "rgba(0,0,0,.55)" }}
+        >
           {listing.year && <span>{listing.year}</span>}
           {listing.lengthM && <span>{listing.lengthM}m</span>}
           {listing.brand && <span>{listing.brand}</span>}
         </div>
 
-        {/* Location */}
         {listing.location && (
           <div className="mt-2 flex items-center gap-1 text-xs" style={{ color: "rgba(0,0,0,.45)" }}>
             <MapPin className="h-3 w-3" />
@@ -334,7 +329,6 @@ function ListingCard({ listing, isOwner }: { listing: ListingDTO; isOwner: boole
           </div>
         )}
 
-        {/* Date */}
         <div className="mt-3 text-xs" style={{ color: "rgba(0,0,0,.35)" }}>
           {getRelativeTime(listing.createdAt)}
         </div>
@@ -591,6 +585,12 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
   const isPro = profile.accountType !== "PRIVATE";
   const primaryAvatarUrl = isPro ? profile.companyLogoUrl || profile.avatarUrl : profile.avatarUrl;
 
+  const scrollToContact = () => {
+    const el = document.getElementById("contact");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <main className="min-h-screen w-full" style={{ backgroundColor: P.faint }}>
       {/* Hero */}
@@ -748,6 +748,7 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
                 <>
                   <button
                     type="button"
+                    onClick={scrollToContact}
                     className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm transition-all"
                     style={{ backgroundColor: P.dark, color: P.accent, fontWeight: 600 }}
                   >
@@ -962,14 +963,18 @@ export default function ProfilePageClient({ profile, isOwner }: Props) {
 
             {/* Right: Sidebar */}
             <div className="space-y-6">
-              {/* Desktop stats */}
               <div className="hidden space-y-4 lg:block">
                 <StatCard icon={Ship} label="Active listings" value={profile.stats.liveListings} subtext="Currently for sale" accent />
                 <StatCard icon={CheckCircle2} label="Sold items" value={profile.stats.soldListings} subtext="Successfully completed" />
                 <StatCard icon={ThumbsUp} label="Response rate" value={`${profile.stats.responseRate}%`} subtext="Based on last 30 days" />
               </div>
 
-              {!isOwner && <ContactCard profile={profile} />}
+              {/* ✅ anchor for services enquiries */}
+              {!isOwner && (
+                <div id="contact" className="scroll-mt-28">
+                  <ContactCard profile={profile} />
+                </div>
+              )}
 
               <TrustIndicators profile={profile} />
 

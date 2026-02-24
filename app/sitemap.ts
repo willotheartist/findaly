@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { getSiteUrl } from "@/lib/site";
 import { DESTINATION_PAGES } from "@/app/destinations/[slug]/_data";
+import { GUIDES } from "@/app/guides/_data";
 
 function slugifyLoose(input: string) {
   return (input || "")
@@ -31,9 +32,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/buy`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/sell`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${base}/charter`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
-    { url: `${base}/brokers`, lastModified: now, changeFrequency: "monthly", priority: 0.80 },
-    { url: `${base}/finance`, lastModified: now, changeFrequency: "monthly", priority: 0.80 },
+    { url: `${base}/brokers`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/services`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${base}/guides`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/finance`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/destinations`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+
+    // ✅ service pillars (pages exist)
+    { url: `${base}/services/yacht-surveyors`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${base}/services/marine-insurance`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${base}/services/yacht-finance`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+    { url: `${base}/services/marine-lawyers`, lastModified: now, changeFrequency: "weekly", priority: 0.85 },
+
     { url: `${base}/add-listing`, lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
@@ -44,8 +54,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.65,
   }));
 
+  // ✅ Use your real GUIDES list (single source of truth)
+  const guideRoutes: MetadataRoute.Sitemap = GUIDES.map((g) => ({
+    url: `${base}/guides/${g.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.72,
+  }));
+
   // ─────────────────────────────────────────────────────────────
-  // Listings (quality-gated)
+  // Listings (quality-gated, early-stage relaxed)
   // ─────────────────────────────────────────────────────────────
   const listings = await prisma.listing.findMany({
     where: {
@@ -70,8 +88,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (!l.slug) return false;
       if (!l._count?.media || l._count.media < 1) return false;
 
+      // relaxed early-stage
       const desc = (l.description || "").trim();
-      if (desc.length < 80) return false;
+      if (desc.length < 40) return false;
 
       const title = (l.title || "").trim();
       if (title.length < 8) return false;
@@ -104,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
   // ─────────────────────────────────────────────────────────────
-  // ✅ Programmatic SEO routes (only if they exist)
+  // Programmatic SEO routes
   // ─────────────────────────────────────────────────────────────
   const MAX_BRANDS = 20000;
   const MAX_MODELS = 20000;
@@ -121,18 +140,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const MAX_BRAND_MODEL_COUNTRY_YEAR_COMBOS = 250000;
 
-  // Base hubs can be thin-ish early. Combos should be stricter.
+  // impressions-first, avoid doorway spam
   const MIN_COUNT_TO_INDEX = 1;
-  const MIN_COUNT_FOR_COMBOS = 2;
-  const MIN_COUNT_FOR_DEEP_COMBOS = 3;
+  const MIN_COUNT_FOR_COMBOS = 3;
+  const MIN_COUNT_FOR_DEEP_COMBOS = 8;
 
   const [
     brandAgg,
     modelAgg,
     countryAgg,
     brandCountryAgg,
-
-    // ✅ NEW
     brandModelAgg,
     modelYearAgg,
     brandYearAgg,
@@ -175,8 +192,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_COUNTRY_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/model/[model]
     prisma.listing.groupBy({
       by: ["brand", "model"],
       where: {
@@ -190,8 +205,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_MODEL_COMBOS,
     }),
-
-    // ✅ /buy/model/[model]/year/[year]
     prisma.listing.groupBy({
       by: ["model", "year"],
       where: {
@@ -205,8 +218,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { model: "desc" } },
       take: MAX_MODEL_YEAR_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/year/[year]
     prisma.listing.groupBy({
       by: ["brand", "year"],
       where: {
@@ -220,8 +231,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_YEAR_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/model/[model]/country/[country]
     prisma.listing.groupBy({
       by: ["brand", "model", "country"],
       where: {
@@ -236,8 +245,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_MODEL_COUNTRY_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/model/[model]/year/[year]
     prisma.listing.groupBy({
       by: ["brand", "model", "year"],
       where: {
@@ -252,8 +259,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_MODEL_YEAR_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/country/[country]/year/[year]
     prisma.listing.groupBy({
       by: ["brand", "country", "year"],
       where: {
@@ -268,8 +273,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { _count: { brand: "desc" } },
       take: MAX_BRAND_COUNTRY_YEAR_COMBOS,
     }),
-
-    // ✅ /buy/brand/[brand]/model/[model]/country/[country]/year/[year]
     prisma.listing.groupBy({
       by: ["brand", "model", "country", "year"],
       where: {
@@ -290,194 +293,108 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const brandRoutes: MetadataRoute.Sitemap = brandAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_TO_INDEX)
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const slug = slugifyLoose(brand);
-      return {
-        url: `${base}/buy/brand/${slug}`,
-        lastModified: now,
-        changeFrequency: "daily",
-        priority: 0.75,
-      };
+      const slug = slugifyLoose((x.brand || "").trim());
+      return { url: `${base}/buy/brand/${slug}`, lastModified: now, changeFrequency: "daily", priority: 0.75 };
     });
 
   const modelRoutes: MetadataRoute.Sitemap = modelAgg
     .filter((x) => (x._count?.model ?? 0) >= MIN_COUNT_TO_INDEX)
     .map((x) => {
-      const model = (x.model || "").trim();
-      const slug = slugifyLoose(model);
-      return {
-        url: `${base}/buy/model/${slug}`,
-        lastModified: now,
-        changeFrequency: "daily",
-        priority: 0.72,
-      };
+      const slug = slugifyLoose((x.model || "").trim());
+      return { url: `${base}/buy/model/${slug}`, lastModified: now, changeFrequency: "daily", priority: 0.72 };
     });
 
   const countryRoutes: MetadataRoute.Sitemap = countryAgg
     .filter((x) => (x._count?.country ?? 0) >= MIN_COUNT_TO_INDEX)
     .map((x) => {
-      const country = (x.country || "").trim();
-      const slug = slugifyLoose(country);
-      return {
-        url: `${base}/buy/country/${slug}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.7,
-      };
+      const slug = slugifyLoose((x.country || "").trim());
+      return { url: `${base}/buy/country/${slug}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 };
     });
 
   const brandCountryRoutes: MetadataRoute.Sitemap = brandCountryAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_COMBOS)
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const country = (x.country || "").trim();
-      const b = slugifyLoose(brand);
-      const c = slugifyLoose(country);
-      return {
-        url: `${base}/buy/brand/${b}/country/${c}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.74,
-      };
+      const b = slugifyLoose((x.brand || "").trim());
+      const c = slugifyLoose((x.country || "").trim());
+      return { url: `${base}/buy/brand/${b}/country/${c}`, lastModified: now, changeFrequency: "weekly", priority: 0.74 };
     });
 
-  // ─────────────────────────────────────────────────────────────
-  // ✅ NEW: Brand + Model
-  // ─────────────────────────────────────────────────────────────
   const brandModelRoutes: MetadataRoute.Sitemap = brandModelAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_COMBOS)
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const model = (x.model || "").trim();
-      const b = slugifyLoose(brand);
-      const m = slugifyLoose(model);
-      return {
-        url: `${base}/buy/brand/${b}/model/${m}`,
-        lastModified: now,
-        changeFrequency: "daily",
-        priority: 0.78,
-      };
+      const b = slugifyLoose((x.brand || "").trim());
+      const m = slugifyLoose((x.model || "").trim());
+      return { url: `${base}/buy/brand/${b}/model/${m}`, lastModified: now, changeFrequency: "daily", priority: 0.78 };
     });
 
-  // ✅ Model + Year
   const modelYearRoutes: MetadataRoute.Sitemap = modelYearAgg
     .filter((x) => (x._count?.model ?? 0) >= MIN_COUNT_FOR_COMBOS)
     .filter((x) => isValidYear(x.year))
     .map((x) => {
-      const model = (x.model || "").trim();
+      const m = slugifyLoose((x.model || "").trim());
       const year = x.year as number;
-      const m = slugifyLoose(model);
-      return {
-        url: `${base}/buy/model/${m}/year/${year}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.68,
-      };
+      return { url: `${base}/buy/model/${m}/year/${year}`, lastModified: now, changeFrequency: "weekly", priority: 0.68 };
     });
 
-  // ✅ Brand + Year
   const brandYearRoutes: MetadataRoute.Sitemap = brandYearAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_COMBOS)
     .filter((x) => isValidYear(x.year))
     .map((x) => {
-      const brand = (x.brand || "").trim();
+      const b = slugifyLoose((x.brand || "").trim());
       const year = x.year as number;
-      const b = slugifyLoose(brand);
-      return {
-        url: `${base}/buy/brand/${b}/year/${year}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.7,
-      };
+      return { url: `${base}/buy/brand/${b}/year/${year}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 };
     });
 
-  // ✅ Brand + Model + Country
   const brandModelCountryRoutes: MetadataRoute.Sitemap = brandModelCountryAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_DEEP_COMBOS)
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const model = (x.model || "").trim();
-      const country = (x.country || "").trim();
-      const b = slugifyLoose(brand);
-      const m = slugifyLoose(model);
-      const c = slugifyLoose(country);
-      return {
-        url: `${base}/buy/brand/${b}/model/${m}/country/${c}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.66,
-      };
+      const b = slugifyLoose((x.brand || "").trim());
+      const m = slugifyLoose((x.model || "").trim());
+      const c = slugifyLoose((x.country || "").trim());
+      return { url: `${base}/buy/brand/${b}/model/${m}/country/${c}`, lastModified: now, changeFrequency: "weekly", priority: 0.66 };
     });
 
-  // ✅ Brand + Model + Year
   const brandModelYearRoutes: MetadataRoute.Sitemap = brandModelYearAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_DEEP_COMBOS)
     .filter((x) => isValidYear(x.year))
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const model = (x.model || "").trim();
+      const b = slugifyLoose((x.brand || "").trim());
+      const m = slugifyLoose((x.model || "").trim());
       const year = x.year as number;
-      const b = slugifyLoose(brand);
-      const m = slugifyLoose(model);
-      return {
-        url: `${base}/buy/brand/${b}/model/${m}/year/${year}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.67,
-      };
+      return { url: `${base}/buy/brand/${b}/model/${m}/year/${year}`, lastModified: now, changeFrequency: "weekly", priority: 0.67 };
     });
 
-  // ✅ Brand + Country + Year
   const brandCountryYearRoutes: MetadataRoute.Sitemap = brandCountryYearAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_DEEP_COMBOS)
     .filter((x) => isValidYear(x.year))
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const country = (x.country || "").trim();
+      const b = slugifyLoose((x.brand || "").trim());
+      const c = slugifyLoose((x.country || "").trim());
       const year = x.year as number;
-      const b = slugifyLoose(brand);
-      const c = slugifyLoose(country);
-      return {
-        url: `${base}/buy/brand/${b}/country/${c}/year/${year}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.66,
-      };
+      return { url: `${base}/buy/brand/${b}/country/${c}/year/${year}`, lastModified: now, changeFrequency: "weekly", priority: 0.66 };
     });
 
-  // ✅ Brand + Model + Country + Year (deepest)
   const brandModelCountryYearRoutes: MetadataRoute.Sitemap = brandModelCountryYearAgg
     .filter((x) => (x._count?.brand ?? 0) >= MIN_COUNT_FOR_DEEP_COMBOS)
     .filter((x) => isValidYear(x.year))
     .map((x) => {
-      const brand = (x.brand || "").trim();
-      const model = (x.model || "").trim();
-      const country = (x.country || "").trim();
+      const b = slugifyLoose((x.brand || "").trim());
+      const m = slugifyLoose((x.model || "").trim());
+      const c = slugifyLoose((x.country || "").trim());
       const year = x.year as number;
-      const b = slugifyLoose(brand);
-      const m = slugifyLoose(model);
-      const c = slugifyLoose(country);
-      return {
-        url: `${base}/buy/brand/${b}/model/${m}/country/${c}/year/${year}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.64,
-      };
+      return { url: `${base}/buy/brand/${b}/model/${m}/country/${c}/year/${year}`, lastModified: now, changeFrequency: "weekly", priority: 0.64 };
     });
 
   return [
     ...staticRoutes,
     ...destinationRoutes,
+    ...guideRoutes,
     ...listingRoutes,
     ...profileRoutes,
-
-    // existing hubs
     ...brandRoutes,
     ...modelRoutes,
     ...countryRoutes,
     ...brandCountryRoutes,
-
-    // new high-print combos
     ...brandModelRoutes,
     ...modelYearRoutes,
     ...brandYearRoutes,
