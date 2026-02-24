@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 23/02/2026, 21:38:06*
+*Generated on: 24/02/2026, 16:22:10*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 257 |
-| 📁 Total Folders | 184 |
+| 📄 Total Files | 264 |
+| 📁 Total Folders | 190 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,14 +24,14 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 144 files (56.0%)
-- 🔷 **.ts** (TypeScript files): 52 files (20.2%)
-- 🖼️ **.jpg** (JPEG images): 17 files (6.6%)
-- 🖼️ **.png** (PNG images): 11 files (4.3%)
-- 📄 **.sql** (Other files): 10 files (3.9%)
+- ⚛️ **.tsx** (React TypeScript files): 148 files (56.1%)
+- 🔷 **.ts** (TypeScript files): 54 files (20.5%)
+- 🖼️ **.jpg** (JPEG images): 17 files (6.4%)
+- 📄 **.sql** (Other files): 11 files (4.2%)
+- 🖼️ **.png** (PNG images): 11 files (4.2%)
 - 🎨 **.svg** (SVG images): 5 files (1.9%)
-- ⚙️ **.json** (JSON files): 4 files (1.6%)
-- 📄 **.mjs** (Other files): 3 files (1.2%)
+- ⚙️ **.json** (JSON files): 4 files (1.5%)
+- 📄 **.mjs** (Other files): 3 files (1.1%)
 - 📖 **.md** (Markdown files): 2 files (0.8%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.4%)
 - 📄 **.txt** (Text files): 1 files (0.4%)
@@ -45,19 +45,19 @@
 
 ### By Category
 
-- **React**: 144 files (56.0%)
-- **TypeScript**: 52 files (20.2%)
-- **Assets**: 34 files (13.2%)
-- **Other**: 16 files (6.2%)
+- **React**: 148 files (56.1%)
+- **TypeScript**: 54 files (20.5%)
+- **Assets**: 34 files (12.9%)
+- **Other**: 17 files (6.4%)
 - **Config**: 6 files (2.3%)
-- **Docs**: 3 files (1.2%)
+- **Docs**: 3 files (1.1%)
 - **DevOps**: 1 files (0.4%)
 - **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 257 files
-- **app**: 135 files
+- **root**: 264 files
+- **app**: 139 files
 - **public**: 33 files
 - **components**: 32 files
 - **app/add-listing**: 21 files
@@ -322,8 +322,16 @@ findaly/
 │   │   ├── ⚛️ page.tsx
 │   │   └── ⚛️ SellPageClient.tsx
 │   ├── 📂 services/
+│   │   ├── 📂 marine-insurance/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 marine-lawyers/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ page.tsx
-│   │   └── ⚛️ ServicesPageClient.tsx
+│   │   ├── ⚛️ ServicesPageClient.tsx
+│   │   ├── 📂 yacht-finance/
+│   │   │   └── ⚛️ page.tsx
+│   │   └── 📂 yacht-surveyors/
+│   │   │   └── ⚛️ page.tsx
 │   ├── 📂 settings/
 │   │   ├── 📂 _components/
 │   │   │   └── ⚛️ SettingsClient.tsx
@@ -444,6 +452,8 @@ findaly/
 │   │   │   └── 📄 migration.sql
 │   │   ├── 📂 20260223110100_add_message_read_at/
 │   │   │   └── 📄 migration.sql
+│   │   ├── 📂 20260224090323_add_service_tags/
+│   │   │   └── 📄 migration.sql
 │   │   └── ⚙️ migration_lock.toml
 │   ├── 📄 schema.prisma
 │   └── ⚙️ tools.seed.json
@@ -502,6 +512,9 @@ findaly/
 │   │   └── 📂 rating/
 │   │   │   ├── 🔷 checklists.ts
 │   │   │   └── 🔷 score.ts
+│   ├── 📂 fix/
+│   │   ├── 🔷 backfill-brand-model-from-title.ts
+│   │   └── 🔷 backfill-brand-model.ts
 │   └── 🔷 fix-services-kind.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
