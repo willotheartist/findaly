@@ -44,6 +44,16 @@ export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   // ---------------------------
+  // ✅ Canonical host redirect (PERMANENT): findaly.co -> www.findaly.co
+  // ---------------------------
+  const host = (req.headers.get("host") || "").toLowerCase();
+  if (host === "findaly.co") {
+    const url = req.nextUrl.clone();
+    url.hostname = "www.findaly.co";
+    return NextResponse.redirect(url, 308);
+  }
+
+  // ---------------------------
   // ✅ Purge legacy site sections
   // ---------------------------
   if (isLegacyRoute(pathname)) {
@@ -107,29 +117,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // ✅ Legacy routes (purge)
-    "/alternatives/:path*",
-    "/use-cases/:path*",
-    "/best/:path*",
-    "/compare/:path*",
-
-    // Protected user routes
-    "/settings",
-    "/settings/:path*",
-    "/my-listings",
-    "/my-listings/:path*",
-    "/messages",
-    "/messages/:path*",
-    "/searches",
-    "/searches/:path*",
-    "/saved",
-    "/saved/:path*",
-    "/alerts",
-    "/alerts/:path*",
-    "/add-listing",
-    "/add-listing/:path*",
-
-    // Admin routes
-    "/admin/:path*",
+    // ✅ Run middleware on all pages so host canonical redirect applies everywhere.
+    // Exclude Next internals + common static assets.
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };
