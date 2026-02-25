@@ -1,6 +1,19 @@
+// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ✅ Force canonical host: https://www.findaly.co
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "findaly.co" }],
+        destination: "https://www.findaly.co/:path*",
+        permanent: true, // 308
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       // Free fallback endpoint
