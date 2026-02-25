@@ -5,6 +5,9 @@ import { verifyAdminToken } from "@/lib/admin/session";
 const ADMIN_COOKIE = "findaly_admin";
 const USER_COOKIE = "findaly_session";
 
+// ✅ Legacy site sections to purge (old Findaly)
+const LEGACY_PREFIXES = ["/alternatives", "/use-cases", "/best", "/compare"];
+
 // Routes that require user authentication
 const PROTECTED_USER_ROUTES = [
   "/settings",
@@ -22,8 +25,30 @@ function isProtectedRoute(pathname: string): boolean {
   );
 }
 
+function isLegacyRoute(pathname: string): boolean {
+  return LEGACY_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+function gone410() {
+  return new NextResponse("Gone", {
+    status: 410,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      // cache a bit so bots don’t hammer you
+      "cache-control": "public, max-age=86400",
+    },
+  });
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
+
+  // ---------------------------
+  // ✅ Purge legacy site sections
+  // ---------------------------
+  if (isLegacyRoute(pathname)) {
+    return gone410();
+  }
 
   // ---------------------------
   // Guard protected user routes
@@ -82,6 +107,12 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    // ✅ Legacy routes (purge)
+    "/alternatives/:path*",
+    "/use-cases/:path*",
+    "/best/:path*",
+    "/compare/:path*",
+
     // Protected user routes
     "/settings",
     "/settings/:path*",
@@ -97,6 +128,7 @@ export const config = {
     "/alerts/:path*",
     "/add-listing",
     "/add-listing/:path*",
+
     // Admin routes
     "/admin/:path*",
   ],

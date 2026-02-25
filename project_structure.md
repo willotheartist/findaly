@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 24/02/2026, 16:22:10*
+*Generated on: 24/02/2026, 19:12:22*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 264 |
-| 📁 Total Folders | 190 |
+| 📄 Total Files | 279 |
+| 📁 Total Folders | 196 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,15 +24,15 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 148 files (56.1%)
-- 🔷 **.ts** (TypeScript files): 54 files (20.5%)
-- 🖼️ **.jpg** (JPEG images): 17 files (6.4%)
-- 📄 **.sql** (Other files): 11 files (4.2%)
-- 🖼️ **.png** (PNG images): 11 files (4.2%)
-- 🎨 **.svg** (SVG images): 5 files (1.9%)
-- ⚙️ **.json** (JSON files): 4 files (1.5%)
+- ⚛️ **.tsx** (React TypeScript files): 163 files (58.4%)
+- 🔷 **.ts** (TypeScript files): 54 files (19.4%)
+- 🖼️ **.jpg** (JPEG images): 17 files (6.1%)
+- 📄 **.sql** (Other files): 11 files (3.9%)
+- 🖼️ **.png** (PNG images): 11 files (3.9%)
+- 🎨 **.svg** (SVG images): 5 files (1.8%)
+- ⚙️ **.json** (JSON files): 4 files (1.4%)
 - 📄 **.mjs** (Other files): 3 files (1.1%)
-- 📖 **.md** (Markdown files): 2 files (0.8%)
+- 📖 **.md** (Markdown files): 2 files (0.7%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.4%)
 - 📄 **.txt** (Text files): 1 files (0.4%)
 - 🖼️ **.ico** (Icon files): 1 files (0.4%)
@@ -45,19 +45,19 @@
 
 ### By Category
 
-- **React**: 148 files (56.1%)
-- **TypeScript**: 54 files (20.5%)
-- **Assets**: 34 files (12.9%)
-- **Other**: 17 files (6.4%)
-- **Config**: 6 files (2.3%)
+- **React**: 163 files (58.4%)
+- **TypeScript**: 54 files (19.4%)
+- **Assets**: 34 files (12.2%)
+- **Other**: 17 files (6.1%)
+- **Config**: 6 files (2.2%)
 - **Docs**: 3 files (1.1%)
 - **DevOps**: 1 files (0.4%)
 - **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 264 files
-- **app**: 139 files
+- **root**: 279 files
+- **app**: 154 files
 - **public**: 33 files
 - **components**: 32 files
 - **app/add-listing**: 21 files
@@ -153,15 +153,20 @@ findaly/
 │   │   └── 📂 success/
 │   │   │   └── ⚛️ page.tsx
 │   ├── 📂 blog/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 brands/
 │   │   ├── ⚛️ BrandsClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 brokers/
 │   │   ├── 📂 dashboard/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 faq/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 join/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ page.tsx
 │   │   └── 📂 pricing/
+│   │   │   └── ⚛️ page.tsx
 │   ├── 📂 buy/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
@@ -220,6 +225,7 @@ findaly/
 │   │   │   │   │   │   └── ⚛️ page.tsx
 │   │   │   │   └── ⚛️ page.tsx
 │   ├── 📂 careers/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 charter/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 contact/
@@ -227,6 +233,7 @@ findaly/
 │   ├── 📂 cookies/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 crew-jobs/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 destinations/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── 🔷 _data.ts
@@ -235,7 +242,9 @@ findaly/
 │   │   │   │   └── ⚛️ page.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 disclaimer/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 faq/
+│   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
 │   ├── 📂 finance/
 │   │   └── ⚛️ page.tsx
@@ -252,8 +261,11 @@ findaly/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 buying-a-beneteau/
 │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 buying-a-yacht/
 │   │   ├── 📂 catamaran-buying-guide/
 │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 charter-guide/
+│   │   ├── 📂 finance/
 │   │   ├── 📂 fountaine-pajot-catamaran-buying-guide/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 isla-40-buying-guide/
@@ -268,13 +280,17 @@ findaly/
 │   │   ├── 📂 motor-yacht-buying-guide/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ page.tsx
+│   │   ├── 📂 selling-a-yacht/
+│   │   ├── 📂 survey-inspection/
 │   │   ├── 📂 used-beneteau-checklist/
 │   │   │   └── ⚛️ page.tsx
 │   │   └── 📂 yacht-types-explained/
 │   │   │   └── ⚛️ page.tsx
 │   ├── 📂 instagram/
+│   │   └── ⚛️ page.tsx
 │   ├── ⚛️ layout.tsx
 │   ├── 📂 linkedin/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 login/
 │   │   ├── ⚛️ LoginClient.tsx
 │   │   └── ⚛️ page.tsx
@@ -296,6 +312,7 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── ⚛️ page.tsx
 │   ├── 📂 parts/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 pricing/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 privacy/
@@ -305,12 +322,16 @@ findaly/
 │   │   │   ├── ⚛️ page.tsx
 │   │   │   └── ⚛️ ProfilePageClient.tsx
 │   ├── 📂 report/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 reports/
+│   │   └── ⚛️ page.tsx
 │   ├── 🔷 robots.ts
 │   ├── 📂 safety/
 │   ├── 📂 saved/
 │   │   ├── ⚛️ page.tsx
 │   │   └── ⚛️ SavedClient.tsx
+│   ├── 📂 saved-searches/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 scams/
 │   ├── 📂 search/
 │   │   ├── ⚛️ page.tsx
