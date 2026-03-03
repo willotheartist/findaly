@@ -48,7 +48,7 @@ export const metadata: Metadata = {
       "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly.",
     images: [
       {
-        url: absoluteUrl("/hero-buy.jpg"),
+        url: absoluteUrl("/og-findaly.jpg"),
         width: 1200,
         height: 630,
         alt: "Findaly — boats for sale, charter, and services",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     title: "Findaly: Every boat. Every budget. Every need.",
     description:
       "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly.",
-    images: [absoluteUrl("/hero-buy.jpg")],
+    images: [absoluteUrl("/og-findaly.jpg")],
   },
 
   robots: {
