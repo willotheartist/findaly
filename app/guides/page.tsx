@@ -6,7 +6,8 @@ export const metadata = {
   title: "Yacht Buying Guides | Findaly",
   description:
     "Browse Findaly’s yacht buying guides: pricing, inspections, model comparisons, ownership reality, and how to buy clean.",
-}
+  alternates: { canonical: "/guides" },
+};
 
 export default function GuidesHubPage() {
   return (

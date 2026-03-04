@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 04/03/2026, 16:56:24*
+*Generated on: 04/03/2026, 17:51:16*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 281 |
+| 📄 Total Files | 282 |
 | 📁 Total Folders | 198 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,8 +24,8 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 163 files (58.0%)
-- 🔷 **.ts** (TypeScript files): 55 files (19.6%)
+- ⚛️ **.tsx** (React TypeScript files): 163 files (57.8%)
+- 🔷 **.ts** (TypeScript files): 56 files (19.9%)
 - 🖼️ **.jpg** (JPEG images): 18 files (6.4%)
 - 📄 **.sql** (Other files): 11 files (3.9%)
 - 🖼️ **.png** (PNG images): 11 files (3.9%)
@@ -45,9 +45,9 @@
 
 ### By Category
 
-- **React**: 163 files (58.0%)
-- **TypeScript**: 55 files (19.6%)
-- **Assets**: 35 files (12.5%)
+- **React**: 163 files (57.8%)
+- **TypeScript**: 56 files (19.9%)
+- **Assets**: 35 files (12.4%)
 - **Other**: 17 files (6.0%)
 - **Config**: 6 files (2.1%)
 - **Docs**: 3 files (1.1%)
@@ -56,11 +56,11 @@
 
 ### 📁 Largest Directories
 
-- **root**: 281 files
-- **app**: 155 files
+- **root**: 282 files
+- **app**: 156 files
 - **public**: 34 files
 - **components**: 32 files
-- **app/add-listing**: 21 files
+- **app/buy**: 22 files
 
 ## 🌳 Directory Structure
 
@@ -171,6 +171,7 @@ findaly/
 │   │   └── 📂 pricing/
 │   │   │   └── ⚛️ page.tsx
 │   ├── 📂 buy/
+│   │   ├── 🔷 _seo.ts
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
 │   │   │   └── ⚛️ page.tsx

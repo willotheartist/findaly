@@ -31,9 +31,10 @@ export const metadata: Metadata = {
 
   applicationName: "Findaly",
 
-  alternates: {
-    canonical: siteUrl,
-  },
+  // CRITICAL:
+  // Do NOT set a global canonical here.
+  // Client pages cannot export metadata, so they'd inherit it and canonical to home.
+  // Canonicals must be per-page (or inferred).
 
   icons: {
     icon: "/favicon.ico",
@@ -108,11 +109,7 @@ const websiteSchema = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={interTight.variable}>
       <head>

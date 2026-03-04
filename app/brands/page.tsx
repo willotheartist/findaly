@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Yacht Brands Directory | Findaly",
   description:
     "Browse yachts for sale by brand. Explore popular yacht builders and jump into live inventory by brand on Findaly.",
+  alternates: { canonical: "/brands" },
 };
 
 type BrandAggRow = { brand: string | null; _count: { brand: number } };

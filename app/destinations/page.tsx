@@ -7,6 +7,7 @@ import { DESTINATIONS, DESTINATION_STYLES } from "@/components/destinations/dest
 export const metadata: Metadata = {
   title: "Destinations | Findaly",
   description: "Explore yacht destinations around the world — coastlines, islands, and iconic harbours.",
+  alternates: { canonical: "/destinations" },
 };
 
 export default function DestinationsPage() {
