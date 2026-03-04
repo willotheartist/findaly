@@ -2,7 +2,6 @@
 import "./globals.css";
 import { Inter_Tight } from "next/font/google";
 import type { Metadata } from "next";
-import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteHeaderOffsetClient from "@/components/SiteHeaderOffsetClient";
@@ -82,10 +81,10 @@ const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Findaly",
-  url: "https://findaly.co",
+  url: "https://www.findaly.co",
   logo: {
     "@type": "ImageObject",
-    url: "https://findaly.co/logo.png",
+    url: "https://www.findaly.co/logo.png",
     width: 200,
     height: 60,
   },
@@ -98,12 +97,12 @@ const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Findaly",
-  url: "https://findaly.co",
+  url: "https://www.findaly.co",
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://findaly.co/buy?query={search_term_string}",
+      urlTemplate: "https://www.findaly.co/buy?query={search_term_string}",
     },
     "query-input": "required name=search_term_string",
   },
@@ -126,11 +125,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-      </head>
-      <body className="min-h-screen">
-        <Script
-          id="trustpilot-widget"
-          strategy="afterInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
@@ -140,6 +135,8 @@ export default function RootLayout({
             `,
           }}
         />
+      </head>
+      <body className="min-h-screen">
         <Header />
         <SiteHeaderOffsetClient />
         {children}
