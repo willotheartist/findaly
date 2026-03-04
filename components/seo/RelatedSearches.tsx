@@ -15,6 +15,16 @@ function slugifyLoose(input: string) {
     .replace(/^-|-$/g, "");
 }
 
+const MIN_YEAR = 1950;
+const MAX_YEAR = new Date().getFullYear() + 1;
+
+function toValidYear(v: unknown): number | null {
+  const n = typeof v === "number" ? v : parseInt(String(v ?? ""), 10);
+  if (!Number.isFinite(n) || Number.isNaN(n)) return null;
+  if (n < MIN_YEAR || n > MAX_YEAR) return null;
+  return n;
+}
+
 function PillLink({
   href,
   children,
@@ -128,7 +138,18 @@ export default function RelatedSearches(props: {
     maxPills = 10,
   } = props;
 
-  const hasAny = brands.length > 0 || models.length > 0 || countries.length > 0 || years.length > 0;
+  const yearsSafe = React.useMemo(
+    () =>
+      years
+        .map(toValidYear)
+        .filter((y): y is number => y !== null)
+        .slice(0, Math.min(12, maxPills)),
+    [years, maxPills]
+  );
+
+  const yearSafe = toValidYear(year);
+
+  const hasAny = brands.length > 0 || models.length > 0 || countries.length > 0 || yearsSafe.length > 0;
   if (!hasAny && kind !== "year") return null;
 
   // BRAND HUB
@@ -157,9 +178,9 @@ export default function RelatedSearches(props: {
           </Panel>
         ) : null}
 
-        {years.length ? (
+        {yearsSafe.length ? (
           <Panel title="Browse by year" footer="Compare generations, specs, and pricing.">
-            {years.slice(0, Math.min(12, maxPills)).map((y) => (
+            {yearsSafe.map((y) => (
               <PillLink key={y} href={`/buy/brand/${brandSlug}/year/${y}`}>
                 {y}
               </PillLink>
@@ -196,9 +217,9 @@ export default function RelatedSearches(props: {
           </Panel>
         ) : null}
 
-        {years.length ? (
+        {yearsSafe.length ? (
           <Panel title="Browse by year" footer="Compare generations, specs, and pricing.">
-            {years.slice(0, Math.min(12, maxPills)).map((y) => (
+            {yearsSafe.map((y) => (
               <PillLink key={y} href={`/buy/model/${modelSlug}/year/${y}`}>
                 {y}
               </PillLink>
@@ -235,9 +256,9 @@ export default function RelatedSearches(props: {
           </Panel>
         ) : null}
 
-        {years.length ? (
+        {yearsSafe.length ? (
           <Panel title="Browse by year" footer="High-intent filters for location-specific searches.">
-            {years.slice(0, Math.min(12, maxPills)).map((y) => (
+            {yearsSafe.map((y) => (
               <PillLink key={y} href={`/buy/country/${countrySlug}/year/${y}`}>
                 {y}
               </PillLink>
@@ -250,14 +271,14 @@ export default function RelatedSearches(props: {
 
   // YEAR HUB
   if (kind === "year") {
-    if (typeof year !== "number" || Number.isNaN(year)) return null;
+    if (!yearSafe) return null;
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {brands.length ? (
-          <Panel title="Popular brands" footer={`Browse ${year} listings by brand.`}>
+          <Panel title="Popular brands" footer={`Browse ${yearSafe} listings by brand.`}>
             {brands.slice(0, maxPills).map((b) => (
-              <PillLink key={b} href={`/buy/year/${year}/brand/${slugifyLoose(b)}`}>
+              <PillLink key={b} href={`/buy/year/${yearSafe}/brand/${slugifyLoose(b)}`}>
                 {b}
               </PillLink>
             ))}
@@ -265,9 +286,9 @@ export default function RelatedSearches(props: {
         ) : null}
 
         {models.length ? (
-          <Panel title="Popular models" footer={`Browse ${year} listings by model.`}>
+          <Panel title="Popular models" footer={`Browse ${yearSafe} listings by model.`}>
             {models.slice(0, maxPills).map((m) => (
-              <PillLink key={m} href={`/buy/year/${year}/model/${slugifyLoose(m)}`}>
+              <PillLink key={m} href={`/buy/year/${yearSafe}/model/${slugifyLoose(m)}`}>
                 {m}
               </PillLink>
             ))}
@@ -275,9 +296,9 @@ export default function RelatedSearches(props: {
         ) : null}
 
         {countries.length ? (
-          <Panel title="Top countries" footer={`Browse ${year} listings by location.`}>
+          <Panel title="Top countries" footer={`Browse ${yearSafe} listings by location.`}>
             {countries.slice(0, maxPills).map((c) => (
-              <PillLink key={c} href={`/buy/year/${year}/country/${slugifyLoose(c)}`}>
+              <PillLink key={c} href={`/buy/year/${yearSafe}/country/${slugifyLoose(c)}`}>
                 {c}
               </PillLink>
             ))}
