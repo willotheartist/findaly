@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 04/03/2026, 17:51:16*
+*Generated on: 04/03/2026, 19:21:34*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 282 |
+| 📄 Total Files | 287 |
 | 📁 Total Folders | 198 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,43 +24,43 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 163 files (57.8%)
-- 🔷 **.ts** (TypeScript files): 56 files (19.9%)
-- 🖼️ **.jpg** (JPEG images): 18 files (6.4%)
-- 📄 **.sql** (Other files): 11 files (3.9%)
-- 🖼️ **.png** (PNG images): 11 files (3.9%)
-- 🎨 **.svg** (SVG images): 5 files (1.8%)
+- ⚛️ **.tsx** (React TypeScript files): 167 files (58.2%)
+- 🔷 **.ts** (TypeScript files): 56 files (19.5%)
+- 🖼️ **.jpg** (JPEG images): 18 files (6.3%)
+- 📄 **.sql** (Other files): 11 files (3.8%)
+- 🖼️ **.png** (PNG images): 11 files (3.8%)
+- 🎨 **.svg** (SVG images): 5 files (1.7%)
 - ⚙️ **.json** (JSON files): 4 files (1.4%)
-- 📄 **.mjs** (Other files): 3 files (1.1%)
+- 📄 **.mjs** (Other files): 4 files (1.4%)
 - 📖 **.md** (Markdown files): 2 files (0.7%)
-- 🚫 **.gitignore** (Git ignore): 1 files (0.4%)
-- 📄 **.txt** (Text files): 1 files (0.4%)
-- 🖼️ **.ico** (Icon files): 1 files (0.4%)
-- 🎨 **.css** (Stylesheets): 1 files (0.4%)
-- ⚙️ **.yaml** (YAML files): 1 files (0.4%)
-- ⚙️ **.toml** (TOML files): 1 files (0.4%)
-- 📄 **.prisma** (Other files): 1 files (0.4%)
-- 📄 **.patch** (Other files): 1 files (0.4%)
-- 📄 **.tsbuildinfo** (Other files): 1 files (0.4%)
+- 🚫 **.gitignore** (Git ignore): 1 files (0.3%)
+- 📄 **.txt** (Text files): 1 files (0.3%)
+- 🖼️ **.ico** (Icon files): 1 files (0.3%)
+- 🎨 **.css** (Stylesheets): 1 files (0.3%)
+- ⚙️ **.yaml** (YAML files): 1 files (0.3%)
+- ⚙️ **.toml** (TOML files): 1 files (0.3%)
+- 📄 **.prisma** (Other files): 1 files (0.3%)
+- 📄 **.patch** (Other files): 1 files (0.3%)
+- 📄 **.tsbuildinfo** (Other files): 1 files (0.3%)
 
 ### By Category
 
-- **React**: 163 files (57.8%)
-- **TypeScript**: 56 files (19.9%)
-- **Assets**: 35 files (12.4%)
-- **Other**: 17 files (6.0%)
+- **React**: 167 files (58.2%)
+- **TypeScript**: 56 files (19.5%)
+- **Assets**: 35 files (12.2%)
+- **Other**: 18 files (6.3%)
 - **Config**: 6 files (2.1%)
-- **Docs**: 3 files (1.1%)
-- **DevOps**: 1 files (0.4%)
-- **Styles**: 1 files (0.4%)
+- **Docs**: 3 files (1.0%)
+- **DevOps**: 1 files (0.3%)
+- **Styles**: 1 files (0.3%)
 
 ### 📁 Largest Directories
 
-- **root**: 282 files
-- **app**: 156 files
+- **root**: 287 files
+- **app**: 160 files
 - **public**: 34 files
 - **components**: 32 files
-- **app/buy**: 22 files
+- **app/add-listing**: 22 files
 
 ## 🌳 Directory Structure
 
@@ -98,6 +98,7 @@ findaly/
 │   │   │   └── 🔷 options.ts
 │   │   ├── 📂 _types/
 │   │   │   └── 🔷 listing.ts
+│   │   ├── ⚛️ AddListingClient.tsx
 │   │   ├── ⚛️ ListingWizard.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 alerts/
@@ -161,6 +162,7 @@ findaly/
 │   │   ├── ⚛️ BrandsClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 brokers/
+│   │   ├── ⚛️ BrokersClient.tsx
 │   │   ├── 📂 dashboard/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 faq/
@@ -231,6 +233,7 @@ findaly/
 │   ├── 📂 careers/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 charter/
+│   │   ├── ⚛️ CharterClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 contact/
 │   │   └── ⚛️ page.tsx
@@ -251,6 +254,7 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
 │   ├── 📂 finance/
+│   │   ├── ⚛️ FinanceClient.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 🎨 globals.css
 │   ├── 📂 guides/
@@ -526,6 +530,7 @@ findaly/
 │   └── 🎨 window.svg
 ├── 🔴 📖 **README.md**
 ├── 📂 scripts/
+│   ├── 📄 check-canonicals.mjs
 │   ├── 📂 eyb/
 │   │   ├── 🔷 backfill-eyb.ts
 │   │   ├── 🔷 debug-one.ts

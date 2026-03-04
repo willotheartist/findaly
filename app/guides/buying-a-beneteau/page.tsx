@@ -1,6 +1,9 @@
 // app/guides/buying-a-beneteau/page.tsx
 "use client"
 
+import Head from "next/head"
+import { absoluteUrl } from "@/lib/site"
+
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -203,6 +206,8 @@ export default function BuyingABeneteauGuidePage() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  const canonical = absoluteUrl("/guides/buying-a-beneteau")
+
   const beneteauFaqSchema = useMemo(
     () => ({
       "@context": "https://schema.org",
@@ -218,6 +223,10 @@ export default function BuyingABeneteauGuidePage() {
 
   return (
     <>
+      <Head>
+        <link rel="canonical" href={canonical} />
+      </Head>
+
       <style>{`
         .pillar-page { background-color: #f5f2eb; color: #1a1a1a; }
         .article-body p { font-size: 17px; line-height: 1.75; color: rgba(10,33,31,0.7); margin-bottom: 1.5rem; }
@@ -694,9 +703,9 @@ export default function BuyingABeneteauGuidePage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
                     {[
-                      { title: "Mediterranean", href: "/destinations" , note: "High Oceanis demand, charter-heavy markets." },
-                      { title: "Caribbean", href: "/destinations" , note: "Inspect hard: weather history + systems." },
-                      { title: "US East Coast", href: "/destinations" , note: "Strong community demand; seasonal cycles." },
+                      { title: "Mediterranean", href: "/destinations", note: "High Oceanis demand, charter-heavy markets." },
+                      { title: "Caribbean", href: "/destinations", note: "Inspect hard: weather history + systems." },
+                      { title: "US East Coast", href: "/destinations", note: "Strong community demand; seasonal cycles." },
                     ].map((x) => (
                       <div key={x.title} className="model-row">
                         <div className="model-name">{x.title}</div>
@@ -768,9 +777,7 @@ export default function BuyingABeneteauGuidePage() {
                   berth, insurance, maintenance, and upgrades. Beneteau is often finance-friendly because
                   it’s a widely known brand with strong market liquidity in popular models.
                 </p>
-                <p>
-                  Explore options and understand the shape of payments before you commit:
-                </p>
+                <p>Explore options and understand the shape of payments before you commit:</p>
                 <div className="mt-6">
                   <Link
                     href="/finance"
@@ -808,8 +815,7 @@ export default function BuyingABeneteauGuidePage() {
                   Ready to browse?
                 </p>
                 <h3 className="text-[clamp(26px,3.5vw,38px)] font-bold leading-[1.1] text-white tracking-tight">
-                  Find your next{" "}
-                  <span className="text-[#fff86c]">Beneteau</span> with confidence.
+                  Find your next <span className="text-[#fff86c]">Beneteau</span> with confidence.
                 </h3>
                 <p className="mx-auto mt-4 max-w-md text-[15px] text-white/50 leading-relaxed">
                   Explore real listings, compare models, and keep the buying process clean —

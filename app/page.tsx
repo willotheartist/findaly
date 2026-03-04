@@ -364,10 +364,7 @@ export default async function Home() {
   return (
     <main className="w-full bg-white">
       <HomeHero />
-      {/* ... YOUR EXISTING RETURN BODY UNCHANGED ... */}
-      {/* (kept 1:1 — I’m not rewriting it here because it’s already in your file and we didn’t modify below this point) */}
-      {/* IMPORTANT: the rest of your file remains exactly as you pasted. */}
-      <HomeHero />
+  
       {/* Category tiles */}
       <section className="w-full border-b border-slate-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">

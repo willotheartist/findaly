@@ -1,14 +1,20 @@
 // app/add-listing/page.tsx
-"use client";
+import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/site";
+import AddListingClient from "./AddListingClient";
 
-import ListingWizard from "./ListingWizard";
+export const metadata: Metadata = {
+  title: "List a Boat | Findaly",
+  description: "Create a boat listing on Findaly in minutes.",
+  alternates: {
+    canonical: absoluteUrl("/add-listing"),
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function AddListingPage() {
-  return (
-    <ListingWizard
-      mode="create"
-      submitUrl="/api/listings"
-      submitMethod="POST"
-    />
-  );
+  return <AddListingClient />;
 }

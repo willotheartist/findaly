@@ -1,14 +1,12 @@
-// app/finance/page.tsx
-"use client";
+// app/finance/FinanceClient.tsx
+"use client"
 
-import Head from "next/head";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { absoluteUrl } from "@/lib/site";
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { motion } from "framer-motion"
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [0.22, 1, 0.36, 1] as const
 const fadeUp = {
   hidden: { opacity: 0, y: 16, filter: "blur(6px)" },
   show: {
@@ -17,11 +15,11 @@ const fadeUp = {
     filter: "blur(0px)",
     transition: { duration: 0.85, ease },
   },
-};
+}
 const stagger = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
-};
+}
 
 const tocSections = [
   { id: "financing-a-yacht", label: "Financing a yacht" },
@@ -29,30 +27,27 @@ const tocSections = [
   { id: "loan-types", label: "Types of marine finance" },
   { id: "what-to-know", label: "What to know first" },
   { id: "faq", label: "FAQ" },
-];
+]
 
 function useTocTracker() {
-  const [activeId, setActiveId] = useState("");
+  const [activeId, setActiveId] = useState("")
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
           .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) setActiveId((visible[0].target as HTMLElement).id);
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible.length > 0) setActiveId(visible[0].target.id)
       },
       { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
-    );
-
+    )
     tocSections.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return activeId;
+      const el = document.getElementById(s.id)
+      if (el) observer.observe(el)
+    })
+    return () => observer.disconnect()
+  }, [])
+  return activeId
 }
 
 const stats = [
@@ -60,7 +55,7 @@ const stats = [
   { value: "Competitive", label: "Marine loan rates from specialist lenders" },
   { value: "Fast", label: "Pre-approval decisions often within 48 hours" },
   { value: "Flexible", label: "Terms from 5 to 20 years available" },
-];
+]
 
 const faqs = [
   {
@@ -83,14 +78,15 @@ const faqs = [
     q: "What's the difference between a marine mortgage and a personal loan for a boat?",
     a: "A marine mortgage uses the vessel as security, typically offering lower rates and longer terms. A personal loan is unsecured, quicker, but usually at higher rates and over shorter periods — better suited for smaller vessels.",
   },
-];
+]
 
-export default function FinancePage() {
-  const activeId = useTocTracker();
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+export default function FinanceClient() {
+  const activeId = useTocTracker()
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  const canonical = absoluteUrl("/finance");
-
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FAQ SCHEMA
+  // ─────────────────────────────────────────────────────────────────────────────
   const financeFaqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -136,14 +132,10 @@ export default function FinancePage() {
         },
       },
     ],
-  };
+  }
 
   return (
     <>
-      <Head>
-        <link rel="canonical" href={canonical} />
-      </Head>
-
       <style>{`
         .pillar-page { background-color: #f5f2eb; color: #1a1a1a; }
         .article-body p { font-size: 17px; line-height: 1.75; color: rgba(10,33,31,0.7); margin-bottom: 1.5rem; }
@@ -171,7 +163,13 @@ export default function FinancePage() {
       <div className="pillar-page min-h-screen pb-0">
         {/* HERO */}
         <div className="relative h-[70vh] min-h-[520px] w-full overflow-hidden">
-          <Image src="/finance-hero.jpg" alt="Yacht finance on Findaly" fill className="object-cover" priority />
+          <Image
+            src="/finance-hero.jpg"
+            alt="Yacht finance on Findaly"
+            fill
+            className="object-cover"
+            priority
+          />
           <div className="absolute inset-0 bg-linear-to-b from-[#0a211f]/60 via-[#0a211f]/30 to-[#f5f2eb]" />
           <motion.div
             className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
@@ -179,19 +177,32 @@ export default function FinancePage() {
             initial="hidden"
             animate="show"
           >
-            <motion.p className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4" variants={fadeUp}>
+            <motion.p
+              className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4"
+              variants={fadeUp}
+            >
               Yacht Finance
             </motion.p>
 
-            <motion.h1 className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em] text-white max-w-3xl" variants={fadeUp}>
-              Don&apos;t wait to own. <span className="text-[#fff86c]">Finance it.</span>
+            <motion.h1
+              className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em] text-white max-w-3xl"
+              variants={fadeUp}
+            >
+              Don&apos;t wait to own.{" "}
+              <span className="text-[#fff86c]">Finance it.</span>
             </motion.h1>
 
-            <motion.p className="mt-6 text-[17px] text-white/70 max-w-xl leading-relaxed" variants={fadeUp}>
+            <motion.p
+              className="mt-6 text-[17px] text-white/70 max-w-xl leading-relaxed"
+              variants={fadeUp}
+            >
               Marine finance options for every vessel and every budget. Understand your options before you make an offer.
             </motion.p>
 
-            <motion.div className="mt-8 flex gap-3 flex-wrap justify-center" variants={fadeUp}>
+            <motion.div
+              className="mt-8 flex gap-3 flex-wrap justify-center"
+              variants={fadeUp}
+            >
               <Link
                 href="/buy"
                 className="inline-flex h-12 items-center justify-center rounded-xl bg-[#fff86c] px-7 text-[14.5px] font-semibold text-[#0a211f] transition-opacity hover:opacity-90"
@@ -210,7 +221,13 @@ export default function FinancePage() {
         </div>
 
         {/* STATS */}
-        <motion.div className="mx-auto max-w-6xl px-6 -mt-2 relative z-10" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+        <motion.div
+          className="mx-auto max-w-6xl px-6 -mt-2 relative z-10"
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {stats.map((s) => (
               <motion.div key={s.label} className="stat-card" variants={fadeUp}>
@@ -227,7 +244,9 @@ export default function FinancePage() {
             <aside className="hidden lg:block">
               <div className="sticky top-28 space-y-5">
                 <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/3 p-6">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-4">On this page</p>
+                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-4">
+                    On this page
+                  </p>
                   <nav>
                     {tocSections.map((s) => (
                       <a
@@ -235,8 +254,8 @@ export default function FinancePage() {
                         href={`#${s.id}`}
                         className={`toc-link ${activeId === s.id ? "toc-link-active" : ""}`}
                         onClick={(e) => {
-                          e.preventDefault();
-                          document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
+                          e.preventDefault()
+                          document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" })
                         }}
                       >
                         {s.label}
@@ -247,11 +266,19 @@ export default function FinancePage() {
 
                 <div className="overflow-hidden rounded-2xl border border-[#0a211f]/10">
                   <div className="relative h-44">
-                    <Image src="/list-boat-cta.jpg" alt="List your boat on Findaly" fill sizes="280px" className="object-cover" />
+                    <Image
+                      src="/list-boat-cta.jpg"
+                      alt="List your boat on Findaly"
+                      fill
+                      sizes="280px"
+                      className="object-cover"
+                    />
                   </div>
                   <div className="bg-[#0a211f] p-5">
                     <p className="text-[15px] font-semibold text-white">Ready to list your boat?</p>
-                    <p className="mt-1.5 text-[13px] text-white/50 leading-relaxed">Free listing. No commission. Global reach.</p>
+                    <p className="mt-1.5 text-[13px] text-white/50 leading-relaxed">
+                      Free listing. No commission. Global reach.
+                    </p>
                     <Link
                       href="/add-listing"
                       className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#fff86c] text-[13.5px] font-semibold text-[#0a211f]"
@@ -262,7 +289,9 @@ export default function FinancePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">Explore Findaly</p>
+                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">
+                    Explore Findaly
+                  </p>
                   <Link href="/buy" className="pillar-link"><span>🛥️</span> Buy a Yacht</Link>
                   <Link href="/sell" className="pillar-link"><span>🏷️</span> Sell Your Boat</Link>
                   <Link href="/charter" className="pillar-link"><span>⚓</span> Charter a Yacht</Link>
@@ -286,7 +315,9 @@ export default function FinancePage() {
                   and the role of a survey all vary between lenders and vessel types. Going in informed means going in with confidence.
                 </p>
 
-                <div className="pull-quote">&ldquo;The best time to explore finance options is before you find the boat you love.&rdquo;</div>
+                <div className="pull-quote">
+                  &ldquo;The best time to explore finance options is before you find the boat you love.&rdquo;
+                </div>
 
                 <p>
                   Findaly&apos;s finance guide covers everything you need to understand your options. And when you&apos;ve found your vessel
@@ -459,11 +490,12 @@ export default function FinancePage() {
           </div>
         </div>
 
+        {/* FAQ SCHEMA SCRIPT (inside top-level wrapper, just before closing tag) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(financeFaqSchema) }}
         />
       </div>
     </>
-  );
+  )
 }
