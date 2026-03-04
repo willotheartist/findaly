@@ -1,6 +1,7 @@
-import Image from "next/image"
-import Link from "next/link"
-import { GUIDES } from "./_data"
+// app/guides/page.tsx
+import Image from "next/image";
+import Link from "next/link";
+import { GUIDES } from "./_data";
 
 export const metadata = {
   title: "Yacht Buying Guides | Findaly",
@@ -159,7 +160,6 @@ export default function GuidesHubPage() {
           ))}
         </div>
 
-        {/* Footer-ish nav */}
         <div className="mt-14 rounded-2xl border border-[#0a211f]/10 bg-[#0a211f]/2 p-8 text-center">
           <p className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#0a211f]/45">
             Want to move faster?
@@ -188,5 +188,5 @@ export default function GuidesHubPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }

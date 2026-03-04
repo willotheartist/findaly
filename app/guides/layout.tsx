@@ -1,11 +1,13 @@
-import type { Metadata } from "next"
+// app/guides/layout.tsx
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Guides | Findaly",
   description:
     "Buying guides, checklists, and model comparisons to help you buy a yacht with confidence.",
-}
+  // DO NOT set alternates.canonical here (it would leak to client pages).
+};
 
 export default function GuidesLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
+  return <>{children}</>;
 }

@@ -29,25 +29,19 @@ function buildSeoIntro(opts: {
 
   const b = brandsTop.slice(0, 3).filter(Boolean);
   const c = countriesTop.slice(0, 3).filter(Boolean);
-  const y = yearsTop
-    .slice(0, 3)
-    .filter((n) => typeof n === "number" && !Number.isNaN(n));
+  const y = yearsTop.slice(0, 3).filter((n) => typeof n === "number" && !Number.isNaN(n));
 
   const bits: string[] = [];
 
   bits.push(
-    `Browse ${total.toLocaleString()} ${modelDisplay} boat${
-      total === 1 ? "" : "s"
-    } for sale on Findaly — updated regularly from trusted sellers and brokers.`
+    `Browse ${total.toLocaleString()} ${modelDisplay} boat${total === 1 ? "" : "s"} for sale on Findaly — updated regularly from trusted sellers and brokers.`
   );
 
   if (b.length) bits.push(`Top brands include ${b.join(", ")}.`);
   if (y.length) bits.push(`Popular years include ${y.join(", ")}.`);
 
   if (c.length) {
-    bits.push(
-      `Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`
-    );
+    bits.push(`Explore listings in ${c.join(", ")} and beyond — with photos, specs, and direct enquiries.`);
   } else {
     bits.push(`Compare specs, pricing, and location — then enquire directly with sellers and brokers.`);
   }
@@ -59,7 +53,6 @@ function jsonLd(obj: JsonLdObject) {
   return (
     <script
       type="application/ld+json"
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
     />
   );
@@ -107,7 +100,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         )
       : truncate(`Explore ${m.display} boats and listings on Findaly. New inventory is added regularly.`, 160);
 
-  const canonical = `/buy/model/${slugifyLoose(m.canonicalSpaced)}`;
+  // ✅ Canonical should match the requested slug (no stripping).
+  const requestedSlug = slugifyLoose(m.spaced);
+  const canonical = `/buy/model/${requestedSlug}`;
 
   return {
     title,
@@ -200,7 +195,7 @@ export default async function ModelHubPage({ params }: PageProps) {
   });
 
   const base = getSiteUrl();
-  const safeModelSlug = slugifyLoose(m.canonicalSpaced);
+  const safeModelSlug = slugifyLoose(m.spaced);
   const pageUrl = `${base}/buy/model/${safeModelSlug}`;
 
   const breadcrumb: JsonLdObject = {
@@ -275,8 +270,7 @@ export default async function ModelHubPage({ params }: PageProps) {
         name: "Can I contact the seller or broker directly?",
         acceptedAnswer: {
           "@type": "Answer",
-          text:
-            "Yes — each listing lets you enquire directly and connect with sellers and brokers.",
+          text: "Yes — each listing lets you enquire directly and connect with sellers and brokers.",
         },
       },
     ],
@@ -403,12 +397,7 @@ export default async function ModelHubPage({ params }: PageProps) {
               {listings.map((l) => {
                 const img = l.media?.[0]?.url || "";
                 const price = fmtPrice(l.priceCents, l.currency);
-                const specs = [
-                  l.brand || null,
-                  l.year ? `${l.year}` : null,
-                  l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null,
-                  l.country || l.location || null,
-                ].filter(Boolean) as string[];
+                const specs = [l.brand || null, l.year ? `${l.year}` : null, l.lengthM ? `${Math.round(l.lengthM)}m` : l.lengthFt ? `${Math.round(l.lengthFt)}ft` : null, l.country || l.location || null].filter(Boolean) as string[];
 
                 return (
                   <Link

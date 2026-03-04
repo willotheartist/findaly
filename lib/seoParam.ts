@@ -1,9 +1,9 @@
 // lib/seoParam.ts
 
 export type ParamTokens = {
-  raw: string; // decoded string, trimmed
-  spaced: string; // "-" "_" collapsed to spaces, normalized whitespace
-  display: string; // title-cased for UI
+  raw: string;
+  spaced: string;
+  display: string;
 };
 
 export type BrandParam = ParamTokens;
@@ -13,23 +13,9 @@ export type CountryParam = ParamTokens & {
 };
 
 export type ModelParam = ParamTokens & {
-  /**
-   * A canonical model spaced form (model-only).
-   * Useful for /buy/model/[model] where you want canonical URLs.
-   */
   canonicalSpaced: string;
-
-  /**
-   * When the URL includes a prefix like "beneteau-oceanis-51-1",
-   * we treat the first token as a brandCandidate and the rest as the modelCandidate.
-   * This helps normalize canonical model-only slugs.
-   */
   brandCandidateRaw: string | null;
   modelCandidateRaw: string | null;
-
-  /**
-   * Candidates used for database matching (robust against "51 1" vs "51.1", casing, etc.)
-   */
   candidates: string[];
 };
 
@@ -45,12 +31,6 @@ export function normalizeSpaces(input: string) {
   return (input || "").replace(/\s+/g, " ").trim();
 }
 
-/**
- * Loose slugify that matches your existing hub conventions.
- * - strips quotes
- * - converts & -> "and"
- * - collapses non-alphanumerics into "-"
- */
 export function slugifyLoose(input: string) {
   return normalizeSpaces(input)
     .toLowerCase()
@@ -84,65 +64,37 @@ export function uniqStrings(arr: string[]) {
   return out;
 }
 
-/**
- * Convert URL-ish string to spaced:
- * "beneteau-oceanis_51-1" -> "beneteau oceanis 51 1"
- */
 export function paramToSpaced(param: string) {
   const raw = normalizeSpaces(decodeParam(param || ""));
   const spaced = normalizeSpaces(raw.replace(/[-_]+/g, " "));
   return { raw, spaced };
 }
 
-/**
- * BRAND
- */
 export function brandFromParam(param: string): BrandParam {
   const { raw, spaced } = paramToSpaced(param);
-  return {
-    raw,
-    spaced,
-    display: titleCaseWords(spaced),
-  };
+  return { raw, spaced, display: titleCaseWords(spaced) };
 }
 
-/**
- * COUNTRY
- * We keep `upper` for matching legacy data that might be stored uppercased.
- */
 export function countryFromParam(param: string): CountryParam {
   const { raw, spaced } = paramToSpaced(param);
   const display = titleCaseWords(spaced);
-  return {
-    raw,
-    spaced,
-    display,
-    upper: spaced.toUpperCase(),
-  };
+  return { raw, spaced, display, upper: spaced.toUpperCase() };
 }
 
-/**
- * MODEL helpers
- *
- * Important: "51 1" -> "51.1"
- * This is the common "Oceanis 51.1" issue when slugs become space-separated digits.
- */
 export function dottedNumberVariant(input: string) {
   return normalizeSpaces(
-    normalizeSpaces(input)
-      // "51 1" -> "51.1"
-      .replace(/\b(\d+)\s+(\d+)\b/g, "$1.$2")
+    normalizeSpaces(input).replace(/\b(\d+)\s+(\d+)\b/g, "$1.$2")
   );
 }
 
 /**
  * MODEL (for /buy/model/[model])
- * Accepts:
- * - "oceanis-51-1"
- * - "beneteau-oceanis-51-1" (brand prefixed)
  *
- * We do NOT enforce brand matching on model-only pages.
- * Instead we derive canonicalSpaced = modelCandidateRaw || spaced.
+ * IMPORTANT CHANGE:
+ * - We no longer treat the first token as a brand by default for canonical.
+ * - CanonicalSpaced is ALWAYS the full spaced form (prevents lossy canonicals).
+ * - But we still build candidates that include the "rest-of-words" variant,
+ *   so prefixed slugs can still match DB values (Oceanis 51.1 etc).
  */
 export function modelFromParam(param: string): ModelParam {
   const { raw, spaced } = paramToSpaced(param);
@@ -151,11 +103,14 @@ export function modelFromParam(param: string): ModelParam {
   const brandCandidateRaw = parts.length >= 2 ? parts[0] : null;
   const modelCandidateRaw = parts.length >= 2 ? parts.slice(1).join(" ") : null;
 
-  const canonicalSpaced = normalizeSpaces(modelCandidateRaw || spaced);
+  // Canonical should NOT collapse/strip. This prevents collisions like:
+  // oceanis-51-1 -> 51-1, sun-odyssey-490 -> odyssey-490, etc.
+  const canonicalSpaced = normalizeSpaces(spaced);
   const canonicalDotted = dottedNumberVariant(canonicalSpaced);
 
-  // For display, we prefer a clean title-cased canonical.
-  const display = titleCaseWords(canonicalSpaced);
+  // For display, if the input *was* prefixed, show the remainder nicely
+  const displayBasis = normalizeSpaces(modelCandidateRaw || canonicalSpaced);
+  const display = titleCaseWords(displayBasis);
 
   // Build robust candidates for DB matching
   const candidates = uniqStrings([
@@ -164,11 +119,11 @@ export function modelFromParam(param: string): ModelParam {
     titleCaseWords(canonicalSpaced),
     titleCaseWords(canonicalDotted),
 
-    // Also include the original spaced/raw forms in case the DB stored the prefixed input
-    spaced,
-    dottedNumberVariant(spaced),
-    titleCaseWords(spaced),
-    titleCaseWords(dottedNumberVariant(spaced)),
+    // Also include stripped modelCandidate variants for matching DB
+    modelCandidateRaw || "",
+    dottedNumberVariant(modelCandidateRaw || ""),
+    titleCaseWords(modelCandidateRaw || ""),
+    titleCaseWords(dottedNumberVariant(modelCandidateRaw || "")),
   ]);
 
   return {
@@ -182,11 +137,6 @@ export function modelFromParam(param: string): ModelParam {
   };
 }
 
-/**
- * MODEL (for /buy/brand/[brand]/model/[model])
- * Brand-scoped routes don’t need the “brandCandidate” parsing.
- * They should still generate dotted + cased candidates robustly.
- */
 export function modelFromParamScoped(param: string): ModelParam {
   const { raw, spaced } = paramToSpaced(param);
 
@@ -210,9 +160,6 @@ export function modelFromParamScoped(param: string): ModelParam {
   };
 }
 
-/**
- * Convenience: slug for brand and model canonical.
- */
 export function brandSlugFromValue(value: string) {
   return slugifyLoose(paramToSpaced(value).spaced);
 }
@@ -222,7 +169,6 @@ export function countrySlugFromValue(value: string) {
 }
 
 export function modelSlugFromValue(value: string) {
-  // for model-only hubs, prefer dotted normalization in canonical slug
   const spaced = paramToSpaced(value).spaced;
   const canonical = dottedNumberVariant(spaced);
   return slugifyLoose(canonical);
