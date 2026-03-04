@@ -2,6 +2,7 @@
 import "./globals.css";
 import { Inter_Tight } from "next/font/google";
 import type { Metadata } from "next";
+import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SiteHeaderOffsetClient from "@/components/SiteHeaderOffsetClient";
@@ -127,6 +128,18 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen">
+        <Script
+          id="trustpilot-widget"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(w,d,s,r,n){w.TrustpilotObject=n;w[n]=w[n]||function(){(w[n].q=w[n].q||[]).push(arguments)};
+              a=d.createElement(s);a.async=1;a.src=r;a.type='text/java'+s;f=d.getElementsByTagName(s)[0];
+              f.parentNode.insertBefore(a,f)})(window,document,'script', 'https://invitejs.trustpilot.com/tp.min.js', 'tp');
+              tp('register', 'UIDDyTdGGEifm6bo');
+            `,
+          }}
+        />
         <Header />
         <SiteHeaderOffsetClient />
         {children}
