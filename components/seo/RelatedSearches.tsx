@@ -1,4 +1,7 @@
 // components/seo/RelatedSearches.tsx
+"use client";
+
+import * as React from "react";
 import Link from "next/link";
 
 function slugifyLoose(input: string) {
@@ -19,6 +22,18 @@ function PillLink({
   href: string;
   children: React.ReactNode;
 }) {
+  const onEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.currentTarget.style.background = "rgba(10,33,31,0.06)";
+    e.currentTarget.style.borderColor = "rgba(10,33,31,0.18)";
+    e.currentTarget.style.color = "rgba(10,33,31,0.9)";
+  };
+
+  const onLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.currentTarget.style.background = "rgba(10,33,31,0.02)";
+    e.currentTarget.style.borderColor = "rgba(10,33,31,0.10)";
+    e.currentTarget.style.color = "rgba(10,33,31,0.75)";
+  };
+
   return (
     <Link
       href={href}
@@ -28,16 +43,8 @@ function PillLink({
         background: "rgba(10,33,31,0.02)",
         color: "rgba(10,33,31,0.75)",
       }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background = "rgba(10,33,31,0.06)";
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(10,33,31,0.18)";
-        (e.currentTarget as HTMLAnchorElement).style.color = "rgba(10,33,31,0.9)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background = "rgba(10,33,31,0.02)";
-        (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(10,33,31,0.10)";
-        (e.currentTarget as HTMLAnchorElement).style.color = "rgba(10,33,31,0.75)";
-      }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
     >
       {children}
     </Link>
@@ -61,20 +68,14 @@ function Panel({
         background: "rgba(10,33,31,0.02)",
       }}
     >
-      <div
-        className="text-[13px] font-semibold tracking-tight"
-        style={{ color: "#0a211f" }}
-      >
+      <div className="text-[13px] font-semibold tracking-tight" style={{ color: "#0a211f" }}>
         {title}
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">{children}</div>
 
       {footer ? (
-        <div
-          className="mt-3 text-[12px] leading-relaxed"
-          style={{ color: "rgba(10,33,31,0.45)" }}
-        >
+        <div className="mt-3 text-[12px] leading-relaxed" style={{ color: "rgba(10,33,31,0.45)" }}>
           {footer}
         </div>
       ) : null}
@@ -83,7 +84,6 @@ function Panel({
 }
 
 type Kind = "brand" | "model" | "country" | "year";
-
 const mustString = (v: unknown): v is string => typeof v === "string" && v.length > 0;
 
 export default function RelatedSearches(props: {
@@ -128,9 +128,7 @@ export default function RelatedSearches(props: {
     maxPills = 10,
   } = props;
 
-  const hasAny =
-    brands.length > 0 || models.length > 0 || countries.length > 0 || years.length > 0;
-
+  const hasAny = brands.length > 0 || models.length > 0 || countries.length > 0 || years.length > 0;
   if (!hasAny && kind !== "year") return null;
 
   // BRAND HUB

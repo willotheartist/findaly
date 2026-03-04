@@ -1,4 +1,5 @@
 // components/seo/PillarRelatedSearches.tsx
+"use client";
 import Link from "next/link";
 
 type Item = { label: string; href: string };

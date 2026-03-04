@@ -23,9 +23,6 @@ importers:
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
       framer-motion:
         specifier: ^12.34.1
         version: 12.34.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -78,6 +75,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.23
         version: 10.4.23(postcss@8.5.6)
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       eslint:
         specifier: ^9
         version: 9.39.1(jiti@2.6.1)
