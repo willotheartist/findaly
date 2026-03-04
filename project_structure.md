@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 04/03/2026, 16:09:26*
+*Generated on: 04/03/2026, 16:56:24*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 280 |
-| 📁 Total Folders | 196 |
+| 📄 Total Files | 281 |
+| 📁 Total Folders | 198 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,8 +24,8 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 163 files (58.2%)
-- 🔷 **.ts** (TypeScript files): 54 files (19.3%)
+- ⚛️ **.tsx** (React TypeScript files): 163 files (58.0%)
+- 🔷 **.ts** (TypeScript files): 55 files (19.6%)
 - 🖼️ **.jpg** (JPEG images): 18 files (6.4%)
 - 📄 **.sql** (Other files): 11 files (3.9%)
 - 🖼️ **.png** (PNG images): 11 files (3.9%)
@@ -45,10 +45,10 @@
 
 ### By Category
 
-- **React**: 163 files (58.2%)
-- **TypeScript**: 54 files (19.3%)
+- **React**: 163 files (58.0%)
+- **TypeScript**: 55 files (19.6%)
 - **Assets**: 35 files (12.5%)
-- **Other**: 17 files (6.1%)
+- **Other**: 17 files (6.0%)
 - **Config**: 6 files (2.1%)
 - **Docs**: 3 files (1.1%)
 - **DevOps**: 1 files (0.4%)
@@ -56,8 +56,8 @@
 
 ### 📁 Largest Directories
 
-- **root**: 280 files
-- **app**: 154 files
+- **root**: 281 files
+- **app**: 155 files
 - **public**: 34 files
 - **components**: 32 files
 - **app/add-listing**: 21 files
@@ -110,6 +110,9 @@ findaly/
 │   │   │   ├── 📂 logout/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   └── 📂 signup/
+│   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 health/
+│   │   │   └── 📂 db/
 │   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 kompipay/
 │   │   │   └── 📂 create-session/

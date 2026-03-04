@@ -1,7 +1,9 @@
 // app/buy/page.tsx
+import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import BuyPageClient from "./BuyPageClient";
+import { absoluteUrl } from "@/lib/site";
 
 type SearchParams = {
   q?: string;
@@ -29,6 +31,90 @@ type PageProps = {
 };
 
 const ITEMS_PER_PAGE = 24;
+
+function formatCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    sailboat: "Sailboats",
+    "motor-yacht": "Motor Yachts",
+    catamaran: "Catamarans",
+    rib: "RIBs & Tenders",
+    superyacht: "Superyachts",
+    fishing: "Fishing Boats",
+    dinghy: "Dinghies",
+    jetski: "Jet Skis & PWC",
+    other: "Other",
+  };
+  return labels[category.toLowerCase()] || category;
+}
+
+function hasRealFilters(params: SearchParams) {
+  // Allowed params that should NOT trigger noindex:
+  // - page (pagination)
+  // - view (UI state)
+  const {
+    page: _page,
+    view: _view,
+    ...rest
+  } = params || {};
+
+  // If any other param has a value -> this is a filter-combo URL
+  return Object.values(rest).some((v) => {
+    if (v === undefined || v === null) return false;
+    if (typeof v === "string") return v.trim().length > 0;
+    return true;
+  });
+}
+
+/**
+ * ✅ IMPORTANT: In Next App Router, generateMetadata must accept the same props shape as the page.
+ * This ensures Next uses THIS metadata (instead of falling back to defaults).
+ */
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await Promise.resolve(searchParams);
+
+  const filtered = hasRealFilters(params);
+  const pageNum = params.page ? Math.max(1, parseInt(params.page, 10) || 1) : 1;
+
+  // Canonical rules:
+  // - If filtered -> canonical back to /buy (Strategy A)
+  // - Else -> canonical /buy or /buy?page=N
+  const canonicalPath = filtered
+    ? "/buy"
+    : pageNum > 1
+      ? `/buy?page=${pageNum}`
+      : "/buy";
+
+  const title = "Boats for Sale | Findaly";
+  const description =
+    "Browse thousands of boats for sale. Find sailboats, motor yachts, catamarans and more on Findaly - the maritime marketplace.";
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+
+    // ✅ Strategy A
+    // - /buy + pagination -> index
+    // - any query-filter combo -> noindex, follow
+    robots: filtered
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+
+    openGraph: {
+      title: `${title} | Findaly`,
+      description,
+      url: absoluteUrl(canonicalPath),
+      type: "website",
+      images: [{ url: absoluteUrl("/og-findaly.jpg") }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | Findaly`,
+      description,
+      images: [absoluteUrl("/og-findaly.jpg")],
+    },
+  };
+}
 
 export default async function BuyPage({ searchParams }: PageProps) {
   const params = await Promise.resolve(searchParams);
@@ -99,34 +185,22 @@ export default async function BuyPage({ searchParams }: PageProps) {
   // Price range
   if (filters.priceMin !== undefined || filters.priceMax !== undefined) {
     where.priceCents = {};
-    if (filters.priceMin !== undefined) {
-      where.priceCents.gte = filters.priceMin;
-    }
-    if (filters.priceMax !== undefined) {
-      where.priceCents.lte = filters.priceMax;
-    }
+    if (filters.priceMin !== undefined) where.priceCents.gte = filters.priceMin;
+    if (filters.priceMax !== undefined) where.priceCents.lte = filters.priceMax;
   }
 
   // Year range
   if (filters.yearMin !== undefined || filters.yearMax !== undefined) {
     where.year = {};
-    if (filters.yearMin !== undefined) {
-      where.year.gte = filters.yearMin;
-    }
-    if (filters.yearMax !== undefined) {
-      where.year.lte = filters.yearMax;
-    }
+    if (filters.yearMin !== undefined) where.year.gte = filters.yearMin;
+    if (filters.yearMax !== undefined) where.year.lte = filters.yearMax;
   }
 
   // Length range (in meters)
   if (filters.lengthMin !== undefined || filters.lengthMax !== undefined) {
     where.lengthM = {};
-    if (filters.lengthMin !== undefined) {
-      where.lengthM.gte = filters.lengthMin;
-    }
-    if (filters.lengthMax !== undefined) {
-      where.lengthM.lte = filters.lengthMax;
-    }
+    if (filters.lengthMin !== undefined) where.lengthM.gte = filters.lengthMin;
+    if (filters.lengthMax !== undefined) where.lengthM.lte = filters.lengthMax;
   }
 
   // Cabins
@@ -140,18 +214,12 @@ export default async function BuyPage({ searchParams }: PageProps) {
   }
 
   // Condition
-  if (filters.condition === "new") {
-    where.vesselCondition = "NEW";
-  } else if (filters.condition === "used") {
-    where.vesselCondition = "USED";
-  }
+  if (filters.condition === "new") where.vesselCondition = "NEW";
+  else if (filters.condition === "used") where.vesselCondition = "USED";
 
   // Seller type
-  if (filters.sellerType === "pro") {
-    where.sellerType = "PROFESSIONAL";
-  } else if (filters.sellerType === "private") {
-    where.sellerType = "PRIVATE";
-  }
+  if (filters.sellerType === "pro") where.sellerType = "PROFESSIONAL";
+  else if (filters.sellerType === "private") where.sellerType = "PRIVATE";
 
   // Build orderBy
   let orderBy: Prisma.ListingOrderByWithRelationInput = { createdAt: "desc" };
@@ -193,23 +261,10 @@ export default async function BuyPage({ searchParams }: PageProps) {
       skip,
       take: ITEMS_PER_PAGE,
       include: {
-        // ✅ we need a handful of images to enable mini scrolling gallery
-        media: {
-          orderBy: { sort: "asc" },
-          take: 8,
-        },
-        // ✅ get true total count of images (even if we only take 8)
-        _count: {
-          select: { media: true },
-        },
+        media: { orderBy: { sort: "asc" }, take: 8 },
+        _count: { select: { media: true } },
         profile: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            isVerified: true,
-            location: true,
-          },
+          select: { id: true, name: true, slug: true, isVerified: true, location: true },
         },
       },
     }),
@@ -238,7 +293,6 @@ export default async function BuyPage({ searchParams }: PageProps) {
     }),
   ]);
 
-  // Transform listings for client
   const transformedListings = listings.map((listing) => ({
     id: listing.id,
     slug: listing.slug,
@@ -261,7 +315,6 @@ export default async function BuyPage({ searchParams }: PageProps) {
     featured: listing.featured,
     createdAt: listing.createdAt.toISOString(),
 
-    // ✅ new: gallery support
     thumbnailUrl: listing.media[0]?.url || null,
     mediaUrls: listing.media.map((m) => m.url),
     mediaCount: listing._count.media,
@@ -277,7 +330,6 @@ export default async function BuyPage({ searchParams }: PageProps) {
     },
   }));
 
-  // Transform aggregations
   const categoryCounts = categoryAggs
     .filter((c) => c.boatCategory)
     .map((c) => ({
@@ -337,27 +389,4 @@ export default async function BuyPage({ searchParams }: PageProps) {
       }}
     />
   );
-}
-
-function formatCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    sailboat: "Sailboats",
-    "motor-yacht": "Motor Yachts",
-    catamaran: "Catamarans",
-    rib: "RIBs & Tenders",
-    superyacht: "Superyachts",
-    fishing: "Fishing Boats",
-    dinghy: "Dinghies",
-    jetski: "Jet Skis & PWC",
-    other: "Other",
-  };
-  return labels[category.toLowerCase()] || category;
-}
-
-export function generateMetadata() {
-  return {
-    title: "Boats for Sale | Findaly",
-    description:
-      "Browse thousands of boats for sale. Find sailboats, motor yachts, catamarans and more on Findaly - the maritime marketplace.",
-  };
 }
