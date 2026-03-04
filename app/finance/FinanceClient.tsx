@@ -84,9 +84,6 @@ export default function FinanceClient() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // FAQ SCHEMA
-  // ─────────────────────────────────────────────────────────────────────────────
   const financeFaqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -161,73 +158,31 @@ export default function FinanceClient() {
       `}</style>
 
       <div className="pillar-page min-h-screen pb-0">
-        {/* HERO */}
         <div className="relative h-[70vh] min-h-[520px] w-full overflow-hidden">
-          <Image
-            src="/finance-hero.jpg"
-            alt="Yacht finance on Findaly"
-            fill
-            className="object-cover"
-            priority
-          />
+          <Image src="/finance-hero.jpg" alt="Yacht finance on Findaly" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-linear-to-b from-[#0a211f]/60 via-[#0a211f]/30 to-[#f5f2eb]" />
-          <motion.div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
-            variants={stagger}
-            initial="hidden"
-            animate="show"
-          >
-            <motion.p
-              className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4"
-              variants={fadeUp}
-            >
+          <motion.div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6" variants={stagger} initial="hidden" animate="show">
+            <motion.p className="text-[12px] font-semibold tracking-[0.2em] uppercase text-[#fff86c] mb-4" variants={fadeUp}>
               Yacht Finance
             </motion.p>
-
-            <motion.h1
-              className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em] text-white max-w-3xl"
-              variants={fadeUp}
-            >
-              Don&apos;t wait to own.{" "}
-              <span className="text-[#fff86c]">Finance it.</span>
+            <motion.h1 className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em] text-white max-w-3xl" variants={fadeUp}>
+              Don&apos;t wait to own. <span className="text-[#fff86c]">Finance it.</span>
             </motion.h1>
-
-            <motion.p
-              className="mt-6 text-[17px] text-white/70 max-w-xl leading-relaxed"
-              variants={fadeUp}
-            >
+            <motion.p className="mt-6 text-[17px] text-white/70 max-w-xl leading-relaxed" variants={fadeUp}>
               Marine finance options for every vessel and every budget. Understand your options before you make an offer.
             </motion.p>
-
-            <motion.div
-              className="mt-8 flex gap-3 flex-wrap justify-center"
-              variants={fadeUp}
-            >
-              <Link
-                href="/buy"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-[#fff86c] px-7 text-[14.5px] font-semibold text-[#0a211f] transition-opacity hover:opacity-90"
-              >
+            <motion.div className="mt-8 flex gap-3 flex-wrap justify-center" variants={fadeUp}>
+              <Link href="/buy" className="inline-flex h-12 items-center justify-center rounded-xl bg-[#fff86c] px-7 text-[14.5px] font-semibold text-[#0a211f] transition-opacity hover:opacity-90">
                 Browse Yachts for Sale
               </Link>
-
-              <Link
-                href="/add-listing"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 px-7 text-[14.5px] font-medium text-white hover:bg-white/10 transition-colors"
-              >
+              <Link href="/add-listing" className="inline-flex h-12 items-center justify-center rounded-xl border border-white/20 px-7 text-[14.5px] font-medium text-white hover:bg-white/10 transition-colors">
                 List your boat
               </Link>
             </motion.div>
           </motion.div>
         </div>
 
-        {/* STATS */}
-        <motion.div
-          className="mx-auto max-w-6xl px-6 -mt-2 relative z-10"
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
+        <motion.div className="mx-auto max-w-6xl px-6 -mt-2 relative z-10" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {stats.map((s) => (
               <motion.div key={s.label} className="stat-card" variants={fadeUp}>
@@ -238,15 +193,12 @@ export default function FinanceClient() {
           </div>
         </motion.div>
 
-        {/* TWO-COLUMN BODY */}
         <div className="mx-auto mt-20 max-w-6xl px-6">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px_1fr] lg:gap-16">
             <aside className="hidden lg:block">
               <div className="sticky top-28 space-y-5">
                 <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/3 p-6">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-4">
-                    On this page
-                  </p>
+                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-4">On this page</p>
                   <nav>
                     {tocSections.map((s) => (
                       <a
@@ -266,32 +218,19 @@ export default function FinanceClient() {
 
                 <div className="overflow-hidden rounded-2xl border border-[#0a211f]/10">
                   <div className="relative h-44">
-                    <Image
-                      src="/list-boat-cta.jpg"
-                      alt="List your boat on Findaly"
-                      fill
-                      sizes="280px"
-                      className="object-cover"
-                    />
+                    <Image src="/list-boat-cta.jpg" alt="List your boat on Findaly" fill sizes="280px" className="object-cover" />
                   </div>
                   <div className="bg-[#0a211f] p-5">
                     <p className="text-[15px] font-semibold text-white">Ready to list your boat?</p>
-                    <p className="mt-1.5 text-[13px] text-white/50 leading-relaxed">
-                      Free listing. No commission. Global reach.
-                    </p>
-                    <Link
-                      href="/add-listing"
-                      className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#fff86c] text-[13.5px] font-semibold text-[#0a211f]"
-                    >
+                    <p className="mt-1.5 text-[13px] text-white/50 leading-relaxed">Free listing. No commission. Global reach.</p>
+                    <Link href="/add-listing" className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#fff86c] text-[13.5px] font-semibold text-[#0a211f]">
                       List Your Boat
                     </Link>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">
-                    Explore Findaly
-                  </p>
+                  <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-[#0a211f]/40 mb-3">Explore Findaly</p>
                   <Link href="/buy" className="pillar-link"><span>🛥️</span> Buy a Yacht</Link>
                   <Link href="/sell" className="pillar-link"><span>🏷️</span> Sell Your Boat</Link>
                   <Link href="/charter" className="pillar-link"><span>⚓</span> Charter a Yacht</Link>
@@ -314,11 +253,7 @@ export default function FinanceClient() {
                   The key is understanding the landscape before you make an offer. Interest rates, term lengths, deposit requirements,
                   and the role of a survey all vary between lenders and vessel types. Going in informed means going in with confidence.
                 </p>
-
-                <div className="pull-quote">
-                  &ldquo;The best time to explore finance options is before you find the boat you love.&rdquo;
-                </div>
-
+                <div className="pull-quote">&ldquo;The best time to explore finance options is before you find the boat you love.&rdquo;</div>
                 <p>
                   Findaly&apos;s finance guide covers everything you need to understand your options. And when you&apos;ve found your vessel
                   on Findaly, you&apos;ll be ready to move quickly.
@@ -356,21 +291,7 @@ export default function FinanceClient() {
                     },
                   ].map((item) => (
                     <div key={item.step} className="flex gap-5">
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          background: "#fff86c",
-                          color: "#0a211f",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 14,
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
+                      <div style={{ width: 36, height: 36, background: "#fff86c", color: "#0a211f", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
                         {item.step}
                       </div>
                       <div>
@@ -439,11 +360,7 @@ export default function FinanceClient() {
                 <div className="mt-2 border-t border-[#0a211f]/8">
                   {faqs.map((faq, i) => (
                     <div key={i} className="faq-item">
-                      <button
-                        className="faq-question"
-                        onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                        aria-expanded={openFaq === i}
-                      >
+                      <button className="faq-question" onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i}>
                         <span>{faq.q}</span>
                         <span className="text-[#0a211f]/30 text-xl shrink-0">{openFaq === i ? "−" : "+"}</span>
                       </button>
@@ -462,16 +379,10 @@ export default function FinanceClient() {
                   Findaly&apos;s marketplace connects you directly with sellers and brokers. Once your finance is in place, you can move fast.
                 </p>
                 <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
-                  <Link
-                    href="/buy"
-                    className="inline-flex h-11 items-center justify-center rounded-xl bg-[#fff86c] px-6 text-sm font-semibold text-[#0a211f]"
-                  >
+                  <Link href="/buy" className="inline-flex h-11 items-center justify-center rounded-xl bg-[#fff86c] px-6 text-sm font-semibold text-[#0a211f]">
                     Browse Yachts for Sale
                   </Link>
-                  <Link
-                    href="/brokers"
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 px-6 text-sm font-medium text-white/80 hover:bg-white/5 transition-colors"
-                  >
+                  <Link href="/brokers" className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 px-6 text-sm font-medium text-white/80 hover:bg-white/5 transition-colors">
                     Find a broker
                   </Link>
                 </div>
@@ -490,11 +401,7 @@ export default function FinanceClient() {
           </div>
         </div>
 
-        {/* FAQ SCHEMA SCRIPT (inside top-level wrapper, just before closing tag) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(financeFaqSchema) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(financeFaqSchema) }} />
       </div>
     </>
   )

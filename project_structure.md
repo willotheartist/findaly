@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 04/03/2026, 19:21:34*
+*Generated on: 04/03/2026, 19:50:52*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 287 |
+| 📄 Total Files | 295 |
 | 📁 Total Folders | 198 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,11 +24,11 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 167 files (58.2%)
-- 🔷 **.ts** (TypeScript files): 56 files (19.5%)
-- 🖼️ **.jpg** (JPEG images): 18 files (6.3%)
-- 📄 **.sql** (Other files): 11 files (3.8%)
-- 🖼️ **.png** (PNG images): 11 files (3.8%)
+- ⚛️ **.tsx** (React TypeScript files): 175 files (59.3%)
+- 🔷 **.ts** (TypeScript files): 56 files (19.0%)
+- 🖼️ **.jpg** (JPEG images): 18 files (6.1%)
+- 📄 **.sql** (Other files): 11 files (3.7%)
+- 🖼️ **.png** (PNG images): 11 files (3.7%)
 - 🎨 **.svg** (SVG images): 5 files (1.7%)
 - ⚙️ **.json** (JSON files): 4 files (1.4%)
 - 📄 **.mjs** (Other files): 4 files (1.4%)
@@ -45,22 +45,22 @@
 
 ### By Category
 
-- **React**: 167 files (58.2%)
-- **TypeScript**: 56 files (19.5%)
-- **Assets**: 35 files (12.2%)
-- **Other**: 18 files (6.3%)
-- **Config**: 6 files (2.1%)
+- **React**: 175 files (59.3%)
+- **TypeScript**: 56 files (19.0%)
+- **Assets**: 35 files (11.9%)
+- **Other**: 18 files (6.1%)
+- **Config**: 6 files (2.0%)
 - **Docs**: 3 files (1.0%)
 - **DevOps**: 1 files (0.3%)
 - **Styles**: 1 files (0.3%)
 
 ### 📁 Largest Directories
 
-- **root**: 287 files
-- **app**: 160 files
+- **root**: 295 files
+- **app**: 168 files
 - **public**: 34 files
 - **components**: 32 files
-- **app/add-listing**: 22 files
+- **app/add-listing**: 23 files
 
 ## 🌳 Directory Structure
 
@@ -99,6 +99,7 @@ findaly/
 │   │   ├── 📂 _types/
 │   │   │   └── 🔷 listing.ts
 │   │   ├── ⚛️ AddListingClient.tsx
+│   │   ├── ⚛️ head.tsx
 │   │   ├── ⚛️ ListingWizard.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 alerts/
@@ -255,6 +256,7 @@ findaly/
 │   ├── 🖼️ favicon.ico
 │   ├── 📂 finance/
 │   │   ├── ⚛️ FinanceClient.tsx
+│   │   ├── ⚛️ head.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 🎨 globals.css
 │   ├── 📂 guides/
@@ -262,15 +264,20 @@ findaly/
 │   │   ├── 📂 astrea-42-buying-guide/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 beneteau-oceanis-vs-first/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 beneteau-price-guide/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 beneteau-swift-trawler-buying-guide/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 buying-a-beneteau/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 buying-a-yacht/
 │   │   ├── 📂 catamaran-buying-guide/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 charter-guide/
 │   │   ├── 📂 finance/
@@ -291,6 +298,7 @@ findaly/
 │   │   ├── 📂 selling-a-yacht/
 │   │   ├── 📂 survey-inspection/
 │   │   ├── 📂 used-beneteau-checklist/
+│   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   └── 📂 yacht-types-explained/
 │   │   │   └── ⚛️ page.tsx
