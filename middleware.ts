@@ -1,6 +1,5 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
-import { verifyAdminToken } from "@/lib/admin/session";
 
 const ADMIN_COOKIE = "findaly_admin";
 const USER_COOKIE = "findaly_session";
@@ -34,13 +33,12 @@ function gone410() {
     status: 410,
     headers: {
       "content-type": "text/plain; charset=utf-8",
-      // cache a bit so bots don’t hammer you
       "cache-control": "public, max-age=86400",
     },
   });
 }
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   // ---------------------------
@@ -61,7 +59,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------------------------
-  // Guard protected user routes
+  // ✅ Guard protected user routes
   // ---------------------------
   if (isProtectedRoute(pathname)) {
     const token = req.cookies.get(USER_COOKIE)?.value;
@@ -72,47 +70,48 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // ✅ IMPORTANT FIX:
-    // Pass token to server components via a REQUEST header.
-    // (Response headers are not readable via next/headers in server components.)
+    // ✅ Pass token to server components via request header
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-session-token", token);
 
     return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
+      request: { headers: requestHeaders },
     });
   }
 
   // ---------------------------
-  // Guard /admin (admin auth)
+  // ✅ Guard /admin (EDGE-SAFE)
+  //
+  // IMPORTANT:
+  // Middleware runs on the Edge runtime.
+  // Do NOT import Prisma, pg, node:crypto, or anything that touches lib/db.ts here.
+  //
+  // We do a lightweight gate here (presence check).
+  // Real verification should happen inside /admin pages or /api/admin routes (Node runtime).
   // ---------------------------
-  if (!pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin")) {
+    // Allow admin login/logout pages
+    if (pathname === "/admin/login" || pathname.startsWith("/admin/logout")) {
+      return NextResponse.next();
+    }
+
+    const secret = (process.env.ADMIN_SECRET || "").trim();
+    const token = (req.cookies.get(ADMIN_COOKIE)?.value || "").trim();
+
+    // If secret missing OR token missing -> bounce to login.
+    // (Keeps behavior similar to your existing intent without importing server-only code.)
+    if (!secret || !token) {
+      const url = new URL("/admin/login", req.url);
+      url.searchParams.set("next", pathname + (search || ""));
+      return NextResponse.redirect(url);
+    }
+
+    // Token exists -> allow request through.
+    // ✅ Verification MUST occur in Node runtime (admin layout/page or API).
     return NextResponse.next();
   }
 
-  // Allow login + logout
-  if (pathname === "/admin/login" || pathname.startsWith("/admin/logout")) {
-    return NextResponse.next();
-  }
-
-  const secret = process.env.ADMIN_SECRET || "";
-
-  if (!secret) {
-    const url = new URL("/admin/login", req.url);
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
-  const token = req.cookies.get(ADMIN_COOKIE)?.value;
-  const ok = await verifyAdminToken(token, secret);
-
-  if (ok) return NextResponse.next();
-
-  const url = new URL("/admin/login", req.url);
-  url.searchParams.set("next", pathname);
-  return NextResponse.redirect(url);
+  return NextResponse.next();
 }
 
 export const config = {

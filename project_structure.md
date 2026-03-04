@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 03/03/2026, 15:48:07*
+*Generated on: 04/03/2026, 16:09:26*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 279 |
+| 📄 Total Files | 280 |
 | 📁 Total Folders | 196 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -24,9 +24,9 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 163 files (58.4%)
-- 🔷 **.ts** (TypeScript files): 54 files (19.4%)
-- 🖼️ **.jpg** (JPEG images): 17 files (6.1%)
+- ⚛️ **.tsx** (React TypeScript files): 163 files (58.2%)
+- 🔷 **.ts** (TypeScript files): 54 files (19.3%)
+- 🖼️ **.jpg** (JPEG images): 18 files (6.4%)
 - 📄 **.sql** (Other files): 11 files (3.9%)
 - 🖼️ **.png** (PNG images): 11 files (3.9%)
 - 🎨 **.svg** (SVG images): 5 files (1.8%)
@@ -45,20 +45,20 @@
 
 ### By Category
 
-- **React**: 163 files (58.4%)
-- **TypeScript**: 54 files (19.4%)
-- **Assets**: 34 files (12.2%)
+- **React**: 163 files (58.2%)
+- **TypeScript**: 54 files (19.3%)
+- **Assets**: 35 files (12.5%)
 - **Other**: 17 files (6.1%)
-- **Config**: 6 files (2.2%)
+- **Config**: 6 files (2.1%)
 - **Docs**: 3 files (1.1%)
 - **DevOps**: 1 files (0.4%)
 - **Styles**: 1 files (0.4%)
 
 ### 📁 Largest Directories
 
-- **root**: 279 files
+- **root**: 280 files
 - **app**: 154 files
-- **public**: 33 files
+- **public**: 34 files
 - **components**: 32 files
 - **app/add-listing**: 21 files
 
@@ -510,6 +510,7 @@ findaly/
 │   ├── 🖼️ Holiday.png
 │   ├── 🖼️ list-boat-cta.jpg
 │   ├── 🎨 next.svg
+│   ├── 🖼️ og-findaly.jpg
 │   ├── 🖼️ sell-hero.jpg
 │   ├── 📂 uploads/
 │   │   ├── 🖼️ 3cf4a8bd-377b-4dcb-b66b-1bf4da243d90.jpg
