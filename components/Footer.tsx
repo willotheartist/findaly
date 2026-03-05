@@ -314,6 +314,9 @@ export default async function Footer() {
               <div>
                 <FooterHeading>Explore</FooterHeading>
                 <div className="mt-4 grid gap-2">
+                  {/* NEW: crawl hub */}
+                  <FooterLink href="/explore">Explore (Directory)</FooterLink>
+
                   <FooterLink href="/destinations">Destinations</FooterLink>
                   <FooterLink href="/brands">Yacht brands</FooterLink>
                   <FooterLink href="/brokers">Brokers</FooterLink>
@@ -417,6 +420,10 @@ export default async function Footer() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <FooterLink href="/add-listing">List a yacht</FooterLink>
             <FooterLink href="/buy">Browse listings</FooterLink>
+
+            {/* NEW: crawl hub */}
+            <FooterLink href="/explore">Explore</FooterLink>
+
             <FooterLink href="/brokers">Find a broker</FooterLink>
             <FooterLink href="/contact">Get in touch</FooterLink>
             <FooterLink href="/pricing">Pricing</FooterLink>

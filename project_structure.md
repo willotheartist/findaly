@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 04/03/2026, 19:50:52*
+*Generated on: 05/03/2026, 16:45:59*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 295 |
-| 📁 Total Folders | 198 |
+| 📄 Total Files | 325 |
+| 📁 Total Folders | 208 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,15 +24,15 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 175 files (59.3%)
-- 🔷 **.ts** (TypeScript files): 56 files (19.0%)
-- 🖼️ **.jpg** (JPEG images): 18 files (6.1%)
-- 📄 **.sql** (Other files): 11 files (3.7%)
-- 🖼️ **.png** (PNG images): 11 files (3.7%)
-- 🎨 **.svg** (SVG images): 5 files (1.7%)
-- ⚙️ **.json** (JSON files): 4 files (1.4%)
-- 📄 **.mjs** (Other files): 4 files (1.4%)
-- 📖 **.md** (Markdown files): 2 files (0.7%)
+- ⚛️ **.tsx** (React TypeScript files): 201 files (61.8%)
+- 🔷 **.ts** (TypeScript files): 59 files (18.2%)
+- 🖼️ **.jpg** (JPEG images): 18 files (5.5%)
+- 📄 **.sql** (Other files): 12 files (3.7%)
+- 🖼️ **.png** (PNG images): 11 files (3.4%)
+- 🎨 **.svg** (SVG images): 5 files (1.5%)
+- ⚙️ **.json** (JSON files): 4 files (1.2%)
+- 📄 **.mjs** (Other files): 4 files (1.2%)
+- 📖 **.md** (Markdown files): 2 files (0.6%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.3%)
 - 📄 **.txt** (Text files): 1 files (0.3%)
 - 🖼️ **.ico** (Icon files): 1 files (0.3%)
@@ -45,22 +45,22 @@
 
 ### By Category
 
-- **React**: 175 files (59.3%)
-- **TypeScript**: 56 files (19.0%)
-- **Assets**: 35 files (11.9%)
-- **Other**: 18 files (6.1%)
-- **Config**: 6 files (2.0%)
-- **Docs**: 3 files (1.0%)
+- **React**: 201 files (61.8%)
+- **TypeScript**: 59 files (18.2%)
+- **Assets**: 35 files (10.8%)
+- **Other**: 19 files (5.8%)
+- **Config**: 6 files (1.8%)
+- **Docs**: 3 files (0.9%)
 - **DevOps**: 1 files (0.3%)
 - **Styles**: 1 files (0.3%)
 
 ### 📁 Largest Directories
 
-- **root**: 295 files
-- **app**: 168 files
+- **root**: 325 files
+- **app**: 192 files
+- **components**: 35 files
+- **app/guides**: 34 files
 - **public**: 34 files
-- **components**: 32 files
-- **app/add-listing**: 23 files
 
 ## 🌳 Directory Structure
 
@@ -173,7 +173,10 @@ findaly/
 │   │   ├── ⚛️ page.tsx
 │   │   └── 📂 pricing/
 │   │   │   └── ⚛️ page.tsx
+│   ├── 📂 builders/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 buy/
+│   │   ├── 🔷 _category-utils.ts
 │   │   ├── 🔷 _seo.ts
 │   │   ├── 📂 [slug]/
 │   │   │   ├── ⚛️ ListingPageClient.tsx
@@ -203,6 +206,8 @@ findaly/
 │   │   │   │   │   └── 📂 [year]/
 │   │   │   │   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ BuyPageClient.tsx
+│   │   ├── 📂 catamarans/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 country/
 │   │   │   └── 📂 [country]/
 │   │   │   │   ├── ⚛️ page.tsx
@@ -218,7 +223,17 @@ findaly/
 │   │   │   │   └── 📂 year/
 │   │   │   │   │   └── 📂 [year]/
 │   │   │   │   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 motor-yachts/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 new/
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ page.tsx
+│   │   ├── 📂 ribs/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 sailboats/
+│   │   │   └── ⚛️ page.tsx
+│   │   ├── 📂 superyachts/
+│   │   │   └── ⚛️ page.tsx
 │   │   └── 📂 year/
 │   │   │   └── 📂 [year]/
 │   │   │   │   ├── 📂 brand/
@@ -242,6 +257,8 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 crew-jobs/
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 deals/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 destinations/
 │   │   ├── 📂 [slug]/
 │   │   │   ├── 🔷 _data.ts
@@ -250,6 +267,8 @@ findaly/
 │   │   │   │   └── ⚛️ page.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 disclaimer/
+│   │   └── ⚛️ page.tsx
+│   ├── 📂 events/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 faq/
 │   │   └── ⚛️ page.tsx
@@ -273,14 +292,21 @@ findaly/
 │   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 buying-a-beneteau/
+│   │   │   ├── ⚛️ BuyingABeneteauClient.tsx
 │   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 buying-a-yacht/
+│   │   │   ├── ⚛️ BuyingAYachtClient.tsx
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 catamaran-buying-guide/
 │   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 charter-guide/
+│   │   │   ├── ⚛️ CharterGuideClient.tsx
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 finance/
+│   │   │   ├── ⚛️ FinanceGuideClient.tsx
+│   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 fountaine-pajot-catamaran-buying-guide/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── 📂 isla-40-buying-guide/
@@ -296,7 +322,11 @@ findaly/
 │   │   │   └── ⚛️ page.tsx
 │   │   ├── ⚛️ page.tsx
 │   │   ├── 📂 selling-a-yacht/
+│   │   │   ├── ⚛️ page.tsx
+│   │   │   └── ⚛️ SellingAYachtClient.tsx
 │   │   ├── 📂 survey-inspection/
+│   │   │   ├── ⚛️ page.tsx
+│   │   │   └── ⚛️ SurveyInspectionClient.tsx
 │   │   ├── 📂 used-beneteau-checklist/
 │   │   │   ├── ⚛️ head.tsx
 │   │   │   └── ⚛️ page.tsx
@@ -343,12 +373,14 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 🔷 robots.ts
 │   ├── 📂 safety/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 saved/
 │   │   ├── ⚛️ page.tsx
 │   │   └── ⚛️ SavedClient.tsx
 │   ├── 📂 saved-searches/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 scams/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 search/
 │   │   ├── ⚛️ page.tsx
 │   │   └── ⚛️ SearchClient.tsx
@@ -389,6 +421,7 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 use-cases/
 │   └── 📂 verification/
+│   │   └── ⚛️ page.tsx
 ├── 🧩 components/
 │   ├── 📂 destinations/
 │   │   ├── ⚛️ DestinationCard.tsx
@@ -417,7 +450,11 @@ findaly/
 │   ├── ⚛️ LogoutButtonClient.tsx
 │   ├── 📂 maps/
 │   │   └── ⚛️ ListingMap.tsx
+│   ├── 📂 pillar/
+│   │   └── ⚛️ PillarShell.tsx
 │   ├── 📂 seo/
+│   │   ├── ⚛️ AnswerTarget.tsx
+│   │   ├── ⚛️ FaqJsonLd.tsx
 │   │   ├── ⚛️ MarketOverview.tsx
 │   │   ├── ⚛️ PillarRelatedSearches.tsx
 │   │   ├── ⚛️ RelatedSearches.tsx
@@ -539,6 +576,7 @@ findaly/
 ├── 🔴 📖 **README.md**
 ├── 📂 scripts/
 │   ├── 📄 check-canonicals.mjs
+│   ├── 🔷 debug-models.ts
 │   ├── 📂 eyb/
 │   │   ├── 🔷 backfill-eyb.ts
 │   │   ├── 🔷 debug-one.ts
@@ -553,7 +591,9 @@ findaly/
 │   │   │   └── 🔷 score.ts
 │   ├── 📂 fix/
 │   │   ├── 🔷 backfill-brand-model-from-title.ts
-│   │   └── 🔷 backfill-brand-model.ts
+│   │   ├── 🔷 backfill-brand-model.ts
+│   │   ├── 📄 cap-listing-media-8.sql
+│   │   └── 🔷 rehost-listing-media.ts
 │   └── 🔷 fix-services-kind.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts

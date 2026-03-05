@@ -10,6 +10,9 @@ import { getMarketStats } from "@/lib/seo/marketStats";
 import MarketOverview from "@/components/seo/MarketOverview";
 import RelatedSearches from "@/components/seo/RelatedSearches";
 
+import AnswerTarget from "@/components/seo/AnswerTarget";
+import FaqJsonLd from "@/components/seo/FaqJsonLd";
+
 import { modelFromParam, modelSlugFromValue, titleCaseWords } from "@/lib/seoParam";
 
 type PageProps = {
@@ -70,6 +73,28 @@ function fmtPrice(cents: number | null, cur: string) {
   } catch {
     return `${Math.round(v).toLocaleString()} ${cur}`;
   }
+}
+
+function fmtMoneyFromCentsEUR(cents: number | null | undefined) {
+  if (!cents || cents <= 0) return "—";
+  const v = cents / 100;
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(v);
+  } catch {
+    return `${Math.round(v).toLocaleString()} EUR`;
+  }
+}
+
+function fmtAvgLength(stats: any) {
+  const m = stats?.avgLengthM;
+  const ft = stats?.avgLengthFt;
+  if (typeof m === "number" && m > 0) return `${Math.round(m)}m`;
+  if (typeof ft === "number" && ft > 0) return `${Math.round(ft)}ft`;
+  return "—";
 }
 
 /**
@@ -260,10 +285,35 @@ export default async function ModelHubPage({ params }: PageProps) {
     },
   };
 
+  const faqs = [
+    {
+      q: `How do I compare ${modelDisplay} listings properly?`,
+      a: "Use like-for-like comparisons: year, condition, inventory (electronics/sails/systems), and documented service history. Photos help, but invoices and survey outcomes usually explain the real value difference.",
+    },
+    {
+      q: `Why do prices vary so much for the same model?`,
+      a: "Because listings differ in maintenance discipline and what expensive components are due soon. Condition, history, and inventory age typically matter more than brochure specs.",
+    },
+    {
+      q: `What should I check before making an offer?`,
+      a: "Prioritise paperwork, service records, and a survey/sea trial plan. Ask for recent invoices, confirm ownership/VAT status where relevant, and treat missing documentation as real risk.",
+    },
+    {
+      q: `How do I enquire on Findaly?`,
+      a: "Open a listing and send a direct enquiry to the seller or broker. Include your timeline, preferred location, and any must-have requirements so the conversation is efficient from the first message.",
+    },
+  ];
+
+  const factPriceRange =
+    stats?.minPriceCents && stats?.maxPriceCents
+      ? `${fmtMoneyFromCentsEUR(stats.minPriceCents)} – ${fmtMoneyFromCentsEUR(stats.maxPriceCents)}`
+      : "—";
+
   return (
     <main className="w-full bg-white">
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
+      <FaqJsonLd faqs={faqs} />
 
       <section className="w-full border-b border-slate-100">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
@@ -278,6 +328,29 @@ export default async function ModelHubPage({ params }: PageProps) {
           <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-600">
             {intro}
           </p>
+
+          {/* AI-citable answer block */}
+          <div className="mt-6">
+            <AnswerTarget
+              eyebrow="AI-ready summary"
+              title={`Browse ${modelDisplay} listings with context, not guesswork.`}
+              summary="Use this hub to shortlist by brand, location, and year — then validate value with condition, inventory age, and documented history. Pricing differences usually come from maintenance discipline and expensive components that are due."
+              bullets={[
+                "Compare year + condition first, then inventory (electronics/sails/systems) and service history.",
+                "Use market overview for reality checks; treat surveys and invoices as the source of truth.",
+                "Enquire directly with sellers and brokers — include your timeline and must-haves.",
+              ]}
+              facts={[
+                { label: "Live listings", value: total.toLocaleString() },
+                { label: "Avg price", value: fmtMoneyFromCentsEUR(stats?.avgPriceCents) },
+                { label: "Price range", value: factPriceRange },
+                { label: "Avg length", value: fmtAvgLength(stats) },
+              ]}
+              ctas={[
+                { label: "Browse all Buy listings →", href: "/buy" },
+              ]}
+            />
+          </div>
 
           <div className="mt-4 text-sm text-slate-500">
             {total > 0 ? (
@@ -346,6 +419,23 @@ export default async function ModelHubPage({ params }: PageProps) {
               years={yearsTop}
               maxPills={10}
             />
+          </div>
+
+          {/* Visible FAQ (AI loves this + you already ship schema above) */}
+          <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 sm:p-7">
+            <div className="text-sm font-semibold text-slate-900">Quick answers</div>
+            <div className="mt-4 space-y-3">
+              {faqs.map((f) => (
+                <details key={f.q} className="rounded-xl border border-slate-200 p-4">
+                  <summary className="cursor-pointer text-[15px] font-medium text-slate-900">
+                    {f.q}
+                  </summary>
+                  <p className="mt-3 text-[14.5px] leading-relaxed text-slate-600">
+                    {f.a}
+                  </p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>

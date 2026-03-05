@@ -1,10 +1,12 @@
 // app/guides/beneteau-price-guide/page.tsx
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import AnswerTarget from "@/components/seo/AnswerTarget"
+import FaqJsonLd from "@/components/seo/FaqJsonLd"
 
 const ease = [0.22, 1, 0.36, 1] as const
 const fadeUp = {
@@ -185,19 +187,6 @@ const faqs = [
 export default function BeneteauPriceGuidePage() {
   const activeId = useTocTracker()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-
-  const faqSchema = useMemo(
-    () => ({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faqs.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.a },
-      })),
-    }),
-    []
-  )
 
   return (
     <>
@@ -411,7 +400,30 @@ export default function BeneteauPriceGuidePage() {
               <section id="overview" className="scroll-mt-28">
                 <p className="section-label">Overview</p>
                 <h2 className="section-heading">Pricing is a condition story, not a brand story.</h2>
-                <p>
+
+                {/* AI “answer target” block */}
+                <div className="mt-6">
+                  <AnswerTarget
+                    eyebrow="AI-ready summary"
+                    title="Beneteau prices vary mostly by condition and inventory."
+                    summary="Two identical Beneteau listings can be tens of thousands apart — and both can be “correct”. The difference is usually history, maintenance discipline, and expensive components that are due (rig, sails, electronics, engines, generator, AC)."
+                    bullets={[
+                      "Treat headline price as the entry fee — ownership cost is decided by systems health.",
+                      "Negotiate with evidence: survey findings, inventory age, service logs, comparable listings.",
+                      "Location changes VAT/tax status, demand cycles, and logistics costs.",
+                    ]}
+                    facts={[
+                      { label: "Big swing factors", value: "Rig • sails • electronics" },
+                      { label: "Motor yacht swing factors", value: "Engines • systems" },
+                      { label: "Best validation", value: "Survey + invoices" },
+                    ]}
+                    ctas={[
+                      { label: "Browse Beneteau listings →", href: "/buy/brand/beneteau" },
+                    ]}
+                  />
+                </div>
+
+                <p className="mt-8">
                   Buyers search “Beneteau price” like there’s one number. In reality, Beneteau values are shaped by{" "}
                   <strong>condition, inventory, location, and history</strong> far more than by model name alone.
                   Two identical Oceanis listings can be tens of thousands apart — and both can be “correct.”
@@ -425,8 +437,7 @@ export default function BeneteauPriceGuidePage() {
                   “A cheaper Beneteau is often just a boat where you’ll pay the missing maintenance later.”
                 </div>
                 <p>
-                  For live pricing context, browse:
-                  {" "}
+                  For live pricing context, browse{" "}
                   <Link
                     href="/buy/brand/beneteau"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
@@ -527,8 +538,7 @@ export default function BeneteauPriceGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  If you want the broader buying logic (not just price), read the pillar:
-                  {" "}
+                  If you want the broader buying logic (not just price), read the pillar{" "}
                   <Link
                     href="/guides/buying-a-beneteau"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
@@ -563,8 +573,7 @@ export default function BeneteauPriceGuidePage() {
                 </div>
 
                 <p className="mt-8">
-                  Want help thinking about payment structure? Explore:
-                  {" "}
+                  Want help thinking about payment structure? Explore{" "}
                   <Link
                     href="/finance"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
@@ -589,8 +598,7 @@ export default function BeneteauPriceGuidePage() {
                   <li><strong>Green flag:</strong> boring, organised logs + invoices + surveys.</li>
                 </ul>
                 <p>
-                  If you’re buying globally, a broker can protect the transaction structure. You can browse:
-                  {" "}
+                  If you’re buying globally, a broker can protect the transaction structure. You can browse{" "}
                   <Link
                     href="/brokers"
                     className="underline decoration-[#fff86c] underline-offset-4 text-[#0a211f] font-semibold"
@@ -668,11 +676,8 @@ export default function BeneteauPriceGuidePage() {
           </div>
         </div>
 
-        {/* FAQ SCHEMA SCRIPT */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
+        {/* FAQ SCHEMA SCRIPT (centralised via lib/site.ts helper) */}
+        <FaqJsonLd faqs={faqs} />
       </div>
     </>
   )
