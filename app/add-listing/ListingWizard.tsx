@@ -22,8 +22,9 @@ import type { FormData, ListingType } from "./_types/listing";
 import { initialFormData } from "./_types/listing";
 
 type SubmitResult = {
+  id?: string | null;
   slug?: string | null;
-  listing?: { slug?: string | null };
+  listing?: { id?: string | null; slug?: string | null };
   error?: string;
   missing?: string[];
   [key: string]: unknown;
@@ -238,6 +239,7 @@ export default function ListingWizard({
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submittedListingSlug, setSubmittedListingSlug] = useState<string | null>(null);
+  const [submittedListingId, setSubmittedListingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -383,7 +385,9 @@ export default function ListingWizard({
         throw new Error(data.error || "Failed to save listing");
       }
       const slug = data.slug ?? data.listing?.slug ?? null;
+      const id = data.id ?? data.listing?.id ?? null;
       setSubmittedListingSlug(slug);
+      setSubmittedListingId(id ?? null);
       setShowSuccessModal(true);
       onSuccess?.(data);
     } catch (error) {
@@ -428,6 +432,7 @@ export default function ListingWizard({
     setCurrentStep(1);
     setShowSuccessModal(false);
     setSubmittedListingSlug(null);
+    setSubmittedListingId(null);
     setSubmitError(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -504,6 +509,7 @@ export default function ListingWizard({
         isOpen={showSuccessModal}
         listingTitle={formData.title || `${formData.brand} ${formData.model}`.trim()}
         listingType={formData.listingType}
+        listingId={submittedListingId ?? undefined}
         onViewListing={handleViewListing}
         onCreateAnother={mode === "create" ? handleCreateAnother : handleGoHome}
         onGoHome={handleGoHome}
@@ -528,7 +534,7 @@ export default function ListingWizard({
                     {missingKeys.slice(0, 8).map((k) => (
                       <li key={k}>{missingLabel(k)}</li>
                     ))}
-                    {missingKeys.length > 8 && <li>…and {missingKeys.length - 8} more</li>}
+                    {missingKeys.length > 8 && <li>&hellip;and {missingKeys.length - 8} more</li>}
                   </ul>
                 </div>
               )}
@@ -559,10 +565,8 @@ export default function ListingWizard({
 
       {/* Main layout */}
       <main className="flex min-h-screen flex-col bg-[#f5f5f4]">
-        {/* ── Compact header: close + steps + publish all in one row ── */}
         <header className="sticky top-0 z-40 border-b border-[#e5e5e5] bg-white/90 backdrop-blur-lg">
           <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-2.5 sm:px-6">
-            {/* Close */}
             <Link
               href="/"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-[#555] transition-colors hover:bg-[#f5f5f4] hover:text-[#1a1a1a]"
@@ -571,12 +575,10 @@ export default function ListingWizard({
               <X className="h-3.5 w-3.5" />
             </Link>
 
-            {/* Step indicator (fills the middle) */}
             <div className="min-w-0 flex-1">
               <StepIndicator steps={steps} currentStep={currentStep} onStepClick={goToStep} />
             </div>
 
-            {/* Publish button (desktop) */}
             <button
               onClick={requestPublish}
               disabled={isSubmitting}
@@ -594,7 +596,6 @@ export default function ListingWizard({
           </div>
         </header>
 
-        {/* Content */}
         <div className="flex-1 pb-24">
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
             {submitError && (
@@ -610,7 +611,6 @@ export default function ListingWizard({
           </div>
         </div>
 
-        {/* Sticky bottom navigation bar */}
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e5e5e5] bg-white/95 backdrop-blur-lg">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
             <button
@@ -626,7 +626,6 @@ export default function ListingWizard({
               <span className="hidden sm:inline">Back</span>
             </button>
 
-            {/* Mobile step dots */}
             <div className="flex items-center gap-1 sm:hidden">
               {steps.map((step) => (
                 <span

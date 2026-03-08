@@ -1,248 +1,475 @@
+// app/pricing/page.tsx
 import Link from "next/link";
+import {
+  BadgeCheck,
+  Zap,
+  TrendingUp,
+  Banknote,
+  Crown,
+  Shield,
+  Sailboat,
+  ArrowRight,
+} from "lucide-react";
 import CheckoutButton from "@/components/kompipay/CheckoutButton";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-10 md:px-10 md:py-14">
+    <div className="mx-auto w-full max-w-6xl px-5 py-10 md:px-10 md:py-16">
       {children}
     </div>
   );
 }
 
-function Card({
-  title,
-  price,
-  subtitle,
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#0a211f]/40">
+      {children}
+    </p>
+  );
+}
+
+function FeatureRow({
+  icon,
   children,
-  footer,
-  badge,
 }: {
-  title: string;
-  price: string;
-  subtitle: string;
-  badge?: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
-  footer: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white">
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-semibold tracking-tight text-slate-900">
-              {title}
-            </h3>
-            <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
-          </div>
-          {badge ? (
-            <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-              {badge}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="mt-5 flex items-end gap-2">
-          <div className="text-3xl font-semibold tracking-tight text-slate-900">
-            {price}
-          </div>
-          <div className="pb-1 text-sm text-slate-500">EUR</div>
-        </div>
-
-        <div className="mt-6 space-y-3 text-sm text-slate-700">{children}</div>
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-[#0a211f]/40">
+        {icon}
       </div>
-
-      <div className="border-t border-slate-200 p-6">{footer}</div>
+      <div className="text-[14px] leading-relaxed text-[#0a211f]/70">
+        {children}
+      </div>
     </div>
   );
 }
 
-function Bullet({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex gap-2">
-      <div className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
-      <div>{children}</div>
-    </div>
-  );
-}
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
 
 export default function PricingPage() {
   return (
-    <main className="bg-[#FAFAFA]">
+    <main className="min-h-screen bg-[#f5f2eb]">
       <Shell>
+        {/* Header */}
         <div className="max-w-3xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            Pricing
+          <SectionLabel>Pricing</SectionLabel>
+          <h1 className="mt-3 text-[clamp(28px,3.4vw,44px)] font-bold leading-[1.12] tracking-tight text-[#0a211f]">
+            Free to list. Pay to stand out.
           </h1>
-          <p className="mt-3 text-base text-slate-600">
-            Findaly is free to browse. Sellers can list, and professionals can
-            upgrade for visibility, trust, and performance.
+          <p className="mt-4 text-[17px] leading-relaxed text-[#0a211f]/60">
+            Findaly is free to browse and free to list. Paid upgrades give your
+            listing more visibility, trust signals, and priority placement.
           </p>
-
-          <p className="mt-3 text-sm text-slate-500">
-            Payments are processed by Wall&Fifth via KompiPay on behalf of
-            Findaly.
+          <p className="mt-2 text-[13px] text-[#0a211f]/35">
+            Payments processed by Wall&nbsp;&amp;&nbsp;Fifth via KompiPay on
+            behalf of Findaly.
           </p>
         </div>
 
-        {/* Brokers */}
-        <section className="mt-10">
-          <div className="flex items-end justify-between gap-6">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-                For Brokers & Professionals
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Boost trust and convert more leads with verified status and pro
-                tools.
-              </p>
-            </div>
-            <Link
-              href="/brokers"
-              className="text-sm font-semibold text-slate-900 underline underline-offset-4 hover:text-slate-700"
-            >
-              Explore brokers →
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <Card
-              title="Verified Broker"
-              subtitle="Trust badge + ranking priority"
-              price="49 / month"
-              badge="Recommended"
-              footer={
-                <CheckoutButton productKey="VERIFIED_BROKER_MONTHLY">
-                  Start Verified Broker
-                </CheckoutButton>
-              }
-            >
-              <Bullet>Verified badge on profile and listings</Bullet>
-              <Bullet>Priority placement in broker directory</Bullet>
-              <Bullet>Improves trust and enquiry rate</Bullet>
-              <Bullet>Cancel anytime</Bullet>
-            </Card>
-
-            <Card
-              title="Broker Pro"
-              subtitle="Pro tools + verified included"
-              price="99 / month"
-              badge="Best value"
-              footer={
-                <CheckoutButton productKey="BROKER_PRO_MONTHLY">
-                  Start Broker Pro
-                </CheckoutButton>
-              }
-            >
-              <Bullet>Unlimited listings</Bullet>
-              <Bullet>Verified badge included</Bullet>
-              <Bullet>Discounts on Featured & Boost upgrades</Bullet>
-              <Bullet>Analytics + priority support (rolling out)</Bullet>
-            </Card>
-          </div>
-        </section>
-
-        {/* Sellers */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-            For Private Sellers
+        {/* ────────────────────────────────────────────── */}
+        {/*  SECTION 1: Listing Upgrades (one-off)        */}
+        {/* ────────────────────────────────────────────── */}
+        <section className="mt-14">
+          <SectionLabel>For sellers</SectionLabel>
+          <h2 className="mt-2 text-[22px] font-bold tracking-tight text-[#0a211f]">
+            Listing upgrades
           </h2>
-          <p className="mt-2 text-sm text-slate-600 max-w-3xl">
-            Listing is free. Upgrades like Featured and Boost are purchased from
-            your listing page or your dashboard — so the upgrade can be applied
-            to a specific boat.
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[#0a211f]/55">
+            Applied per listing from your dashboard or after publishing. Choose
+            the visibility level that suits your sale.
           </p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                Featured Listing
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {/* Featured Listing */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff86c]/60">
+                  <BadgeCheck className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">
+                    Featured Listing
+                  </div>
+                  <div className="text-[12px] text-[#0a211f]/45">
+                    Maximum exposure
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                Pin to the top + homepage visibility.
+
+              <div className="mt-5 space-y-2.5">
+                <FeatureRow icon={<TrendingUp className="h-4 w-4" />}>
+                  Pinned to top of search results
+                </FeatureRow>
+                <FeatureRow icon={<Crown className="h-4 w-4" />}>
+                  Homepage &ldquo;Featured&rdquo; carousel
+                </FeatureRow>
+                <FeatureRow icon={<BadgeCheck className="h-4 w-4" />}>
+                  Featured badge on listing card
+                </FeatureRow>
               </div>
-              <div className="mt-4 text-sm text-slate-900">
-                €49 / 14 days • €79 / 30 days
+
+              <div className="mt-6 space-y-2.5">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      14 days
+                    </div>
+                    <div className="text-[12px] text-[#0a211f]/45">
+                      Quick sale push
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £49
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      30 days
+                    </div>
+                    <div className="text-[12px] text-[#0a211f]/45">
+                      Full month coverage
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £79
+                  </div>
+                </div>
               </div>
+
+              <p className="mt-4 text-center text-[12px] text-[#0a211f]/40">
+                Applied from your listing dashboard
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                Boost Packages
+            {/* Boost */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a211f]/8">
+                  <Zap className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">
+                    Boost
+                  </div>
+                  <div className="text-[12px] text-[#0a211f]/45">
+                    Ranking lift
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                Temporary ranking lift.
+
+              <div className="mt-5 space-y-2.5">
+                <FeatureRow icon={<TrendingUp className="h-4 w-4" />}>
+                  Higher position in search results
+                </FeatureRow>
+                <FeatureRow icon={<Zap className="h-4 w-4" />}>
+                  Boost badge visible to buyers
+                </FeatureRow>
+                <FeatureRow icon={<Sailboat className="h-4 w-4" />}>
+                  Great for fresh urgency on older listings
+                </FeatureRow>
               </div>
-              <div className="mt-4 text-sm text-slate-900">
-                €29 / 7 days • €49 / 14 days • €89 / 30 days
+
+              <div className="mt-6 space-y-2.5">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      7 days
+                    </div>
+                    <div className="text-[12px] text-[#0a211f]/45">
+                      Short burst
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £19
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      14 days
+                    </div>
+                    <div className="text-[12px] text-[#0a211f]/45">
+                      Sustained lift
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £29
+                  </div>
+                </div>
               </div>
+
+              <p className="mt-4 text-center text-[12px] text-[#0a211f]/40">
+                Applied from your listing dashboard
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                Finance Priority
+            {/* Finance Priority */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a211f]/8">
+                  <Banknote className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">
+                    Finance Priority
+                  </div>
+                  <div className="text-[12px] text-[#0a211f]/45">
+                    Reach finance-ready buyers
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                “Finance Ready” badge + finance filter priority.
+
+              <div className="mt-5 space-y-2.5">
+                <FeatureRow icon={<Banknote className="h-4 w-4" />}>
+                  &ldquo;Finance Ready&rdquo; badge on your listing
+                </FeatureRow>
+                <FeatureRow icon={<TrendingUp className="h-4 w-4" />}>
+                  Higher ranking in finance filter results
+                </FeatureRow>
+                <FeatureRow icon={<Shield className="h-4 w-4" />}>
+                  Shown in finance landing page sections
+                </FeatureRow>
               </div>
-              <div className="mt-4 text-sm text-slate-900">€29 / 30 days</div>
+
+              <div className="mt-6 space-y-2.5">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      14 days
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £29
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/8 bg-white/60 px-4 py-3">
+                  <div>
+                    <div className="text-[14px] font-bold text-[#0a211f]">
+                      30 days
+                    </div>
+                  </div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    £49
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-4 text-center text-[12px] text-[#0a211f]/40">
+                Applied from your listing dashboard
+              </p>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/add-listing"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#fff86c] px-5 py-3 text-[14px] font-bold text-[#0a211f] transition-all hover:bg-[#f5ee5a] active:scale-[0.98]"
             >
-              List your boat
+              <Sailboat className="h-4 w-4" />
+              List your boat — free
             </Link>
             <Link
               href="/my-listings"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-black px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#0a211f]/16 bg-[#0a211f]/3 px-5 py-3 text-[14px] font-semibold text-[#0a211f] transition-all hover:bg-[#0a211f]/6"
             >
               Manage my listings
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </section>
 
-        {/* FAQs */}
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-            FAQ
+        {/* ────────────────────────────────────────────── */}
+        {/*  SECTION 2: Broker Plans (recurring)           */}
+        {/* ────────────────────────────────────────────── */}
+        <section className="mt-16">
+          <SectionLabel>For brokers &amp; professionals</SectionLabel>
+          <h2 className="mt-2 text-[22px] font-bold tracking-tight text-[#0a211f]">
+            Broker plans
           </h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[#0a211f]/55">
+            Boost trust, get priority directory placement, and unlock
+            professional tools to grow your brokerage on Findaly.
+          </p>
 
-          <div className="mt-4 space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                Do I need to pay to list?
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {/* Free tier */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[18px] font-bold text-[#0a211f]">
+                    Free
+                  </div>
+                  <div className="text-[13px] text-[#0a211f]/50">
+                    Get started on Findaly
+                  </div>
+                </div>
+                <div className="text-[28px] font-bold tracking-tight text-[#0a211f]">
+                  £0
+                  <span className="text-[13px] font-semibold text-[#0a211f]/40">
+                    /mo
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                No — listings are free. Paid upgrades improve visibility and
-                performance.
+
+              <div className="mt-6 space-y-2.5">
+                <FeatureRow icon={<Sailboat className="h-4 w-4" />}>
+                  Basic broker profile
+                </FeatureRow>
+                <FeatureRow icon={<Sailboat className="h-4 w-4" />}>
+                  Standard listings
+                </FeatureRow>
+                <FeatureRow icon={<Sailboat className="h-4 w-4" />}>
+                  Receive enquiries and messages
+                </FeatureRow>
+                <FeatureRow icon={<Sailboat className="h-4 w-4" />}>
+                  Profile page with contact info
+                </FeatureRow>
+              </div>
+
+              <div className="mt-6">
+                <Link
+                  href="/signup"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#0a211f]/16 bg-[#0a211f]/3 px-4 py-2.5 text-[14px] font-semibold text-[#0a211f] transition-all hover:bg-[#0a211f]/6"
+                >
+                  Create free account
+                </Link>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                Who processes payments?
+            {/* Broker Pro */}
+            <div className="relative rounded-2xl border-2 border-[#0a211f] bg-[#0a211f] p-6 text-white">
+              <div className="absolute -top-3 right-6">
+                <span className="rounded-full bg-[#fff86c] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#0a211f]">
+                  Recommended
+                </span>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                Payments are processed by Wall&Fifth via KompiPay on behalf of
-                Findaly.
-              </div>
-            </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="text-sm font-semibold text-slate-900">
-                When does an upgrade activate?
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[18px] font-bold text-white">
+                    Broker Pro
+                  </div>
+                  <div className="text-[13px] text-white/50">
+                    Professional growth toolkit
+                  </div>
+                </div>
+                <div className="text-[28px] font-bold tracking-tight text-[#fff86c]">
+                  £99
+                  <span className="text-[13px] font-semibold text-[#fff86c]/60">
+                    /mo
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-sm text-slate-600">
-                Upgrades activate when Findaly receives a KompiPay webhook
-                confirming payment. (Redirect success pages are not used as
-                proof.)
+
+              <div className="mt-6 space-y-2.5">
+                <FeatureRow icon={<BadgeCheck className="h-4 w-4 text-[#fff86c]/50" />}>
+                  <span className="text-white/70">
+                    Verified badge on profile and all listings
+                  </span>
+                </FeatureRow>
+                <FeatureRow icon={<Crown className="h-4 w-4 text-[#fff86c]/50" />}>
+                  <span className="text-white/70">
+                    Priority placement in broker directory
+                  </span>
+                </FeatureRow>
+                <FeatureRow icon={<TrendingUp className="h-4 w-4 text-[#fff86c]/50" />}>
+                  <span className="text-white/70">
+                    Ranking boost on all your listings
+                  </span>
+                </FeatureRow>
+                <FeatureRow icon={<Zap className="h-4 w-4 text-[#fff86c]/50" />}>
+                  <span className="text-white/70">
+                    20% discount on Featured and Boost upgrades
+                  </span>
+                </FeatureRow>
+                <FeatureRow icon={<Shield className="h-4 w-4 text-[#fff86c]/50" />}>
+                  <span className="text-white/70">
+                    Analytics dashboard &amp; priority support (rolling out)
+                  </span>
+                </FeatureRow>
               </div>
+
+              <div className="mt-6">
+                <CheckoutButton productKey="BROKER_PRO_MONTHLY" variant="primary">
+                  Start Broker Pro — £99/mo
+                </CheckoutButton>
+              </div>
+
+              <p className="mt-3 text-center text-[12px] text-white/30">
+                Cancel anytime. Billed monthly.
+              </p>
             </div>
           </div>
         </section>
+
+        {/* ────────────────────────────────────────────── */}
+        {/*  SECTION 3: FAQ                                */}
+        {/* ────────────────────────────────────────────── */}
+        <section className="mt-16">
+          <SectionLabel>FAQ</SectionLabel>
+          <h2 className="mt-2 text-[22px] font-bold tracking-tight text-[#0a211f]">
+            Common questions
+          </h2>
+
+          <div className="mt-6 space-y-3">
+            {[
+              {
+                q: "Do I need to pay to list?",
+                a: "No — listings are completely free. Paid upgrades are optional and improve visibility and performance.",
+              },
+              {
+                q: "How do I apply an upgrade to my listing?",
+                a: "After publishing, go to My Listings and click the upgrade options on any listing card. You can also upgrade right after publishing from the success screen.",
+              },
+              {
+                q: "Who processes payments?",
+                a: "Payments are processed by Wall & Fifth via KompiPay on behalf of Findaly. Your card details are handled securely by Stripe.",
+              },
+              {
+                q: "When does an upgrade activate?",
+                a: "Upgrades activate when Findaly receives a confirmed payment webhook. The redirect success page is not used as proof of payment.",
+              },
+              {
+                q: "Can I cancel Broker Pro?",
+                a: "Yes — you can cancel anytime. Your Pro features will remain active until the end of your current billing period.",
+              },
+            ].map((faq) => (
+              <div
+                key={faq.q}
+                className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-5"
+              >
+                <div className="text-[14px] font-bold text-[#0a211f]">
+                  {faq.q}
+                </div>
+                <div className="mt-2 text-[14px] leading-relaxed text-[#0a211f]/55">
+                  {faq.a}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Breadcrumb footer */}
+        <div className="mt-14 border-t border-[#0a211f]/10 pt-6 text-[13px] text-[#0a211f]/40">
+          <Link
+            href="/"
+            className="transition-colors hover:text-[#0a211f]/65"
+          >
+            Home
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-[#0a211f]/65">Pricing</span>
+        </div>
       </Shell>
     </main>
   );

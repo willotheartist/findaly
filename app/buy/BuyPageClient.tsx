@@ -189,12 +189,6 @@ function getRelativeTime(dateStr: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
-function isInteractiveTarget(el: HTMLElement) {
-  const tag = el.tagName.toLowerCase();
-  if (tag === "button" || tag === "a" || tag === "input") return true;
-  if (el.closest("button, a, input")) return true;
-  return false;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-components
@@ -348,7 +342,7 @@ function BoatCard({ listing, view }: { listing: ListingDTO; view: "list" | "grid
                 scrollBehavior: "smooth",
                 WebkitOverflowScrolling: "touch",
               }}
-              onClick={(e) => {
+              onClick={() => {
                 // allow click on image area to open listing, but do not block
               }}
               onWheel={(e) => {
@@ -968,7 +962,7 @@ export default function BuyPageClient({
 
       {/* Sticky filter bar */}
       <div
-        className="sticky top-[var(--site-header-offset)] z-30 w-full border-b bg-white"
+        className="sticky top-(--site-header-offset) z-30 w-full border-b bg-white"
         style={{ borderColor: "rgba(0,0,0,.10)" }}
       >
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
@@ -1282,7 +1276,7 @@ export default function BuyPageClient({
                 More filters
                 {activeFiltersCount > 0 && (
                   <span
-                    className="flex h-5 min-w-[20px] items-center justify-center rounded-md border px-1 text-xs"
+                    className="flex h-5 min-w-5 items-center justify-center rounded-md border px-1 text-xs"
                     style={{ backgroundColor: P.white, color: P.text, borderColor: "rgba(0,0,0,.18)", fontWeight: 500 }}
                   >
                     {activeFiltersCount}

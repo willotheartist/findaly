@@ -3,29 +3,19 @@
 
 import * as React from "react";
 import type { ProductKey } from "@prisma/client";
-import { KOMPIPAY_AMOUNTS_MINOR, KOMPIPAY_PRICE_KEYS } from "@/lib/kompipay/products";
 
 type Props = {
   productKey: ProductKey;
   listingId?: string;
-  quantity?: number; // KompiPay embed endpoint currently assumes quantity=1; kept for API compatibility
+  quantity?: number;
   children: React.ReactNode;
   className?: string;
+  variant?: "primary" | "secondary" | "dark";
 };
 
 function errorMessage(err: unknown) {
   if (err instanceof Error) return err.message;
   return String(err);
-}
-
-function kpOrigin() {
-  return (process.env.NEXT_PUBLIC_KOMPIPAY_ORIGIN || "https://kompipay.com")
-    .trim()
-    .replace(/\/+$/, "");
-}
-
-function titleFor(productKey: ProductKey) {
-  return `Findaly — ${String(productKey).replace(/_/g, " ")}`;
 }
 
 export default function CheckoutButton({
@@ -34,6 +24,7 @@ export default function CheckoutButton({
   quantity = 1,
   children,
   className,
+  variant = "dark",
 }: Props) {
   const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
@@ -43,32 +34,10 @@ export default function CheckoutButton({
     setLoading(true);
 
     try {
-      const publishableKey = process.env.NEXT_PUBLIC_KOMPIPAY_PUBLISHABLE_KEY;
-      if (!publishableKey) {
-        throw new Error("Missing NEXT_PUBLIC_KOMPIPAY_PUBLISHABLE_KEY (set it in Findaly env vars)");
-      }
-
-      const price = KOMPIPAY_AMOUNTS_MINOR[productKey];
-      if (!price || !Number.isFinite(price) || price < 1) {
-        throw new Error(`Missing/invalid price for ${productKey} in KOMPIPAY_AMOUNTS_MINOR`);
-      }
-
-      const res = await fetch(`${kpOrigin()}/api/embed/checkout`, {
+      const res = await fetch("/api/kompipay/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          publishableKey,
-          title: titleFor(productKey),
-          currency: "GBP",
-          price, // minor units (pennies)
-          metadata: {
-            source: "findaly",
-            productKey,
-            listingId: listingId ?? null,
-            quantity,
-            priceKey: KOMPIPAY_PRICE_KEYS[productKey] ?? null,
-          },
-        }),
+        body: JSON.stringify({ productKey, listingId, quantity }),
       });
 
       const json: unknown = await res.json().catch(() => ({}));
@@ -78,12 +47,14 @@ export default function CheckoutButton({
           : {};
 
       if (!res.ok) {
-        const e = typeof j.error === "string" ? j.error : "KompiPay checkout failed";
+        const e =
+          typeof j.error === "string" ? j.error : "Checkout session failed";
         throw new Error(e);
       }
 
-      const checkoutUrl = typeof j.checkoutUrl === "string" ? j.checkoutUrl : null;
-      if (!checkoutUrl) throw new Error("Missing checkoutUrl from KompiPay");
+      const checkoutUrl =
+        typeof j.checkout_url === "string" ? j.checkout_url : null;
+      if (!checkoutUrl) throw new Error("Missing checkout URL from server");
 
       window.location.href = checkoutUrl;
     } catch (e: unknown) {
@@ -92,17 +63,32 @@ export default function CheckoutButton({
     }
   }
 
+  const baseClasses =
+    "inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed";
+
+  const variantClasses: Record<string, string> = {
+    primary:
+      "bg-[#fff86c] text-[#0a211f] hover:bg-[#f5ee5a] active:scale-[0.98]",
+    secondary:
+      "border border-[#0a211f]/16 bg-[#0a211f]/3 text-[#0a211f] hover:bg-[#0a211f]/6 active:scale-[0.98]",
+    dark: "bg-[#0a211f] text-[#fff86c] hover:bg-[#0a211f]/90 active:scale-[0.98]",
+  };
+
   return (
     <div className="w-full">
       <button
         onClick={onClick}
         disabled={loading}
-        className={
-          className ??
-          "w-full rounded-xl border border-slate-200 bg-black px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
-        }
+        className={className ?? `${baseClasses} ${variantClasses[variant]}`}
       >
-        {loading ? "Redirecting…" : children}
+        {loading ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Redirecting…
+          </>
+        ) : (
+          children
+        )}
       </button>
       {err ? <div className="mt-2 text-xs text-red-600">{err}</div> : null}
     </div>

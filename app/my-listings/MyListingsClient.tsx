@@ -1,4 +1,17 @@
 // app/my-listings/MyListingsClient.tsx
+//
+// INTEGRATION INSTRUCTIONS:
+// This file adds upgrade functionality to your existing MyListingsClient.
+// There are 3 changes to make to your current file:
+//
+// 1. Add import at top
+// 2. Add state + handler in the main component
+// 3. Add upgrade button to ListingMenu component
+// 4. Add the ListingUpgradePanel render at bottom of main component
+//
+// Below is the COMPLETE updated file with all changes applied.
+// ─────────────────────────────────────────────────────────────────
+
 "use client";
 
 import * as React from "react";
@@ -29,7 +42,9 @@ import {
   Anchor,
   Loader2,
   X,
+  Rocket,
 } from "lucide-react";
+import ListingUpgradePanel from "@/components/kompipay/ListingUpgradePanel";
 
 type ListingRow = {
   id: string;
@@ -73,9 +88,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 function formatPrice(currency: string | null, priceCents: number | null) {
   if (!priceCents || priceCents <= 0) return "Price on request";
   const value = priceCents / 100;
-
   const safeCurrency: string = currency?.trim() || "EUR";
-
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
@@ -93,12 +106,10 @@ function formatDate(dateString: string) {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-
   return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -173,7 +184,6 @@ async function apiPatchListingStatus(listingId: string, status: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
-
   const data = (await res.json().catch(() => ({}))) as ApiErrorResponse;
   if (!res.ok) {
     const err = new Error(data?.error || "Failed to update listing status") as Error & {
@@ -294,13 +304,13 @@ function ConfirmDeleteModal({
   );
 }
 
-// Dropdown menu component
 function ListingMenu({
   listing,
   onClose,
   onPauseToggle,
   onDelete,
   onDuplicate,
+  onUpgrade,
   busy,
 }: {
   listing: ListingRow;
@@ -308,6 +318,7 @@ function ListingMenu({
   onPauseToggle: (listing: ListingRow) => void;
   onDelete: (listing: ListingRow) => void;
   onDuplicate: (listing: ListingRow) => void;
+  onUpgrade: (listing: ListingRow) => void;
   busy: boolean;
 }) {
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -350,6 +361,21 @@ function ListingMenu({
           <Pencil className="h-4 w-4 text-slate-400" />
           Edit listing
         </Link>
+
+        {/* ── UPGRADE BUTTON ── */}
+        {isLive && (
+          <button
+            type="button"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#0a211f] font-semibold transition-colors hover:bg-[#fff86c]/20"
+            onClick={() => {
+              onClose();
+              onUpgrade(listing);
+            }}
+          >
+            <Rocket className="h-4 w-4 text-[#0a211f]" />
+            Upgrade listing
+          </button>
+        )}
 
         <button
           type="button"
@@ -410,13 +436,13 @@ function ListingMenu({
   );
 }
 
-// Single listing card component
 function ListingCard({
   listing,
   viewMode,
   onPauseToggle,
   onDelete,
   onDuplicate,
+  onUpgrade,
   busy,
 }: {
   listing: ListingRow;
@@ -424,6 +450,7 @@ function ListingCard({
   onPauseToggle: (listing: ListingRow) => void;
   onDelete: (listing: ListingRow) => void;
   onDuplicate: (listing: ListingRow) => void;
+  onUpgrade: (listing: ListingRow) => void;
   busy: boolean;
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -431,11 +458,11 @@ function ListingCard({
   const StatusIcon = statusConfig.icon;
   const viewHref = listing.slug ? `/buy/${listing.slug}` : null;
   const editHref = `/my-listings/${listing.id}/edit`;
+  const isLive = String(listing.status).toUpperCase() === "LIVE";
 
   if (viewMode === "grid") {
     return (
       <div className="group relative rounded-2xl border border-slate-200 bg-white transition-all duration-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50">
-        {/* Image with overflow hidden */}
         <div className="relative aspect-4/3 overflow-hidden rounded-t-2xl bg-linear-to-br from-slate-100 to-slate-50">
           {listing.thumbnailUrl ? (
             <Image
@@ -452,7 +479,6 @@ function ListingCard({
             </div>
           )}
 
-          {/* Status badge overlay */}
           <div className="absolute left-3 top-3">
             <div
               className={cx(
@@ -468,7 +494,6 @@ function ListingCard({
             </div>
           </div>
 
-          {/* Badges */}
           <div className="absolute right-3 top-3 flex flex-col gap-1.5">
             {listing.featured && (
               <span className="inline-flex items-center gap-1 rounded-full border border-[#ff6a00]/20 bg-[#ff6a00] px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
@@ -484,7 +509,6 @@ function ListingCard({
             )}
           </div>
 
-          {/* Quick actions overlay */}
           <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-center gap-2 bg-linear-to-t from-black/60 via-black/30 to-transparent p-4 pt-10 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
             {viewHref && (
               <Link
@@ -502,12 +526,20 @@ function ListingCard({
               <Pencil className="h-3.5 w-3.5" />
               Edit
             </Link>
+            {isLive && !listing.featured && (
+              <button
+                type="button"
+                onClick={() => onUpgrade(listing)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#fff86c] px-3 py-2 text-xs font-semibold text-[#0a211f] transition-colors hover:bg-[#f5ee5a]"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                Upgrade
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Content - NO overflow hidden here */}
         <div className="p-4">
-          {/* Title & menu */}
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-1 text-sm font-semibold text-slate-900">
               {listing.title || "Untitled listing"}
@@ -532,20 +564,19 @@ function ListingCard({
                   onPauseToggle={onPauseToggle}
                   onDelete={onDelete}
                   onDuplicate={onDuplicate}
+                  onUpgrade={onUpgrade}
                   onClose={() => setMenuOpen(false)}
                 />
               )}
             </div>
           </div>
 
-          {/* Brand/Model */}
           {(listing.brand || listing.model) && (
             <p className="mt-1 line-clamp-1 text-xs text-slate-500">
               {[listing.brand, listing.model].filter(Boolean).join(" ")}
             </p>
           )}
 
-          {/* Meta row */}
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
             {listing.year && <span>{listing.year}</span>}
             {listing.lengthM && <span>{listing.lengthM}m</span>}
@@ -557,7 +588,6 @@ function ListingCard({
             )}
           </div>
 
-          {/* Price & inquiries */}
           <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
             <div>
               <div className="text-lg font-bold text-slate-900">
@@ -582,7 +612,6 @@ function ListingCard({
   // List view
   return (
     <div className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-all duration-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-100">
-      {/* Thumbnail */}
       <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-linear-to-br from-slate-100 to-slate-50">
         {listing.thumbnailUrl ? (
           <Image
@@ -597,7 +626,6 @@ function ListingCard({
             <Sailboat className="h-8 w-8 text-slate-300" />
           </div>
         )}
-        {/* Status dot */}
         <div className="absolute bottom-2 left-2">
           <span className={cx("inline-flex h-5 w-5 items-center justify-center rounded-full", statusConfig.bg)}>
             <StatusIcon className="h-3 w-3 text-white" />
@@ -605,7 +633,6 @@ function ListingCard({
         </div>
       </div>
 
-      {/* Main content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -633,7 +660,6 @@ function ListingCard({
             )}
           </div>
 
-          {/* Status pill */}
           <div
             className={cx(
               "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
@@ -648,7 +674,6 @@ function ListingCard({
           </div>
         </div>
 
-        {/* Meta */}
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
           {(listing.year || listing.lengthM) && (
             <span className="inline-flex items-center gap-1">
@@ -673,7 +698,6 @@ function ListingCard({
         </div>
       </div>
 
-      {/* Price */}
       <div className="shrink-0 text-right">
         <div className="text-base font-bold text-slate-900">
           {formatPrice(listing.currency, listing.priceCents)}
@@ -683,8 +707,17 @@ function ListingCard({
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex shrink-0 items-center gap-2">
+        {isLive && !listing.featured && (
+          <button
+            type="button"
+            onClick={() => onUpgrade(listing)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#fff86c] px-3 py-2 text-xs font-semibold text-[#0a211f] transition-colors hover:bg-[#f5ee5a]"
+          >
+            <Rocket className="h-3.5 w-3.5" />
+            Upgrade
+          </button>
+        )}
         {viewHref && (
           <Link
             href={viewHref}
@@ -721,6 +754,7 @@ function ListingCard({
               onPauseToggle={onPauseToggle}
               onDelete={onDelete}
               onDuplicate={onDuplicate}
+              onUpgrade={onUpgrade}
               onClose={() => setMenuOpen(false)}
             />
           )}
@@ -739,11 +773,8 @@ export default function MyListingsClient({
   stats: Stats;
   profileSlug: string;
 }) {
-  // Local state so we can optimistically update status/delete
   const [rows, setRows] = React.useState<ListingRow[]>(listings);
   const [localStats, setLocalStats] = React.useState<Stats>(stats);
-
-  // per-listing in-flight flags
   const [busyById, setBusyById] = React.useState<Record<string, boolean>>({});
 
   // delete modal
@@ -751,11 +782,13 @@ export default function MyListingsClient({
   const [deleteTarget, setDeleteTarget] = React.useState<ListingRow | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
 
+  // ── UPGRADE PANEL STATE ──
+  const [upgradeTarget, setUpgradeTarget] = React.useState<ListingRow | null>(null);
+
   const [q, setQ] = React.useState("");
   const [filter, setFilter] = React.useState<"ALL" | "LIVE" | "DRAFT" | "PAUSED" | "SOLD">("ALL");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
-  // If parent props ever change, keep in sync (rare, but safe)
   React.useEffect(() => {
     setRows(listings);
     setLocalStats(stats);
@@ -774,10 +807,7 @@ export default function MyListingsClient({
       const current = String(listing.status).toUpperCase();
       const next = current === "LIVE" ? "PAUSED" : current === "PAUSED" ? "LIVE" : null;
       if (!next) return;
-
       setBusy(listing.id, true);
-
-      // optimistic
       setRows((prev) => {
         const nextRows = prev.map((r) =>
           r.id === listing.id ? { ...r, status: next, updatedAt: new Date().toISOString() } : r
@@ -785,11 +815,8 @@ export default function MyListingsClient({
         refreshStatsFromRows(nextRows);
         return nextRows;
       });
-
       try {
         const result = await apiPatchListingStatus(listing.id, next);
-
-        // trust server returned status (esp. if server normalizes)
         setRows((prev) => {
           const nextRows = prev.map((r) =>
             r.id === listing.id
@@ -801,7 +828,6 @@ export default function MyListingsClient({
         });
       } catch (e) {
         const error = e as Error & { code?: string; missing?: string[] };
-        // revert on error
         setRows((prev) => {
           const nextRows = prev.map((r) =>
             r.id === listing.id ? { ...r, status: listing.status } : r
@@ -809,11 +835,9 @@ export default function MyListingsClient({
           refreshStatsFromRows(nextRows);
           return nextRows;
         });
-
-        // special case: publishing blocked
         if (error.code === "LISTING_INCOMPLETE" && Array.isArray(error.missing)) {
           alert(
-            `This listing can't go Live yet.\n\nMissing: ${error.missing.join(", ")}\n\nOpen Edit listing to complete it.`
+            `This listing can\u2019t go Live yet.\n\nMissing: ${error.missing.join(", ")}\n\nOpen Edit listing to complete it.`
           );
         } else {
           alert(error.message || "Failed to update listing");
@@ -832,19 +856,15 @@ export default function MyListingsClient({
 
   const onConfirmDelete = React.useCallback(async () => {
     if (!deleteTarget) return;
-
     setDeleteBusy(true);
     setBusy(deleteTarget.id, true);
-
     try {
       await apiDeleteListing(deleteTarget.id);
-
       setRows((prev) => {
         const nextRows = prev.filter((r) => r.id !== deleteTarget.id);
         refreshStatsFromRows(nextRows);
         return nextRows;
       });
-
       setDeleteOpen(false);
       setDeleteTarget(null);
     } catch (e) {
@@ -857,32 +877,23 @@ export default function MyListingsClient({
   }, [deleteTarget, refreshStatsFromRows, setBusy]);
 
   const onDuplicate = React.useCallback(() => {
-    // No duplicate endpoint yet — keep it lightweight and honest.
-    // When you want: we can implement POST /api/listings/[id]/duplicate.
-    alert("Duplicate isn't wired yet. If you want it, I'll add a duplicate endpoint + UI.");
+    alert("Duplicate isn\u2019t wired yet. If you want it, I\u2019ll add a duplicate endpoint + UI.");
+  }, []);
+
+  // ── UPGRADE HANDLER ──
+  const onUpgrade = React.useCallback((listing: ListingRow) => {
+    setUpgradeTarget(listing);
   }, []);
 
   const filtered = React.useMemo(() => {
     const query = q.trim().toLowerCase();
-
     return rows.filter((l) => {
       if (filter !== "ALL" && String(l.status).toUpperCase() !== filter) return false;
-
       if (!query) return true;
-      const hay = [
-        l.title,
-        l.brand,
-        l.model,
-        l.location,
-        l.country,
-        l.boatCategory,
-        l.kind,
-        l.intent,
-      ]
+      const hay = [l.title, l.brand, l.model, l.location, l.country, l.boatCategory, l.kind, l.intent]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-
       return hay.includes(query);
     });
   }, [rows, q, filter]);
@@ -910,6 +921,14 @@ export default function MyListingsClient({
           setDeleteTarget(null);
         }}
         onConfirm={onConfirmDelete}
+      />
+
+      {/* ── UPGRADE PANEL ── */}
+      <ListingUpgradePanel
+        listingId={upgradeTarget?.id ?? ""}
+        listingTitle={upgradeTarget?.title ?? ""}
+        isOpen={!!upgradeTarget}
+        onClose={() => setUpgradeTarget(null)}
       />
 
       {/* Header section */}
@@ -946,7 +965,6 @@ export default function MyListingsClient({
                 </div>
               </div>
             </div>
-
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
@@ -958,7 +976,6 @@ export default function MyListingsClient({
                 </div>
               </div>
             </div>
-
             <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
@@ -970,7 +987,6 @@ export default function MyListingsClient({
                 </div>
               </div>
             </div>
-
             <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
@@ -982,7 +998,6 @@ export default function MyListingsClient({
                 </div>
               </div>
             </div>
-
             <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-colors hover:border-slate-300">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100">
@@ -994,7 +1009,6 @@ export default function MyListingsClient({
                 </div>
               </div>
             </div>
-
             <div className="rounded-2xl border border-[#ff6a00]/20 bg-orange-50/50 p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff6a00]/10">
@@ -1014,7 +1028,6 @@ export default function MyListingsClient({
       <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search */}
             <div className="relative flex-1 sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -1025,9 +1038,7 @@ export default function MyListingsClient({
               />
             </div>
 
-            {/* Filter tabs & view toggle */}
             <div className="flex items-center gap-3">
-              {/* Status filters */}
               <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
                 {(["ALL", "LIVE", "DRAFT", "PAUSED", "SOLD"] as const).map((k) => (
                   <button
@@ -1054,7 +1065,6 @@ export default function MyListingsClient({
                 ))}
               </div>
 
-              {/* View toggle */}
               <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
                 <button
                   type="button"
@@ -1119,6 +1129,7 @@ export default function MyListingsClient({
                 onPauseToggle={onPauseToggle}
                 onDelete={onRequestDelete}
                 onDuplicate={onDuplicate}
+                onUpgrade={onUpgrade}
                 busy={!!busyById[listing.id]}
               />
             ))}
@@ -1133,13 +1144,13 @@ export default function MyListingsClient({
                 onPauseToggle={onPauseToggle}
                 onDelete={onRequestDelete}
                 onDuplicate={onDuplicate}
+                onUpgrade={onUpgrade}
                 busy={!!busyById[listing.id]}
               />
             ))}
           </div>
         )}
 
-        {/* Footer */}
         <div className="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
           <p className="text-sm text-slate-500">
             Showing {filtered.length} of {rows.length} listings

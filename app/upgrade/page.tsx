@@ -1,231 +1,305 @@
-"use client";
-
+// app/upgrade/page.tsx
 import Link from "next/link";
-import { useState } from "react";
 import {
-  ArrowRight,
   BadgeCheck,
-  CreditCard,
-  Shield,
-  Sparkles,
   Zap,
+  TrendingUp,
+  Banknote,
+  Crown,
+  Shield,
+  ArrowRight,
+  Sailboat,
+  Check,
 } from "lucide-react";
+import CheckoutButton from "@/components/kompipay/CheckoutButton";
 
-type PlanId = "free" | "pro" | "premium";
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#0a211f]/40">
+      {children}
+    </p>
+  );
+}
 
-type Plan = {
-  id: PlanId;
-  name: string;
-  priceMonthly: string;
-  sub: string;
-  accent: string;
-  cta: string;
-  footnote?: string;
-  features: { title: string; desc: string }[];
-};
+function FeatureCheckLight({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#fff86c]/30">
+        <Check className="h-3 w-3 text-[#fff86c]" />
+      </div>
+      <div className="text-[14px] leading-relaxed text-white/70">
+        {children}
+      </div>
+    </div>
+  );
+}
 
-const PLANS: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    priceMonthly: "€0",
-    sub: "Public profile + basic presence",
-    accent: "#0ea5e9",
-    cta: "Start free",
-    features: [
-      { title: "Public profile", desc: "Show name, location, and contact." },
-      { title: "Basic portfolio", desc: "Link to listings or work." },
-      { title: "Standard placement", desc: "Visible in search results." },
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    priceMonthly: "€39",
-    sub: "For active brokers and pros",
-    accent: "#ff6a00",
-    cta: "Upgrade to Pro",
-    features: [
-      { title: "Verified badge", desc: "Boost trust instantly." },
-      { title: "Higher ranking", desc: "More exposure in discovery." },
-      { title: "Lead capture", desc: "Simple inquiry form on profile." },
-    ],
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    priceMonthly: "€99",
-    sub: "For top firms that want maximum visibility",
-    accent: "#8b5cf6",
-    cta: "Go Premium",
-    footnote: "Includes priority support.",
-    features: [
-      { title: "Featured placement", desc: "Top slots in relevant categories." },
-      { title: "Rich media gallery", desc: "More images, more impact." },
-      { title: "Team members", desc: "Add multiple agents to one profile." },
-    ],
-  },
-];
-
-function cx(...v: Array<string | false | null | undefined>) {
-  return v.filter(Boolean).join(" ");
+function FeatureCheck({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0a211f]/8">
+        <Check className="h-3 w-3 text-[#0a211f]/60" />
+      </div>
+      <div className="text-[14px] leading-relaxed text-[#0a211f]/70">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function UpgradePage() {
-  const [selected, setSelected] = useState<PlanId>("pro");
-
-  const selPlan = PLANS.find((p) => p.id === selected) ?? PLANS[1];
-
   return (
-    <main className="w-full bg-white">
-      {/* Header */}
-      <section className="relative w-full overflow-hidden bg-linear-to-br from-slate-50 via-white to-orange-50/30">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div
-            className="absolute -right-40 -top-40 h-[620px] w-[620px] rounded-full opacity-25 blur-3xl"
-            style={{ backgroundColor: selPlan.accent }}
-          />
-          <div className="absolute -bottom-24 -left-24 h-[420px] w-[420px] rounded-full bg-sky-500/10 blur-3xl" />
-          <svg className="absolute inset-0 h-full w-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="upgrade-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#upgrade-grid)" />
-          </svg>
-        </div>
+    <main className="min-h-screen bg-[#f5f2eb]">
+      <div className="mx-auto max-w-6xl px-5 py-16 md:px-10">
+        {/* Header */}
+        <SectionLabel>Upgrade</SectionLabel>
+        <h1 className="mt-3 text-[clamp(28px,3.4vw,44px)] font-bold leading-[1.12] tracking-tight text-[#0a211f]">
+          Get more from Findaly
+        </h1>
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-[#0a211f]/60">
+          Whether you are a private seller looking to boost a single listing or a
+          broker growing your business, there is an upgrade for you.
+        </p>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mb-4 text-sm text-slate-600">
-            <Link href="/" className="no-underline hover:text-slate-900">
-              Home
-            </Link>
-            <span className="mx-2 text-slate-300">/</span>
-            <span className="font-semibold text-slate-900">Upgrade</span>
-          </div>
+        {/* ── Broker Pro hero card ── */}
+        <section className="mt-12">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-[#0a211f] bg-[#0a211f] p-7 md:p-10">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#fff86c]/5 blur-3xl" />
+            <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[#fff86c]/5 blur-3xl" />
 
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-200/70">
-              <Shield className="h-3.5 w-3.5 text-slate-500" />
-              Plans
-            </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Choose a plan
-            </h1>
-            <p className="mt-3 text-base text-slate-600">
-              Upgrade your profile for better trust and visibility.
-            </p>
-          </div>
-        </div>
-      </section>
+            <div className="relative">
+              <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-lg">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#fff86c]/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#fff86c]">
+                    <Crown className="h-3.5 w-3.5" />
+                    Recommended for brokers
+                  </div>
 
-      {/* Plans */}
-      <section className="w-full">
-        <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-          <div className="grid gap-5 lg:grid-cols-3">
-            {PLANS.map((p) => {
-              const isActive = p.id === selected;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setSelected(p.id)}
-                  className={cx(
-                    "text-left overflow-hidden rounded-3xl border bg-white p-6 shadow-sm transition-all",
-                    "hover:border-slate-300 hover:shadow-md",
-                    isActive ? "border-slate-300 ring-2 ring-slate-900/5" : "border-slate-200/80"
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="text-lg font-bold text-slate-900">{p.name}</div>
-                      <div className="mt-1 text-sm text-slate-600">{p.sub}</div>
+                  <h2 className="mt-4 text-[28px] font-bold tracking-tight text-white md:text-[32px]">
+                    Broker Pro
+                  </h2>
+                  <p className="mt-2 text-[15px] leading-relaxed text-white/50">
+                    Professional growth toolkit. Verified badge, priority
+                    placement, ranking boost, and discounted listing upgrades.
+                  </p>
+
+                  <div className="mt-6 flex items-end gap-1">
+                    <div className="text-[40px] font-bold tracking-tight text-[#fff86c]">
+                      £99
                     </div>
-                    {p.id !== "free" ? (
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200/80">
-                        <Sparkles className="h-5 w-5" style={{ color: p.accent }} />
-                      </div>
-                    ) : (
-                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 ring-1 ring-slate-200/80">
-                        <Zap className="h-5 w-5 text-slate-400" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-5 flex items-end justify-between">
-                    <div className="text-3xl font-bold tracking-tight text-slate-900">
-                      {p.priceMonthly}
-                      <span className="ml-1 text-sm font-semibold text-slate-500">/mo</span>
+                    <div className="mb-2 text-[14px] font-semibold text-[#fff86c]/50">
+                      /month
                     </div>
-                    {isActive ? (
-                      <BadgeCheck className="h-6 w-6" style={{ color: p.accent }} />
-                    ) : null}
                   </div>
 
-                  <div className="mt-6 grid gap-3">
-                    {p.features.map((f) => (
-                      <div key={f.title} className="rounded-2xl border border-slate-200/80 bg-white p-4">
-                        <div className="text-sm font-semibold text-slate-900">{f.title}</div>
-                        <div className="mt-1 text-sm text-slate-600">{f.desc}</div>
-                      </div>
-                    ))}
+                  <div className="mt-6 space-y-3">
+                    <FeatureCheckLight>
+                      <strong className="text-white">Verified badge</strong> on
+                      profile and all your listings
+                    </FeatureCheckLight>
+                    <FeatureCheckLight>
+                      <strong className="text-white">Priority placement</strong>{" "}
+                      in broker directory and search results
+                    </FeatureCheckLight>
+                    <FeatureCheckLight>
+                      <strong className="text-white">Ranking boost</strong>{" "}
+                      applied across all your listings
+                    </FeatureCheckLight>
+                    <FeatureCheckLight>
+                      <strong className="text-white">20% discount</strong> on
+                      Featured and Boost upgrades
+                    </FeatureCheckLight>
+                    <FeatureCheckLight>
+                      <strong className="text-white">Analytics</strong> and
+                      priority support (rolling out)
+                    </FeatureCheckLight>
                   </div>
 
-                  {p.footnote ? (
-                    <div className="mt-4 text-sm text-slate-600">{p.footnote}</div>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Checkout card */}
-          <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
-            <div className="p-6 sm:p-7">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="text-lg font-bold text-slate-900">
-                    Selected: {selPlan.name}
+                  <div className="mt-8 max-w-xs">
+                    <CheckoutButton
+                      productKey="BROKER_PRO_MONTHLY"
+                      variant="primary"
+                    >
+                      Start Broker Pro — £99/mo
+                    </CheckoutButton>
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
-                    {selPlan.priceMonthly}/mo
-                  </div>
+                  <p className="mt-3 text-[12px] text-white/25">
+                    Cancel anytime. Billed monthly.
+                  </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => alert("Checkout wiring next")}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
-                  style={{ backgroundColor: selPlan.accent }}
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {selPlan.cta}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                <div className="hidden w-px self-stretch bg-white/10 md:block" />
+
+                <div className="shrink-0 md:w-56">
+                  <div className="text-[13px] font-semibold text-white/30">
+                    Also available
+                  </div>
+                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="text-[14px] font-bold text-white">Free</div>
+                    <div className="mt-1 text-[12px] text-white/40">
+                      Basic profile, standard listings, receive enquiries
+                    </div>
+                    <Link
+                      href="/signup"
+                      className="mt-3 inline-flex text-[13px] font-semibold text-[#fff86c] no-underline transition-colors hover:text-[#fff86c]/80"
+                    >
+                      Create free account
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Listing upgrades ── */}
+        <section className="mt-14">
+          <SectionLabel>For all sellers</SectionLabel>
+          <h2 className="mt-2 text-[22px] font-bold tracking-tight text-[#0a211f]">
+            Listing upgrades
+          </h2>
+          <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-[#0a211f]/55">
+            One-off purchases applied to individual listings. Buy from your
+            listing dashboard or right after publishing.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Featured */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fff86c]/60">
+                  <BadgeCheck className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">Featured Listing</div>
+                  <div className="text-[12px] text-[#0a211f]/45">Maximum exposure</div>
+                </div>
+              </div>
+              <div className="mt-5 space-y-2">
+                <FeatureCheck>Pinned to top of search results</FeatureCheck>
+                <FeatureCheck>Homepage &ldquo;Featured&rdquo; carousel</FeatureCheck>
+                <FeatureCheck>Featured badge on listing card</FeatureCheck>
+              </div>
+              <div className="mt-5 space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">14 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£49</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">30 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£79</span>
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 bg-slate-50 p-6 sm:p-7">
-              <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                <span>Need to edit your profile first?</span>
-                <Link
-                  href="/settings"
-                  className="font-semibold text-slate-900 no-underline hover:text-slate-900"
-                >
-                  Go to settings <ArrowRight className="inline h-4 w-4" />
-                </Link>
+            {/* Boost */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a211f]/8">
+                  <Zap className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">Boost</div>
+                  <div className="text-[12px] text-[#0a211f]/45">Ranking lift</div>
+                </div>
+              </div>
+              <div className="mt-5 space-y-2">
+                <FeatureCheck>Higher position in search results</FeatureCheck>
+                <FeatureCheck>Boost badge visible to buyers</FeatureCheck>
+                <FeatureCheck>Great for refreshing older listings</FeatureCheck>
+              </div>
+              <div className="mt-5 space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">7 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£19</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">14 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£29</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Finance Priority */}
+            <div className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0a211f]/8">
+                  <Banknote className="h-5 w-5 text-[#0a211f]" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[#0a211f]">Finance Priority</div>
+                  <div className="text-[12px] text-[#0a211f]/45">Reach finance-ready buyers</div>
+                </div>
+              </div>
+              <div className="mt-5 space-y-2">
+                <FeatureCheck>&ldquo;Finance Ready&rdquo; badge on listing</FeatureCheck>
+                <FeatureCheck>Higher ranking in finance filters</FeatureCheck>
+                <FeatureCheck>Shown in finance landing sections</FeatureCheck>
+              </div>
+              <div className="mt-5 space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">14 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£29</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-[#0a211f]/6 bg-white/60 px-4 py-3">
+                  <span className="text-[13px] font-bold text-[#0a211f]">30 days</span>
+                  <span className="text-[16px] font-bold text-[#0a211f]">£49</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 text-center text-sm text-slate-600">
-            <Link href="/contact" className="font-semibold text-slate-900 no-underline hover:text-[#ff6a00]">
-              Contact support
-            </Link>
+          <p className="mt-6 text-[13px] text-[#0a211f]/35">
+            Listing upgrades are applied from{" "}
+            <Link href="/my-listings" className="font-semibold text-[#0a211f]/50 no-underline transition-colors hover:text-[#0a211f]/70">
+              My Listings
+            </Link>{" "}
+            or right after publishing. They attach to a specific listing.
+          </p>
+        </section>
+
+        {/* ── How it works ── */}
+        <section className="mt-14">
+          <SectionLabel>How it works</SectionLabel>
+          <h2 className="mt-2 text-[22px] font-bold tracking-tight text-[#0a211f]">
+            Simple and transparent
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              { step: "1", title: "List for free", desc: "Create a listing at no cost. Photos, description, contact info, enquiries — all free." },
+              { step: "2", title: "Upgrade when ready", desc: "Choose Featured, Boost, or Finance Priority from your dashboard. One-time payment, instant activation." },
+              { step: "3", title: "Get more leads", desc: "Upgraded listings rank higher, show trust badges, and reach more serious buyers." },
+            ].map((item) => (
+              <div key={item.step} className="rounded-2xl border border-[#0a211f]/8 bg-[#0a211f]/2 p-5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0a211f] text-[13px] font-bold text-[#fff86c]">
+                  {item.step}
+                </div>
+                <div className="mt-3 text-[15px] font-bold text-[#0a211f]">{item.title}</div>
+                <div className="mt-2 text-[13px] leading-relaxed text-[#0a211f]/50">{item.desc}</div>
+              </div>
+            ))}
           </div>
+        </section>
+
+        {/* Links */}
+        <div className="mt-14 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-4 text-[13px]">
+            <Link href="/pricing" className="font-semibold text-[#0a211f] no-underline transition-colors hover:text-[#0a211f]/70">Full pricing details</Link>
+            <Link href="/brokers/pricing" className="font-semibold text-[#0a211f] no-underline transition-colors hover:text-[#0a211f]/70">Broker plans</Link>
+            <Link href="/my-listings" className="font-semibold text-[#0a211f] no-underline transition-colors hover:text-[#0a211f]/70">My listings</Link>
+          </div>
+          <Link href="/contact" className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#0a211f]/50 no-underline transition-colors hover:text-[#0a211f]/70">
+            Need help? Contact us <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
-      </section>
+
+        <div className="mt-10 border-t border-[#0a211f]/10 pt-6 text-[13px] text-[#0a211f]/40">
+          <Link href="/" className="transition-colors hover:text-[#0a211f]/65">Home</Link>
+          <span className="mx-2">/</span>
+          <span className="text-[#0a211f]/65">Upgrade</span>
+        </div>
+      </div>
     </main>
   );
 }

@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 05/03/2026, 16:45:59*
+*Generated on: 08/03/2026, 20:39:47*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 325 |
-| 📁 Total Folders | 208 |
+| 📄 Total Files | 327 |
+| 📁 Total Folders | 209 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -24,8 +24,8 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 201 files (61.8%)
-- 🔷 **.ts** (TypeScript files): 59 files (18.2%)
+- ⚛️ **.tsx** (React TypeScript files): 203 files (62.1%)
+- 🔷 **.ts** (TypeScript files): 59 files (18.0%)
 - 🖼️ **.jpg** (JPEG images): 18 files (5.5%)
 - 📄 **.sql** (Other files): 12 files (3.7%)
 - 🖼️ **.png** (PNG images): 11 files (3.4%)
@@ -45,9 +45,9 @@
 
 ### By Category
 
-- **React**: 201 files (61.8%)
-- **TypeScript**: 59 files (18.2%)
-- **Assets**: 35 files (10.8%)
+- **React**: 203 files (62.1%)
+- **TypeScript**: 59 files (18.0%)
+- **Assets**: 35 files (10.7%)
 - **Other**: 19 files (5.8%)
 - **Config**: 6 files (1.8%)
 - **Docs**: 3 files (0.9%)
@@ -56,8 +56,8 @@
 
 ### 📁 Largest Directories
 
-- **root**: 325 files
-- **app**: 192 files
+- **root**: 327 files
+- **app**: 194 files
 - **components**: 35 files
 - **app/guides**: 34 files
 - **public**: 34 files
@@ -99,7 +99,7 @@ findaly/
 │   │   ├── 📂 _types/
 │   │   │   └── 🔷 listing.ts
 │   │   ├── ⚛️ AddListingClient.tsx
-│   │   ├── ⚛️ head.tsx
+│   │   ├── ⚛️ layout.tsx
 │   │   ├── ⚛️ ListingWizard.tsx
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 alerts/
@@ -270,6 +270,8 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 events/
 │   │   └── ⚛️ page.tsx
+│   ├── 📂 explore/
+│   │   └── ⚛️ page.tsx
 │   ├── 📂 faq/
 │   │   └── ⚛️ page.tsx
 │   ├── 🖼️ favicon.ico
@@ -356,6 +358,7 @@ findaly/
 │   │   └── ⚛️ page.tsx
 │   ├── 📂 news/
 │   │   └── ⚛️ page.tsx
+│   ├── ⚛️ not-found.tsx
 │   ├── ⚛️ page.tsx
 │   ├── 📂 parts/
 │   │   └── ⚛️ page.tsx

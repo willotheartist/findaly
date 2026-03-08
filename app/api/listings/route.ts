@@ -143,6 +143,10 @@ function isBlobOrDataUrl(url: string) {
   return url.startsWith("blob:") || url.startsWith("data:image/");
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * POST — Create a new listing
+ * ───────────────────────────────────────────────────────────── */
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -153,15 +157,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user's profile (create one if doesn't exist)
     let profile = await prisma.profile.findFirst({
       where: { userId: user.id },
     });
 
     if (!profile) {
-      const profileSlug = `user-${user.id.slice(0, 8)}-${Date.now().toString(
-        36
-      )}`;
+      const profileSlug = `user-${user.id.slice(0, 8)}-${Date.now().toString(36)}`;
       profile = await prisma.profile.create({
         data: {
           userId: user.id,
@@ -186,7 +187,6 @@ export async function POST(request: NextRequest) {
       data: {
         profileId: profile.id,
 
-        // Core fields
         kind: mapListingKind(formData.listingType),
         intent: mapListingIntent(formData.listingType),
         status: "LIVE",
@@ -195,24 +195,20 @@ export async function POST(request: NextRequest) {
         slug,
         description: formData.description || null,
 
-        // Location
         location: formData.location || null,
         country: formData.country || null,
         marina: formData.marina || null,
         lying: formData.lying || null,
 
-        // Pricing
         currency: mapCurrency(formData.currency),
         priceCents: priceToCents(formData.price),
         priceType: mapPriceType(formData.priceType),
         taxStatus: formData.taxStatus || null,
 
-        // Listing options
         featured: formData.featured || false,
         urgent: formData.urgent || false,
         acceptOffers: formData.acceptOffers ?? true,
 
-        // Vessel specific
         boatCategory: formData.boatCategory || null,
         charterType: formData.charterType || null,
         vesselCondition: mapVesselCondition(formData.condition),
@@ -221,7 +217,6 @@ export async function POST(request: NextRequest) {
         model: formData.model || null,
         year: parseIntOrNull(formData.year),
 
-        // Dimensions
         lengthFt: parseFloatOrNull(formData.lengthFt),
         lengthM: parseFloatOrNull(formData.lengthM),
         beamFt: parseFloatOrNull(formData.beamFt),
@@ -230,12 +225,10 @@ export async function POST(request: NextRequest) {
         draftM: parseFloatOrNull(formData.draftM),
         displacement: formData.displacement || null,
 
-        // Hull
         hullMaterial: formData.hullMaterial || null,
         hullType: formData.hullType || null,
         hullColor: formData.hullColor || null,
 
-        // Engine
         engineMake: formData.engineMake || null,
         engineModel: formData.engineModel || null,
         enginePower: formData.enginePower || null,
@@ -244,18 +237,15 @@ export async function POST(request: NextRequest) {
         fuelType: formData.fuelType || null,
         fuelCapacity: formData.fuelCapacity || null,
 
-        // Accommodation
         cabins: parseIntOrNull(formData.cabins),
         berths: parseIntOrNull(formData.berths),
         heads: parseIntOrNull(formData.heads),
 
-        // Features (JSON arrays)
         features: formData.features || [],
         electronics: formData.electronics || [],
         safetyEquipment: formData.safetyEquipment || [],
         customFeatures: formData.customFeatures || null,
 
-        // Charter specific
         charterGuests: parseIntOrNull(formData.charterGuests),
         charterCrew: parseIntOrNull(formData.charterCrew),
         charterPricePeriod: mapCharterPricePeriod(formData.charterPricePeriod),
@@ -263,24 +253,20 @@ export async function POST(request: NextRequest) {
         charterAvailableTo: parseDateOrNull(formData.charterAvailableTo),
         charterIncluded: formData.charterIncluded || [],
 
-        // Recent works & media
         recentWorks: formData.recentWorks || null,
         videoUrl: formData.videoUrl || null,
         virtualTourUrl: formData.virtualTourUrl || null,
 
-        // Service specific
         serviceCategory: formData.serviceCategory || null,
         serviceName: formData.serviceName || null,
         serviceDescription: formData.serviceDescription || null,
         serviceExperience: formData.serviceExperience || null,
         serviceAreas: formData.serviceAreas || [],
 
-        // Parts specific
         partsCategory: formData.partsCategory || null,
         partsCondition: mapPartsCondition(formData.partsCondition),
         partsCompatibility: formData.partsCompatibility || null,
 
-        // Seller info (denormalized for display)
         sellerType: mapSellerType(formData.sellerType),
         sellerName: formData.sellerName || null,
         sellerCompany: formData.sellerCompany || null,
@@ -292,7 +278,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // ✅ Create media records (IGNORE blob/data preview URLs)
     const rawUrls: string[] = Array.isArray(formData.photoUrls)
       ? formData.photoUrls.filter((u: unknown): u is string => typeof u === "string")
       : [];
@@ -325,6 +310,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+ * GET — Fetch listings with monetization ranking
+ *
+ * Ranking order:
+ *   1. featured DESC     (paid featured listings first)
+ *   2. boostLevel DESC   (boosted listings next)
+ *   3. updatedAt DESC    (newest otherwise)
+ *
+ * Post-query: expired features are cleaned from the response
+ * so buyers never see stale badges.
+ * ───────────────────────────────────────────────────────────── */
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -345,6 +342,8 @@ export async function GET(request: NextRequest) {
       where.intent = intent.toUpperCase();
     }
 
+    const now = new Date();
+
     const [listings, total] = await Promise.all([
       prisma.listing.findMany({
         where,
@@ -355,6 +354,8 @@ export async function GET(request: NextRequest) {
               name: true,
               slug: true,
               isVerified: true,
+              brokerPlan: true,
+              brokerProActiveUntil: true,
             },
           },
           media: {
@@ -362,21 +363,51 @@ export async function GET(request: NextRequest) {
             take: 1,
           },
         },
-        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+        orderBy: [
+          { featured: "desc" },
+          { boostLevel: "desc" },
+          { updatedAt: "desc" },
+        ],
         take: limit,
         skip: offset,
       }),
       prisma.listing.count({ where }),
     ]);
 
+    // Clean expired upgrades from response so buyers see accurate badges
+    const cleaned = listings.map((l) => {
+      const featuredActive =
+        l.featured && l.featuredUntil && l.featuredUntil > now;
+      const boostActive =
+        l.boostLevel > 0 && l.boostUntil && l.boostUntil > now;
+      const brokerProActive =
+        l.profile.brokerPlan === "PRO" &&
+        l.profile.brokerProActiveUntil &&
+        l.profile.brokerProActiveUntil > now;
+
+      return {
+        ...l,
+        featured: !!featuredActive,
+        boostLevel: boostActive ? l.boostLevel : 0,
+        profile: {
+          ...l.profile,
+          // Broker Pro includes verified status
+          isVerified: l.profile.isVerified || !!brokerProActive,
+        },
+      };
+    });
+
     return NextResponse.json({
-      listings,
+      listings: cleaned,
       total,
       limit,
       offset,
     });
   } catch (error) {
     console.error("Error fetching listings:", error);
-    return NextResponse.json({ error: "Failed to fetch listings" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch listings" },
+      { status: 500 }
+    );
   }
 }
