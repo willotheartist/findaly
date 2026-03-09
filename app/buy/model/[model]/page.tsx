@@ -20,6 +20,7 @@ type PageProps = {
 };
 
 type JsonLdObject = Record<string, unknown>;
+type MarketStats = Awaited<ReturnType<typeof getMarketStats>>;
 
 function buildSeoIntro(opts: {
   modelDisplay: string;
@@ -89,9 +90,10 @@ function fmtMoneyFromCentsEUR(cents: number | null | undefined) {
   }
 }
 
-function fmtAvgLength(stats: any) {
+function fmtAvgLength(stats: MarketStats | null | undefined) {
   const m = stats?.avgLengthM;
   const ft = stats?.avgLengthFt;
+
   if (typeof m === "number" && m > 0) return `${Math.round(m)}m`;
   if (typeof ft === "number" && ft > 0) return `${Math.round(ft)}ft`;
   return "—";
@@ -103,12 +105,9 @@ function fmtAvgLength(stats: any) {
  * - add a contains fallback for the canonical string (good when DB stores extra suffixes)
  */
 function buildWhere(m: ReturnType<typeof modelFromParam>): Prisma.ListingWhereInput {
-  const canonical = m.canonicalSpaced;           // e.g. "lagoon 42" (spaced, normalized)
-  const canonicalTC = titleCaseWords(canonical); // "Lagoon 42"
-
-  // If slug looks like "lagoon-42", modelCandidateRaw will be "42"
-  // This is exactly how your DB stores it for Lagoon: brand="Lagoon", model="42"
-  const modelOnly = (m.modelCandidateRaw || "").trim(); // "42"
+  const canonical = m.canonicalSpaced;
+  const canonicalTC = titleCaseWords(canonical);
+  const modelOnly = (m.modelCandidateRaw || "").trim();
 
   const equalsModelClauses = m.candidates.map((cand) => ({
     model: { equals: cand, mode: "insensitive" as const },
@@ -127,7 +126,7 @@ function buildWhere(m: ReturnType<typeof modelFromParam>): Prisma.ListingWhereIn
     canonicalTC && canonicalTC.length >= 4
       ? [
           { title: { contains: canonicalTC, mode: "insensitive" as const } },
-          { brand: { contains: canonicalTC, mode: "insensitive" as const } }, // catches brand="Lagoon 42"
+          { brand: { contains: canonicalTC, mode: "insensitive" as const } },
         ]
       : [];
 
@@ -143,10 +142,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { model } = await params;
   const m = modelFromParam(model);
 
-  // IMPORTANT: For /buy/model/[model], display should be the full canonical model phrase.
-  // m.display is intentionally "remainder" for prefixed inputs, which breaks cases like "lagoon-42".
   const modelDisplay = titleCaseWords(m.canonicalSpaced);
-
   const where = buildWhere(m);
   const total = await prisma.listing.count({ where });
 
@@ -329,7 +325,6 @@ export default async function ModelHubPage({ params }: PageProps) {
             {intro}
           </p>
 
-          {/* AI-citable answer block */}
           <div className="mt-6">
             <AnswerTarget
               eyebrow="AI-ready summary"
@@ -346,9 +341,7 @@ export default async function ModelHubPage({ params }: PageProps) {
                 { label: "Price range", value: factPriceRange },
                 { label: "Avg length", value: fmtAvgLength(stats) },
               ]}
-              ctas={[
-                { label: "Browse all Buy listings →", href: "/buy" },
-              ]}
+              ctas={[{ label: "Browse all Buy listings →", href: "/buy" }]}
             />
           </div>
 
@@ -421,7 +414,6 @@ export default async function ModelHubPage({ params }: PageProps) {
             />
           </div>
 
-          {/* Visible FAQ (AI loves this + you already ship schema above) */}
           <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 sm:p-7">
             <div className="text-sm font-semibold text-slate-900">Quick answers</div>
             <div className="mt-4 space-y-3">

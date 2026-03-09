@@ -1,3 +1,4 @@
+// scripts/eyb/backfill-eyb.ts
 /**
  * scripts/eyb/backfill-eyb.ts
  *
@@ -26,10 +27,10 @@
  *   --start=1 --end=196
  *   --force-media
  *   --force-features
- *   --listingDelay=12000        (ms between listings; default 12000)
- *   --requestGap=2500           (ms between ALL HTTP requests; default 2500)
- *   --jitter=1500               (random 0..jitter ms; default 1500)
- *   --cache=1                   (default 1; set 0 to disable)
+ *   --listingDelay=12000
+ *   --requestGap=2500
+ *   --jitter=1500
+ *   --cache=1
  */
 
 import fs from "node:fs";
@@ -39,55 +40,101 @@ dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 import * as cheerio from "cheerio";
+import type { PrismaClient } from "@prisma/client";
 
 const EYB_BASE = "https://europeanyachtbrokers.com";
 
-// -------------------- args --------------------
+type WpRendered = {
+  rendered?: string;
+};
+
+type WpYacht = {
+  id: number;
+  slug?: string;
+  featured_media?: number;
+  title?: WpRendered;
+};
+
+type WpMedia = {
+  id: number;
+  source_url?: string;
+  media_details?: {
+    width?: number;
+    height?: number;
+    sizes?: {
+      full?: {
+        source_url?: string;
+      };
+    };
+  };
+};
+
+type MediaImage = {
+  id: number;
+  url: string;
+  width?: number;
+  height?: number;
+};
+
+type ListingLike = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  features: PrismaJsonValue[] | null;
+  videoUrl: string | null;
+  media: Array<{ id: string; url: string; sort: number }>;
+};
+
+type PrismaJsonPrimitive = string | number | boolean | null;
+type PrismaJsonValue = PrismaJsonPrimitive | PrismaJsonObject | PrismaJsonArray;
+type PrismaJsonObject = { [key: string]: PrismaJsonValue };
+type PrismaJsonArray = PrismaJsonValue[];
 
 function getArg(name: string, def?: string) {
-  const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
+  const hit = process.argv.find((arg) => arg.startsWith(`--${name}=`));
   if (!hit) return def;
   return hit.split("=").slice(1).join("=");
 }
+
 function hasFlag(name: string) {
   return process.argv.includes(`--${name}`);
 }
 
 const START = Number(getArg("start", "1"));
 const END = Number(getArg("end", "196"));
-
-// Hard force single-thread
 const CONCURRENCY = 1;
-
 const FORCE_MEDIA = hasFlag("force-media");
 const FORCE_FEATURES = hasFlag("force-features");
-
-const LISTING_DELAY_MS = Math.max(0, Number(getArg("listingDelay", "12000"))); // default 12s
-const REQUEST_GAP_MS = Math.max(0, Number(getArg("requestGap", "2500"))); // default 2.5s between ALL requests
-const JITTER_MS = Math.max(0, Number(getArg("jitter", "1500"))); // default 0..1.5s random
+const LISTING_DELAY_MS = Math.max(0, Number(getArg("listingDelay", "12000")));
+const REQUEST_GAP_MS = Math.max(0, Number(getArg("requestGap", "2500")));
+const JITTER_MS = Math.max(0, Number(getArg("jitter", "1500")));
 const CACHE_ENABLED = String(getArg("cache", "1")).trim() !== "0";
 
 const CACHE_DIR = path.join(process.cwd(), ".cache", "eyb-backfill");
 if (CACHE_ENABLED) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
-// -------------------- helpers --------------------
-
 function pad3(n: number) {
   return String(n).padStart(3, "0");
 }
+
 function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
 function jitter() {
   return JITTER_MS > 0 ? Math.floor(Math.random() * JITTER_MS) : 0;
 }
+
 function cachePath(listingId: string) {
   return path.join(CACHE_DIR, `${listingId}.json`);
 }
+
 function readCache<T>(listingId: string): T | null {
   if (!CACHE_ENABLED) return null;
   const p = cachePath(listingId);
   if (!fs.existsSync(p)) return null;
+
   try {
     const raw = fs.readFileSync(p, "utf8");
     return JSON.parse(raw) as T;
@@ -95,6 +142,7 @@ function readCache<T>(listingId: string): T | null {
     return null;
   }
 }
+
 function writeCache(listingId: string, data: unknown) {
   if (!CACHE_ENABLED) return;
   const p = cachePath(listingId);
@@ -121,13 +169,11 @@ function isPlaceholderDescription(desc: string | null | undefined, title: string
 
 function extractYoutubeUrlFromText(s?: string): string | undefined {
   if (!s) return undefined;
-  const m =
+  const match =
     s.match(/https?:\/\/(?:www\.)?youtu\.be\/[A-Za-z0-9_\-]+/i) ||
     s.match(/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[A-Za-z0-9_\-]+/i);
-  return m?.[0];
+  return match?.[0];
 }
-
-// -------------------- ultra-polite request throttle + backoff --------------------
 
 let lastRequestAt = 0;
 
@@ -148,7 +194,7 @@ async function fetchWithBackoff(
   accept: string,
   as: "json" | "text",
   tries = 6
-): Promise<any> {
+): Promise<unknown> {
   let lastErr: unknown;
 
   for (let i = 0; i < tries; i++) {
@@ -165,8 +211,7 @@ async function fetchWithBackoff(
       if (!res.ok) {
         const status = res.status;
         if (isRetryableStatus(status)) {
-          const base = 8000; // 8s
-          const backoff = Math.min(120000, base * Math.pow(2, i)); // cap 2 min
+          const backoff = Math.min(120000, 8000 * Math.pow(2, i));
           await sleep(backoff + jitter());
           continue;
         }
@@ -174,10 +219,9 @@ async function fetchWithBackoff(
       }
 
       return as === "json" ? await res.json() : await res.text();
-    } catch (e) {
-      lastErr = e;
-      const base = 6000;
-      const backoff = Math.min(120000, base * Math.pow(2, i));
+    } catch (error: unknown) {
+      lastErr = error;
+      const backoff = Math.min(120000, 6000 * Math.pow(2, i));
       await sleep(backoff + jitter());
     }
   }
@@ -193,8 +237,6 @@ async function fetchHtml(url: string): Promise<string> {
   return (await fetchWithBackoff(url, "text/html,application/xhtml+xml", "text")) as string;
 }
 
-// -------------------- HTML extractors --------------------
-
 function extractFeatures($: cheerio.CheerioAPI): string[] {
   const items = $(".jet-check-list__item-content")
     .toArray()
@@ -205,19 +247,16 @@ function extractFeatures($: cheerio.CheerioAPI): string[] {
 
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const it of items) {
-    if (seen.has(it)) continue;
-    seen.add(it);
-    out.push(it);
+
+  for (const item of items) {
+    if (seen.has(item)) continue;
+    seen.add(item);
+    out.push(item);
   }
+
   return out;
 }
 
-/**
- * Targeted description extraction:
- * - Find heading ".elementor-heading-title" == "Description"
- * - Take adjacent ".jet-listing-dynamic-field__content"
- */
 function extractDescriptionTextHtml(
   $: cheerio.CheerioAPI,
   wpPostId: number
@@ -234,6 +273,7 @@ function extractDescriptionTextHtml(
       .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
+
     if (headingText === "more boats") node.remove();
   });
 
@@ -241,12 +281,12 @@ function extractDescriptionTextHtml(
     $(`#post-${wpPostId}`).first().length
       ? $(`#post-${wpPostId}`).first()
       : $(`.post-${wpPostId}`).first().length
-      ? $(`.post-${wpPostId}`).first()
-      : $("article.hentry").first().length
-      ? $("article.hentry").first()
-      : $("#content").first().length
-      ? $("#content").first()
-      : $("main").first();
+        ? $(`.post-${wpPostId}`).first()
+        : $("article.hentry").first().length
+          ? $("article.hentry").first()
+          : $("#content").first().length
+            ? $("#content").first()
+            : $("main").first();
 
   postRoot.find(".jet-listing-grid, .jet-listing-grid__items, .jet-listing-grid__item").remove();
 
@@ -254,13 +294,14 @@ function extractDescriptionTextHtml(
     .find(".elementor-heading-title")
     .toArray()
     .map((el) => $(el))
-    .find((h) => h.text().replace(/\s+/g, " ").trim().toLowerCase() === "description");
+    .find((heading) => heading.text().replace(/\s+/g, " ").trim().toLowerCase() === "description");
 
   if (!headingEl) return {};
 
   const headingWidget = headingEl.closest(
     ".elementor-widget, .elementor-element, .elementor-column, section"
   );
+
   const row = headingWidget.closest(
     ".elementor-section, section, .elementor-container, .elementor-row, .elementor-inner-section"
   );
@@ -284,26 +325,23 @@ function extractDescriptionTextHtml(
   };
 }
 
-// -------------------- EYB slug resolving --------------------
-
 function buildCandidateEybSlugs(findalySlug: string): string[] {
   const s = (findalySlug || "").trim();
   const base = s.replace(/^eyb-/, "").replace(/^-+|-+$/g, "").replace(/-+/g, "-");
 
   const out: string[] = [];
-  const push = (x: string) => {
-    const v = x.replace(/^-+|-+$/g, "").replace(/-+/g, "-");
-    if (v && !out.includes(v)) out.push(v);
+
+  const push = (value: string) => {
+    const normalized = value.replace(/^-+|-+$/g, "").replace(/-+/g, "-");
+    if (normalized && !out.includes(normalized)) out.push(normalized);
   };
 
-  // raw base
   push(base);
 
-  // insert "-for-sale-" before year
-  const m = base.match(/^(.*?)-((19|20)\d{2})$/);
-  if (m) {
-    const stem = m[1];
-    const year = m[2];
+  const match = base.match(/^(.*?)-((19|20)\d{2})$/);
+  if (match) {
+    const stem = match[1];
+    const year = match[2];
     push(`${stem}-for-sale-${year}`);
   }
 
@@ -311,7 +349,6 @@ function buildCandidateEybSlugs(findalySlug: string): string[] {
 }
 
 function findalySlugToSearchQuery(findalySlug: string): string {
-  // "eyb-lagoon-450-f-2020" -> "lagoon 450 f 2020"
   return findalySlug
     .replace(/^eyb-/, "")
     .replace(/-/g, " ")
@@ -321,39 +358,41 @@ function findalySlugToSearchQuery(findalySlug: string): string {
 
 async function getWpYachtBySlug(slug: string) {
   const url = `${EYB_BASE}/wp-json/wp/v2/yachts?slug=${encodeURIComponent(slug)}`;
-  const arr = await fetchJson<any[]>(url);
-  return arr?.[0] || null;
+  const arr = await fetchJson<WpYacht[]>(url);
+  return arr[0] || null;
 }
 
 async function searchWpYacht(query: string) {
   const url = `${EYB_BASE}/wp-json/wp/v2/yachts?search=${encodeURIComponent(query)}&per_page=20`;
-  const arr = await fetchJson<any[]>(url);
+  const arr = await fetchJson<WpYacht[]>(url);
   return Array.isArray(arr) ? arr : [];
 }
 
 async function resolveWpYacht(findalySlug: string, listingTitle: string) {
   const candidates = buildCandidateEybSlugs(findalySlug);
 
-  for (const cand of candidates) {
-    const yacht = await getWpYachtBySlug(cand);
-    if (yacht) return { yacht, eybSlug: cand, method: "slug" as const };
+  for (const candidate of candidates) {
+    const yacht = await getWpYachtBySlug(candidate);
+    if (yacht) return { yacht, eybSlug: candidate, method: "slug" as const };
   }
 
-  // fallback search using slug tokens (includes year)
   const q1 = findalySlugToSearchQuery(findalySlug);
   const s1 = await searchWpYacht(q1);
   if (s1.length) {
     const year = (findalySlug.match(/(19|20)\d{2}$/)?.[0] || "").trim();
-    const best = (year && s1.find((x) => String(x.slug || "").includes(year))) || s1[0];
+    const best = (year && s1.find((item) => String(item.slug || "").includes(year))) || s1[0];
     return { yacht: best, eybSlug: String(best.slug || ""), method: "search(slug)" as const };
   }
 
-  // last fallback: title search (less reliable)
   const q2 = (listingTitle || "").trim();
   if (q2) {
     const s2 = await searchWpYacht(q2);
     if (s2.length) {
-      return { yacht: s2[0], eybSlug: String(s2[0].slug || ""), method: "search(title)" as const };
+      return {
+        yacht: s2[0],
+        eybSlug: String(s2[0].slug || ""),
+        method: "search(title)" as const,
+      };
     }
   }
 
@@ -364,35 +403,36 @@ async function resolveWpYacht(findalySlug: string, listingTitle: string) {
   );
 }
 
-// -------------------- WP media --------------------
-
 async function getMediaByParent(parentId: number) {
-  const images: Array<{ id: number; url: string; width?: number; height?: number }> = [];
+  const images: MediaImage[] = [];
 
   for (let page = 1; page <= 20; page++) {
     const url = `${EYB_BASE}/wp-json/wp/v2/media?parent=${parentId}&per_page=50&page=${page}`;
-    let batch: any[] = [];
+
+    let batch: WpMedia[] = [];
     try {
-      batch = await fetchJson<any[]>(url);
+      batch = await fetchJson<WpMedia[]>(url);
     } catch {
       break;
     }
+
     if (!batch.length) break;
 
-    for (const m of batch) {
-      const full = m?.media_details?.sizes?.full?.source_url || m?.source_url;
+    for (const media of batch) {
+      const full = media.media_details?.sizes?.full?.source_url || media.source_url;
       if (!full) continue;
+
       images.push({
-        id: m.id,
+        id: media.id,
         url: String(full),
-        width: m?.media_details?.width,
-        height: m?.media_details?.height,
+        width: media.media_details?.width,
+        height: media.media_details?.height,
       });
     }
   }
 
-  // dedupe by filename (strip "-300x169" etc if present)
   const seen = new Set<string>();
+
   return images.filter((img) => {
     try {
       const u = new URL(img.url);
@@ -410,8 +450,6 @@ async function getMediaByParent(parentId: number) {
   });
 }
 
-// -------------------- enrichment --------------------
-
 type CachedEnrichment = {
   eybSlug: string;
   method: "slug" | "search(slug)" | "search(title)";
@@ -421,7 +459,7 @@ type CachedEnrichment = {
   descriptionHtml?: string;
   features: string[];
   featuredImage?: string;
-  images: Array<{ id: number; url: string; width?: number; height?: number }>;
+  images: MediaImage[];
   youtubeUrl?: string;
 };
 
@@ -444,8 +482,8 @@ async function enrichEybListing(listingId: string, findalySlug: string, listingT
   let featuredImage: string | undefined;
   if (yacht.featured_media) {
     try {
-      const m = await fetchJson<any>(`${EYB_BASE}/wp-json/wp/v2/media/${yacht.featured_media}`);
-      featuredImage = m?.source_url ? String(m.source_url) : undefined;
+      const media = await fetchJson<WpMedia>(`${EYB_BASE}/wp-json/wp/v2/media/${yacht.featured_media}`);
+      featuredImage = media.source_url ? String(media.source_url) : undefined;
     } catch {
       // ignore
     }
@@ -468,56 +506,59 @@ async function enrichEybListing(listingId: string, findalySlug: string, listingT
   return out;
 }
 
-// -------------------- DB update --------------------
+async function replaceListingMedia(
+  prismaClient: PrismaClient,
+  listingId: string,
+  urls: string[]
+) {
+  await prismaClient.listingMedia.deleteMany({ where: { listingId } });
 
-async function replaceListingMedia(prisma: any, listingId: string, urls: string[]) {
-  await prisma.listingMedia.deleteMany({ where: { listingId } });
   if (!urls.length) return;
-  await prisma.listingMedia.createMany({
+
+  await prismaClient.listingMedia.createMany({
     data: urls.map((url, idx) => ({ listingId, url, sort: idx })),
   });
 }
 
-// -------------------- main --------------------
+function asStringArray(value: PrismaJsonValue[] | null): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
 
 async function main() {
-  // import Prisma AFTER dotenv so db.ts doesn't throw
   const { prisma } = await import("../../lib/db");
 
   console.log(
     `EYB backfill (ULTRA-POLITE): start=${START} end=${END} concurrency=${CONCURRENCY} forceMedia=${FORCE_MEDIA} forceFeatures=${FORCE_FEATURES} listingDelay=${LISTING_DELAY_MS} requestGap=${REQUEST_GAP_MS} jitter=${JITTER_MS} cache=${CACHE_ENABLED}`
   );
 
-  // single worker
   for (let n = START; n <= END; n++) {
     const externalId = `eyb_${pad3(n)}`;
 
     try {
-      const listing = await prisma.listing.findUnique({
+      const listing = (await prisma.listing.findUnique({
         where: { id: externalId },
         include: { media: { orderBy: { sort: "asc" } } },
-      });
+      })) as ListingLike | null;
 
       if (!listing) {
         console.log(`[SKIP] ${externalId} not found`);
       } else {
         const hasMedia = (listing.media?.length || 0) > 0;
-
         const enriched = await enrichEybListing(listing.id, listing.slug, listing.title);
 
-        const imgs = enriched.images.map((x) => x.url).filter(Boolean);
+        const imgs = enriched.images.map((img) => img.url).filter(Boolean);
         const featured = enriched.featuredImage;
         const urls = featured && !imgs.includes(featured) ? [featured, ...imgs] : imgs;
 
         const shouldWriteDescription = isPlaceholderDescription(listing.description, listing.title);
         const nextDescription = shouldWriteDescription
-          ? (enriched.descriptionText?.trim() || undefined)
-          : listing.description;
+          ? enriched.descriptionText?.trim() || undefined
+          : listing.description || undefined;
 
-        const currentFeatures = Array.isArray(listing.features) ? (listing.features as any[]) : [];
+        const currentFeatures = asStringArray(listing.features);
         const shouldWriteFeatures = FORCE_FEATURES || currentFeatures.length === 0;
-
-        const nextVideoUrl = listing.videoUrl ? listing.videoUrl : enriched.youtubeUrl;
+        const nextVideoUrl = listing.videoUrl || enriched.youtubeUrl;
 
         await prisma.listing.update({
           where: { id: listing.id },
@@ -539,11 +580,10 @@ async function main() {
             (hasMedia && !FORCE_MEDIA ? " | media kept" : " | media replaced")
         );
       }
-    } catch (e) {
-      console.error(`[ERR] ${externalId}`, e);
+    } catch (error: unknown) {
+      console.error(`[ERR] ${externalId}`, error);
     }
 
-    // extra polite delay between listings
     if (LISTING_DELAY_MS > 0) {
       await sleep(LISTING_DELAY_MS + jitter());
     }
@@ -552,7 +592,7 @@ async function main() {
   console.log("Done.");
 }
 
-main().catch((e) => {
-  console.error(e);
+main().catch((error: unknown) => {
+  console.error(error);
   process.exit(1);
 });

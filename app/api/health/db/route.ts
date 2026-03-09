@@ -1,15 +1,54 @@
+// app/api/health/db/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type ErrorWithDetails = {
+  name?: string;
+  message?: string;
+  code?: string | number;
+  meta?: unknown;
+  cause?: unknown;
+};
+
+function getErrorDetails(error: unknown): ErrorWithDetails {
+  if (error instanceof Error) {
+    const maybeWithDetails = error as ErrorWithDetails;
+    return {
+      name: error.name,
+      message: error.message,
+      code: maybeWithDetails.code,
+      meta: maybeWithDetails.meta,
+      cause: maybeWithDetails.cause,
+    };
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeWithDetails = error as ErrorWithDetails;
+    return {
+      name: maybeWithDetails.name,
+      message:
+        typeof maybeWithDetails.message === "string"
+          ? maybeWithDetails.message
+          : String(error),
+      code: maybeWithDetails.code,
+      meta: maybeWithDetails.meta,
+      cause: maybeWithDetails.cause,
+    };
+  }
+
+  return {
+    message: String(error),
+  };
+}
+
 export async function GET() {
   const startedAt = Date.now();
 
   try {
-    // simplest possible query — proves DB connectivity + Prisma works
-    const result = await prisma.$queryRaw`SELECT 1 as ok`;
+    const result = await prisma.$queryRaw<Array<{ ok: number }>>`SELECT 1 as ok`;
 
     return NextResponse.json({
       ok: true,
@@ -19,7 +58,9 @@ export async function GET() {
       vercelEnv: process.env.VERCEL_ENV || null,
       region: process.env.VERCEL_REGION || null,
     });
-  } catch (e: any) {
+  } catch (error: unknown) {
+    const details = getErrorDetails(error);
+
     return NextResponse.json(
       {
         ok: false,
@@ -28,12 +69,11 @@ export async function GET() {
         vercelEnv: process.env.VERCEL_ENV || null,
         region: process.env.VERCEL_REGION || null,
         error: {
-          name: e?.name || null,
-          message: e?.message || String(e),
-          code: e?.code || null,
-          // Prisma often nests useful info here:
-          meta: e?.meta || null,
-          cause: e?.cause ? String(e.cause) : null,
+          name: details.name ?? null,
+          message: details.message ?? "Unknown error",
+          code: details.code ?? null,
+          meta: details.meta ?? null,
+          cause: details.cause ? String(details.cause) : null,
         },
       },
       { status: 500 }
