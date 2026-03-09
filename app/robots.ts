@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
+          // App routes (auth, settings, private)
           "/api/",
           "/login",
           "/signup",
@@ -21,6 +22,17 @@ export default function robots(): MetadataRoute.Robots {
           "/upgrade",
           "/stack",
           "/searches",
+          "/saved",
+          "/alerts",
+          "/billing/",
+
+          // Old tool directory paths — these don't exist anymore
+          // Blocking them stops Google recrawling 250+ dead URLs
+          "/alternatives/",
+          "/compare/",
+          "/best/",
+          "/tools/",
+          "/use-cases/",
         ],
       },
     ],
