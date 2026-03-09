@@ -1,32 +1,4 @@
-// components/destinations/DestinationHighlights.tsx
-import DestinationLinkCard from "@/components/destinations/DestinationLinkCard";
 import type { DestinationPageData } from "@/app/destinations/[slug]/_data";
-
-function HighlightItem({
-  title,
-  description,
-  emoji,
-}: {
-  title: string;
-  description: string;
-  emoji?: string;
-}) {
-  return (
-    <div className="flex gap-4">
-      {emoji && (
-        <span className="text-2xl shrink-0 mt-0.5" role="img">
-          {emoji}
-        </span>
-      )}
-      <div>
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-slate-600">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export default function DestinationHighlights({
   data,
@@ -34,84 +6,47 @@ export default function DestinationHighlights({
   data: DestinationPageData;
 }) {
   return (
-    <section className="w-full">
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Left column: Where to start */}
+    <section className="pb-12 sm:pb-16">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div>
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-                Where to start
-              </h2>
-              <p className="mt-2 text-base text-slate-500">
-                Jump into planning with these guides
-              </p>
-            </div>
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Highlights
+            </span>
 
-            <div className="space-y-4">
-              {data.links.map((link) => (
-                <DestinationLinkCard
-                  key={link.href}
-                  title={link.title}
-                  description={link.description}
-                  href={link.href}
-                  badge={link.badge}
-                  emoji={link.emoji}
-                />
-              ))}
-            </div>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+              Why people choose {data.title}
+            </h2>
+
+            <p className="mt-4 text-base leading-8 text-slate-700">
+              The best yacht destinations are not just beautiful. They make route
+              planning easier, create better days on the water, and give you
+              enough variety ashore that the whole trip feels complete.
+            </p>
           </div>
 
-          {/* Right column: Why you'll love it + Tips */}
-          <div className="space-y-12">
-            {/* Highlights */}
-            <div>
-              <div className="mb-8">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-                  Why you&apos;ll love it
-                </h2>
-                <p className="mt-2 text-base text-slate-500">
-                  What makes {data.title} special
-                </p>
-              </div>
+          <div className="grid gap-4">
+            {data.highlights.map((item, index) => (
+              <article
+                key={`${item.title}-${index}`}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F56462]/10 text-xl">
+                    <span aria-hidden="true">{item.emoji ?? "✦"}</span>
+                  </div>
 
-              <div className="space-y-6">
-                {data.highlights.map((highlight, idx) => (
-                  <HighlightItem
-                    key={`${highlight.title}-${idx}`}
-                    title={highlight.title}
-                    description={highlight.description}
-                    emoji={highlight.emoji}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Tips */}
-            {data.tips && data.tips.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg" role="img" aria-label="lightbulb">
-                    💡
-                  </span>
-                  <h3 className="text-base font-semibold text-slate-900">
-                    Local tips
-                  </h3>
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-tight text-slate-950">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-
-                <ul className="space-y-3">
-                  {data.tips.map((tip, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-3 text-sm text-slate-700"
-                    >
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#F56462]" />
-                      <span className="leading-relaxed">{tip}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              </article>
+            ))}
           </div>
         </div>
       </div>
