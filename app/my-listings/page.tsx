@@ -11,8 +11,6 @@ export const metadata = {
 };
 
 export default async function MyListingsPage() {
-  // ✅ Middleware only guarantees cookie exists
-  // We must validate session token is valid in DB here
   const user = await getCurrentUser();
 
   if (!user) {
@@ -21,7 +19,6 @@ export default async function MyListingsPage() {
 
   const profile = await getCurrentProfile();
 
-  // User authenticated but has no profile
   if (!profile) {
     redirect("/settings?setup=profile");
   }
@@ -68,6 +65,11 @@ export default async function MyListingsPage() {
     model: listing.model,
     boatCategory: listing.boatCategory,
     featured: listing.featured,
+    featuredUntil: listing.featuredUntil?.toISOString() ?? null,
+    boostLevel: listing.boostLevel,
+    boostUntil: listing.boostUntil?.toISOString() ?? null,
+    financePriority: listing.financePriority,
+    financePriorityUntil: listing.financePriorityUntil?.toISOString() ?? null,
     urgent: listing.urgent,
     createdAt: listing.createdAt.toISOString(),
     updatedAt: listing.updatedAt.toISOString(),

@@ -1,13 +1,13 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 08/03/2026, 20:39:47*
+*Generated on: 09/03/2026, 10:52:12*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 327 |
-| 📁 Total Folders | 209 |
+| 📄 Total Files | 332 |
+| 📁 Total Folders | 211 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
 
@@ -19,18 +19,19 @@
 - 🟡 ▲ **next.config.ts** - Next.js config
 - 🔴 📦 **package.json** - Package configuration
 - 🟡 🔷 **tsconfig.json** - TypeScript config
+- 🔵 ▲ **vercel.json** - Vercel config
 
 ## 📊 File Statistics
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 203 files (62.1%)
-- 🔷 **.ts** (TypeScript files): 59 files (18.0%)
-- 🖼️ **.jpg** (JPEG images): 18 files (5.5%)
-- 📄 **.sql** (Other files): 12 files (3.7%)
-- 🖼️ **.png** (PNG images): 11 files (3.4%)
+- ⚛️ **.tsx** (React TypeScript files): 206 files (62.0%)
+- 🔷 **.ts** (TypeScript files): 60 files (18.1%)
+- 🖼️ **.jpg** (JPEG images): 18 files (5.4%)
+- 📄 **.sql** (Other files): 12 files (3.6%)
+- 🖼️ **.png** (PNG images): 11 files (3.3%)
+- ⚙️ **.json** (JSON files): 5 files (1.5%)
 - 🎨 **.svg** (SVG images): 5 files (1.5%)
-- ⚙️ **.json** (JSON files): 4 files (1.2%)
 - 📄 **.mjs** (Other files): 4 files (1.2%)
 - 📖 **.md** (Markdown files): 2 files (0.6%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.3%)
@@ -45,20 +46,20 @@
 
 ### By Category
 
-- **React**: 203 files (62.1%)
-- **TypeScript**: 59 files (18.0%)
-- **Assets**: 35 files (10.7%)
-- **Other**: 19 files (5.8%)
-- **Config**: 6 files (1.8%)
+- **React**: 206 files (62.0%)
+- **TypeScript**: 60 files (18.1%)
+- **Assets**: 35 files (10.5%)
+- **Other**: 19 files (5.7%)
+- **Config**: 7 files (2.1%)
 - **Docs**: 3 files (0.9%)
 - **DevOps**: 1 files (0.3%)
 - **Styles**: 1 files (0.3%)
 
 ### 📁 Largest Directories
 
-- **root**: 327 files
-- **app**: 194 files
-- **components**: 35 files
+- **root**: 332 files
+- **app**: 195 files
+- **components**: 38 files
 - **app/guides**: 34 files
 - **public**: 34 files
 
@@ -112,6 +113,9 @@ findaly/
 │   │   │   ├── 📂 logout/
 │   │   │   │   └── 🔷 route.ts
 │   │   │   └── 📂 signup/
+│   │   │   │   └── 🔷 route.ts
+│   │   ├── 📂 cron/
+│   │   │   └── 📂 expire-upgrades/
 │   │   │   │   └── 🔷 route.ts
 │   │   ├── 📂 health/
 │   │   │   └── 📂 db/
@@ -446,10 +450,13 @@ findaly/
 │   │   ├── ⚛️ HomeSplitCtas.tsx
 │   │   └── ⚛️ ThingsToDo.tsx
 │   ├── 📂 kompipay/
-│   │   └── ⚛️ CheckoutButton.tsx
+│   │   ├── ⚛️ CheckoutButton.tsx
+│   │   └── ⚛️ ListingUpgradePanel.tsx
 │   ├── 📂 listing/
+│   │   ├── ⚛️ ListingBadges.tsx
 │   │   ├── ⚛️ SaveListingButtonClient.tsx
-│   │   └── ⚛️ SellerCard.tsx
+│   │   ├── ⚛️ SellerCard.tsx
+│   │   └── ⚛️ UpgradeStatusBadges.tsx
 │   ├── ⚛️ LogoutButtonClient.tsx
 │   ├── 📂 maps/
 │   │   └── ⚛️ ListingMap.tsx
@@ -601,7 +608,8 @@ findaly/
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts
 ├── 🟡 🔷 **tsconfig.json**
-└── 📄 tsconfig.tsbuildinfo
+├── 📄 tsconfig.tsbuildinfo
+└── 🔵 ▲ **vercel.json**
 ```
 
 ## 📖 Legend

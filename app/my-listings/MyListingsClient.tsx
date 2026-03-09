@@ -45,6 +45,7 @@ import {
   Rocket,
 } from "lucide-react";
 import ListingUpgradePanel from "@/components/kompipay/ListingUpgradePanel";
+import UpgradeStatusBadges from "@/components/listing/UpgradeStatusBadges";
 
 type ListingRow = {
   id: string;
@@ -64,6 +65,11 @@ type ListingRow = {
   model: string | null;
   boatCategory: string | null;
   featured: boolean;
+  featuredUntil: string | null;
+  boostLevel: number;
+  boostUntil: string | null;
+  financePriority: boolean;
+  financePriorityUntil: string | null;
   urgent: boolean;
   createdAt: string;
   updatedAt: string;
@@ -577,6 +583,18 @@ function ListingCard({
             </p>
           )}
 
+          {/* ── UPGRADE STATUS BADGES ── */}
+          <UpgradeStatusBadges
+            status={{
+              featured: listing.featured,
+              featuredUntil: listing.featuredUntil,
+              boostLevel: listing.boostLevel,
+              boostUntil: listing.boostUntil,
+              financePriority: listing.financePriority,
+              financePriorityUntil: listing.financePriorityUntil,
+            }}
+          />
+
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
             {listing.year && <span>{listing.year}</span>}
             {listing.lengthM && <span>{listing.lengthM}m</span>}
@@ -658,6 +676,17 @@ function ListingCard({
                 {[listing.brand, listing.model].filter(Boolean).join(" ")}
               </p>
             )}
+            {/* ── UPGRADE STATUS BADGES (list view) ── */}
+            <UpgradeStatusBadges
+              status={{
+                featured: listing.featured,
+                featuredUntil: listing.featuredUntil,
+                boostLevel: listing.boostLevel,
+                boostUntil: listing.boostUntil,
+                financePriority: listing.financePriority,
+                financePriorityUntil: listing.financePriorityUntil,
+              }}
+            />
           </div>
 
           <div
