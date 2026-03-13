@@ -1,4 +1,3 @@
-// app/robots.ts
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site";
 
@@ -11,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          // App routes (auth, settings, private)
           "/api/",
           "/login",
           "/signup",
@@ -21,13 +19,11 @@ export default function robots(): MetadataRoute.Robots {
           "/my-listings",
           "/upgrade",
           "/stack",
+          "/search",
           "/searches",
           "/saved",
           "/alerts",
           "/billing/",
-
-          // Old tool directory paths — these don't exist anymore
-          // Blocking them stops Google recrawling 250+ dead URLs
           "/alternatives/",
           "/compare/",
           "/best/",

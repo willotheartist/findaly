@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { programmaticPageRobots } from "@/lib/seo/thinPageGuard";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 import { slugifyLoose } from "@/lib/seoParam";
@@ -178,7 +179,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots: programmaticPageRobots({ listingCount: total, dimensions: 2, hasYear: false }),
     openGraph: {
       title: `${title} | Findaly`,
       description,

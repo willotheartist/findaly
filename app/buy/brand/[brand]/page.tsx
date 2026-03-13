@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
+import { programmaticPageRobots } from "@/lib/seo/thinPageGuard";
 import { prisma } from "@/lib/db";
 import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 import {
@@ -247,7 +248,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots: programmaticPageRobots({ listingCount: total, dimensions: 1, hasYear: false }),
     openGraph: {
       title: `${title} | Findaly`,
       description,
@@ -660,15 +661,6 @@ export default async function BrandHubPage({ params }: PageProps) {
               })}
             </div>
           )}
-        </div>
-      </section>
-
-      <section className="w-full border-t border-slate-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-          <div className="text-xs text-slate-500">
-            Matching DB brand variants for <span className="font-semibold text-slate-700">{b.display}</span>:{" "}
-            {variants.length ? variants.join(" · ") : "—"}
-          </div>
         </div>
       </section>
     </main>

@@ -9,6 +9,7 @@ import { absoluteUrl, getSiteUrl, truncate } from "@/lib/site";
 import { getMarketStats } from "@/lib/seo/marketStats";
 import MarketOverview from "@/components/seo/MarketOverview";
 import RelatedSearches from "@/components/seo/RelatedSearches";
+import { programmaticPageRobots } from "@/lib/seo/thinPageGuard";
 
 type PageProps = {
   params: Promise<{ year: string; country: string }>;
@@ -150,7 +151,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical },
-    robots: total > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    robots: programmaticPageRobots({ listingCount: total, dimensions: 2, hasYear: true }),
     openGraph: {
       title: `${title} | Findaly`,
       description,

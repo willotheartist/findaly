@@ -5,9 +5,15 @@ type BuyMetaArgs = {
   title: string;
   description: string;
   pathname: string; // must start with "/"
+  robots?: Metadata["robots"];
 };
 
-export function buyMeta({ title, description, pathname }: BuyMetaArgs): Metadata {
+export function buyMeta({
+  title,
+  description,
+  pathname,
+  robots = { index: true, follow: true },
+}: BuyMetaArgs): Metadata {
   const url = absoluteUrl(pathname);
 
   return {
@@ -37,9 +43,6 @@ export function buyMeta({ title, description, pathname }: BuyMetaArgs): Metadata
       description,
       images: [absoluteUrl("/og-findaly.jpg")],
     },
-    robots: {
-      index: true,
-      follow: true,
-    },
+    robots,
   };
 }

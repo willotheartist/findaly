@@ -1,37 +1,66 @@
-// lib/seo/thinPageGuard.ts
-//
-// Use this in generateMetadata() for programmatic pages
-// (brand, model, country, year hubs) to noindex pages
-// that don't have enough listings to be worth indexing.
-//
-// Usage in any hub page:
-//
-//   import { shouldNoindex } from "@/lib/seo/thinPageGuard";
-//
-//   export async function generateMetadata(...) {
-//     const count = await prisma.listing.count({ where: { ... } });
-//     return {
-//       title: "...",
-//       robots: shouldNoindex(count) ? { index: false, follow: true } : { index: true, follow: true },
-//     };
-//   }
+import type { Metadata } from "next";
 
-const MIN_LISTINGS_TO_INDEX = 3;
+export const PROGRAMMATIC_INDEX_THRESHOLDS = {
+  single: 5,
+  combo: 8,
+} as const;
 
-/**
- * Returns true if a programmatic page should be noindexed.
- * Pages with fewer than MIN_LISTINGS_TO_INDEX are considered thin.
- */
-export function shouldNoindex(listingCount: number): boolean {
-  return listingCount < MIN_LISTINGS_TO_INDEX;
+type ProgrammaticRobotsArgs = {
+  listingCount: number;
+  dimensions: 1 | 2 | 3 | 4;
+  hasYear?: boolean;
+};
+
+export function shouldNoindex(
+  listingCount: number,
+  args?: Omit<ProgrammaticRobotsArgs, "listingCount">
+): boolean {
+  return !programmaticShouldIndex({
+    listingCount,
+    dimensions: args?.dimensions ?? 1,
+    hasYear: args?.hasYear ?? false,
+  });
 }
 
-/**
- * Returns the robots metadata object for a programmatic page.
- */
-export function hubPageRobots(listingCount: number) {
-  if (listingCount < MIN_LISTINGS_TO_INDEX) {
-    return { index: false, follow: true };
+export function hubPageRobots(listingCount: number): Metadata["robots"] {
+  return programmaticPageRobots({
+    listingCount,
+    dimensions: 1,
+    hasYear: false,
+  });
+}
+
+export function programmaticShouldIndex({
+  listingCount,
+  dimensions,
+  hasYear = false,
+}: ProgrammaticRobotsArgs): boolean {
+  if (!Number.isFinite(listingCount) || listingCount <= 0) return false;
+
+  if (dimensions >= 3) return false;
+
+  if (hasYear) {
+    if (dimensions === 1) return listingCount >= PROGRAMMATIC_INDEX_THRESHOLDS.combo;
+    return false;
   }
-  return { index: true, follow: true };
+
+  if (dimensions === 1) {
+    return listingCount >= PROGRAMMATIC_INDEX_THRESHOLDS.single;
+  }
+
+  if (dimensions === 2) {
+    return listingCount >= PROGRAMMATIC_INDEX_THRESHOLDS.combo;
+  }
+
+  return false;
+}
+
+export function programmaticPageRobots({
+  listingCount,
+  dimensions,
+  hasYear = false,
+}: ProgrammaticRobotsArgs): Metadata["robots"] {
+  return programmaticShouldIndex({ listingCount, dimensions, hasYear })
+    ? { index: true, follow: true }
+    : { index: false, follow: true };
 }
