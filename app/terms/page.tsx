@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service | Findaly",
+  robots: { index: false, follow: true },
+};
+
 import Link from "next/link";
 
 function Shell({ children }: { children: React.ReactNode }) {

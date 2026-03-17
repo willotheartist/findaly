@@ -308,6 +308,24 @@ export default async function ModelHubPage({ params }: PageProps) {
 
   return (
     <main className="w-full bg-white">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Boats for Sale on Findaly</h1>
+        <p>Browse boats for sale on Findaly. Find yachts, sailboats, catamarans and motor boats from private sellers and brokers worldwide.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       {jsonLd(breadcrumb)}
       {jsonLd(itemList)}
       <FaqJsonLd faqs={faqs} />

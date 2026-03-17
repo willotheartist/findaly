@@ -189,11 +189,27 @@ export const metadata: Metadata = {
   description:
     "Find marine lawyers across the Mediterranean. Contracts, VAT, registration, escrow and dispute support — enquire directly.",
   alternates: { canonical: "/services/marine-lawyers" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: "Marine Lawyers | Marine Services Directory | Findaly",
     description:
       "Find marine lawyers across the Mediterranean. Contracts, VAT, registration, escrow and dispute support — enquire directly.",
     url: "/services/marine-lawyers",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Marine Lawyers Directory | Findaly",
+    description: "Find experienced marine lawyers and maritime legal services on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
   },
 };
 
@@ -295,6 +311,24 @@ export default async function MarineLawyersPillarPage() {
 
   return (
     <main className="min-h-screen w-full" style={{ backgroundColor: P.faint }}>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Marine Lawyers Directory — Find Maritime Legal Services</h1>
+        <p>Find experienced marine lawyers and maritime legal services on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       {jsonLd(faq)}
 
       <section className="w-full border-b" style={{ backgroundColor: P.white, borderColor: "rgba(0,0,0,.08)" }}>

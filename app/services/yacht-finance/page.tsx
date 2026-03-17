@@ -189,11 +189,27 @@ export const metadata: Metadata = {
   description:
     "Find yacht finance providers across the Mediterranean. Compare lenders, brokers, and specialists — then enquire directly.",
   alternates: { canonical: "/services/yacht-finance" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: "Yacht Finance | Marine Services Directory | Findaly",
     description:
       "Find yacht finance providers across the Mediterranean. Compare lenders, brokers, and specialists — then enquire directly.",
     url: "/services/yacht-finance",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Yacht Finance Services | Findaly",
+    description: "Find yacht finance and marine loan providers on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
   },
 };
 
@@ -305,6 +321,24 @@ export default async function YachtFinancePillarPage() {
 
   return (
     <main className="min-h-screen w-full" style={{ backgroundColor: P.faint }}>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Yacht Finance — Marine Finance on Findaly</h1>
+        <p>Find yacht finance and marine loan providers on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       {jsonLd(faq)}
 
       <section className="w-full border-b" style={{ backgroundColor: P.white, borderColor: "rgba(0,0,0,.08)" }}>

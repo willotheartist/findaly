@@ -6,6 +6,31 @@ export const metadata: Metadata = {
   title: "Yachting News & Market Updates | Findaly",
   description:
     "Market updates, new launches, buyer trends and platform notes. A lightweight newsroom that will expand as Findaly grows.",
+  alternates: { canonical: "/news" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Yachting News & Market Updates | Findaly",
+    description: "Market updates, new launches, buyer trends and platform notes from Findaly.",
+    url: "https://www.findaly.co/news",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Yachting News & Market Updates | Findaly",
+    description: "Market updates, new launches, buyer trends and platform notes from Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 type NewsCard = {
@@ -63,6 +88,22 @@ const CARDS: NewsCard[] = [
 export default function NewsPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Yachting News and Market Updates</h1>
+        <p>Market updates, new launches, buyer trends and platform notes from Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/safety">Boating Safety</a>
+          <a href="/scams">Avoid Scams</a>
+          <a href="/faq">FAQ</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+        </nav>
+      </div>
       <div className="max-w-3xl">
         <p className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">
           Learn

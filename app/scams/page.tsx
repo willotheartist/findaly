@@ -6,6 +6,30 @@ export const metadata: Metadata = {
   description:
     "Learn common yacht scams and how to avoid them. Red flags, safe payment practices, document checks and what to do if you suspect fraud.",
   alternates: { canonical: "/scams" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Avoid Yacht Scams | Findaly",
+    description: "Learn common yacht scams and how to avoid them. Red flags, safe payment practices and document checks.",
+    url: "https://www.findaly.co/scams",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Avoid Yacht Scams | Findaly",
+    description: "Learn common yacht scams and how to avoid them. Red flags, safe payment practices and document checks.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 function H2({ children }: { children: React.ReactNode }) {
@@ -26,6 +50,22 @@ function Bullets({ items }: { items: string[] }) {
 export default function Page() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-14">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Avoid Yacht Scams — Red Flags and Safe Payments</h1>
+        <p>Learn common yacht scams and how to avoid them. Red flags, safe payment practices and document checks.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/safety">Boating Safety</a>
+          <a href="/scams">Avoid Scams</a>
+          <a href="/faq">FAQ</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+        </nav>
+      </div>
       <p className="text-sm font-medium tracking-wide text-neutral-500">Trust</p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Avoid scams</h1>
       <p className="mt-5 text-lg leading-relaxed text-neutral-700">

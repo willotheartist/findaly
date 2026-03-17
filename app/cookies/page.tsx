@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy | Findaly",
+  robots: { index: false, follow: true },
+};
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="bg-[#FAFAFA]">

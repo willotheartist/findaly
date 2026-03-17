@@ -14,6 +14,16 @@ export const metadata: Metadata = {
   description:
     "Browse the latest boats for sale on Findaly. Explore listings, brands, models, and countries — updated regularly.",
   alternates: { canonical: "/explore" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: "Explore Boats for Sale | Findaly",
     description:
@@ -21,6 +31,12 @@ export const metadata: Metadata = {
     url: `${siteUrl}/explore`,
     siteName: "Findaly",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Explore Boats for Sale | Findaly",
+    description: "Browse the latest boats for sale on Findaly. Explore listings, brands, models and countries.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
   },
 };
 
@@ -131,6 +147,22 @@ export default async function ExplorePage() {
 
   return (
     <main className="pt-24">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Explore Boats for Sale on Findaly</h1>
+        <p>Browse the latest boats for sale on Findaly. Explore listings, brands, models and countries.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/safety">Boating Safety</a>
+          <a href="/scams">Avoid Scams</a>
+          <a href="/faq">FAQ</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+        </nav>
+      </div>
       <header className="mx-auto max-w-[1200px] px-6 md:px-10">
         <div className="rounded-3xl border border-black/10 bg-white/60 p-6 md:p-10">
           <h1 className="text-[28px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[38px]">

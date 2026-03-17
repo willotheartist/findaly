@@ -1,12 +1,12 @@
 # 📁 findaly - Project Structure
 
-*Generated on: 09/03/2026, 15:10:42*
+*Generated on: 17/03/2026, 15:51:36*
 
 ## 📋 Quick Overview
 
 | Metric | Value |
 |--------|-------|
-| 📄 Total Files | 332 |
+| 📄 Total Files | 335 |
 | 📁 Total Folders | 211 |
 | 🌳 Max Depth | 10 levels |
 | 🛠️ Tech Stack | React, Next.js, TypeScript, CSS, Node.js |
@@ -25,14 +25,14 @@
 
 ### By File Type
 
-- ⚛️ **.tsx** (React TypeScript files): 206 files (62.0%)
-- 🔷 **.ts** (TypeScript files): 60 files (18.1%)
+- ⚛️ **.tsx** (React TypeScript files): 206 files (61.5%)
+- 🔷 **.ts** (TypeScript files): 62 files (18.5%)
 - 🖼️ **.jpg** (JPEG images): 18 files (5.4%)
 - 📄 **.sql** (Other files): 12 files (3.6%)
 - 🖼️ **.png** (PNG images): 11 files (3.3%)
 - ⚙️ **.json** (JSON files): 5 files (1.5%)
+- 📄 **.mjs** (Other files): 5 files (1.5%)
 - 🎨 **.svg** (SVG images): 5 files (1.5%)
-- 📄 **.mjs** (Other files): 4 files (1.2%)
 - 📖 **.md** (Markdown files): 2 files (0.6%)
 - 🚫 **.gitignore** (Git ignore): 1 files (0.3%)
 - 📄 **.txt** (Text files): 1 files (0.3%)
@@ -46,10 +46,10 @@
 
 ### By Category
 
-- **React**: 206 files (62.0%)
-- **TypeScript**: 60 files (18.1%)
-- **Assets**: 35 files (10.5%)
-- **Other**: 19 files (5.7%)
+- **React**: 206 files (61.5%)
+- **TypeScript**: 62 files (18.5%)
+- **Assets**: 35 files (10.4%)
+- **Other**: 20 files (6.0%)
 - **Config**: 7 files (2.1%)
 - **Docs**: 3 files (0.9%)
 - **DevOps**: 1 files (0.3%)
@@ -57,7 +57,7 @@
 
 ### 📁 Largest Directories
 
-- **root**: 332 files
+- **root**: 335 files
 - **app**: 195 files
 - **components**: 38 files
 - **app/guides**: 34 files
@@ -505,7 +505,8 @@ findaly/
 │   ├── 📂 kompipay/
 │   │   └── 🔷 products.ts
 │   ├── 📂 seo/
-│   │   └── 🔷 marketStats.ts
+│   │   ├── 🔷 marketStats.ts
+│   │   └── 🔷 thinPageGuard.ts
 │   ├── 🔷 seoParam.ts
 │   └── 🔷 site.ts
 ├── 🔷 middleware.ts
@@ -603,7 +604,9 @@ findaly/
 │   │   ├── 🔷 backfill-brand-model-from-title.ts
 │   │   ├── 🔷 backfill-brand-model.ts
 │   │   ├── 📄 cap-listing-media-8.sql
+│   │   ├── 🔷 normalise-brands.ts
 │   │   └── 🔷 rehost-listing-media.ts
+│   ├── 📄 fix-programmatic-indexing.mjs
 │   └── 🔷 fix-services-kind.ts
 ├── 📄 seed-tools-batch-1.patch
 ├── 🔷 tailwind.config.ts

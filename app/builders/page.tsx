@@ -6,6 +6,30 @@ export const metadata: Metadata = {
   description:
     "Explore boat builders, brands and shipyards. Browse by brand, model, year and country, and discover the market on Findaly.",
   alternates: { canonical: "/builders" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Shipyard & Yacht Builders Directory | Findaly",
+    description: "A curated directory of shipyards and yacht builders. Discover leading manufacturers on Findaly.",
+    url: "https://www.findaly.co/builders",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shipyard & Yacht Builders Directory | Findaly",
+    description: "A curated directory of shipyards and yacht builders. Discover leading manufacturers on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 function Bullets({ items }: { items: string[] }) {
@@ -23,6 +47,32 @@ function Bullets({ items }: { items: string[] }) {
 export default function Page() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-14">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Shipyards and Yacht Builders on Findaly</h1>
+        <p>A curated directory of shipyards and yacht builders. Discover leading manufacturers and explore their inventory on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/charter">Charter</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/brokers/join">List as a Broker</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/guides/buying-a-yacht">Buying a Yacht Guide</a>
+          <a href="/guides/catamaran-buying-guide">Catamaran Buying Guide</a>
+          <a href="/guides/motor-yacht-buying-guide">Motor Yacht Buying Guide</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/about">About</a>
+          <a href="/faq">FAQ</a>
+        </nav>
+      </div>
       <p className="text-sm font-medium tracking-wide text-neutral-500">Browse</p>
       <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Boat builders & brands</h1>
       <p className="mt-5 text-lg leading-relaxed text-neutral-700">

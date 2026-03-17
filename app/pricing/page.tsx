@@ -1,3 +1,35 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Findaly Pricing — List Your Boat | Findaly",
+  description: "Simple, transparent pricing for listing boats and yachts on Findaly. Free listings available for private sellers.",
+  alternates: { canonical: "/pricing" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Findaly Pricing — List Your Boat | Findaly",
+    description: "Simple, transparent pricing for listing boats and yachts on Findaly. Free listings available for private sellers.",
+    url: "https://www.findaly.co/pricing",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Findaly Pricing — List Your Boat | Findaly",
+    description: "Simple, transparent pricing for listing boats and yachts on Findaly. Free listings available for private sellers.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
+};
+
 // app/pricing/page.tsx
 import Link from "next/link";
 import {
@@ -18,9 +50,38 @@ import CheckoutButton from "@/components/kompipay/CheckoutButton";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
+    <>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Findaly Pricing — List Your Boat</h1>
+        <p>Simple, transparent pricing for listing boats and yachts on Findaly. Free listings available for private sellers.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/charter">Charter a Boat</a>
+          <a href="/brokers">Yacht Brokers</a>
+          <a href="/brokers/join">List as a Broker</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/guides/buying-a-yacht">Buying a Yacht Guide</a>
+          <a href="/guides/catamaran-buying-guide">Catamaran Buying Guide</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <a href="/faq">FAQ</a>
+          <a href="/blog">Blog</a>
+        </nav>
+      </div>
     <div className="mx-auto w-full max-w-6xl px-5 py-10 md:px-10 md:py-16">
       {children}
     </div>
+    </>
   );
 }
 
@@ -57,6 +118,7 @@ function FeatureRow({
 
 export default function PricingPage() {
   return (
+    <>
     <main className="min-h-screen bg-[#f5f2eb]">
       <Shell>
         {/* Header */}
@@ -472,5 +534,6 @@ export default function PricingPage() {
         </div>
       </Shell>
     </main>
+    </>
   );
 }

@@ -19,8 +19,23 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     title,
     description,
     alternates: { canonical: canonicalPath },
-    robots: { index: true, follow: true },
+    robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
     openGraph: { title: `${title} | Findaly`, description, url: absoluteUrl(canonicalPath), type: "website" },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sailboats for Sale | Findaly",
+    description: "Browse sailboats for sale on Findaly. Find monohulls, performance sailboats and cruising yachts.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
   };
 }
 
@@ -59,7 +74,27 @@ export default async function Page({ searchParams }: PageProps) {
   }));
 
   return (
-    <BuyPageClient
+    <>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Sailboats for Sale — Find Your Next Sailing Yacht</h1>
+        <p>Browse sailboats for sale on Findaly. Find monohulls, performance sailboats and cruising yachts from private sellers and brokers.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/charter">Charter</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/about">About</a>
+          <a href="/faq">FAQ</a>
+        </nav>
+      </div>
+      <BuyPageClient
       listings={transformedListings}
       totalCount={totalCount}
       currentPage={page}
@@ -78,5 +113,6 @@ export default async function Page({ searchParams }: PageProps) {
       }}
       aggregations={{ categories, brands, countries }}
     />
+    </>
   );
 }

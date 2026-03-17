@@ -1,5 +1,37 @@
 // app/brokers/pricing/page.tsx
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Broker Pricing | Findaly",
+  description: "Simple, transparent pricing for yacht brokers listing on Findaly. Choose the plan that fits your brokerage.",
+  alternates: { canonical: "/brokers/pricing" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Broker Pricing | Findaly",
+    description: "Simple, transparent pricing for yacht brokers listing on Findaly.",
+    url: "https://www.findaly.co/brokers/pricing",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Broker Pricing | Findaly",
+    description: "Simple, transparent pricing for yacht brokers listing on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
+};
+
 import {
   BadgeCheck,
   Crown,
@@ -52,6 +84,17 @@ function FeatureCheckLight({ children }: { children: React.ReactNode }) {
 export default function BrokersPricingPage() {
   return (
     <main className="min-h-screen bg-[#f5f2eb]">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Broker Pricing — List Your Inventory on Findaly</h1>
+        <p>Simple, transparent pricing for yacht brokers listing on Findaly. Choose the plan that fits your brokerage.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/brokers/join">Join as a Broker</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       <div className="mx-auto max-w-6xl px-5 py-16 md:px-10">
         {/* Header */}
         <SectionLabel>For brokers</SectionLabel>

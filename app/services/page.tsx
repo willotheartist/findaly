@@ -169,7 +169,26 @@ export default async function ServicesPage({ searchParams }: PageProps) {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <ServicesPageClient
+    <>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Marine Services Directory — Surveyors, Insurance, Lawyers and Finance</h1>
+        <p>Find yacht surveyors, marine insurance, maritime lawyers and yacht finance on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
+      <ServicesPageClient
       listings={transformedListings}
       totalCount={totalCount}
       currentPage={filters.page}
@@ -185,6 +204,7 @@ export default async function ServicesPage({ searchParams }: PageProps) {
         countries: countryCounts,
       }}
     />
+    </>
   );
 }
 
@@ -208,7 +228,18 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
-    robots: filtered ? { index: false, follow: true } : { index: true, follow: true },
+    robots: filtered
+      ? { index: false, follow: true }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
+        },
     openGraph: {
       title,
       description,

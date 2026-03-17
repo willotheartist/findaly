@@ -98,7 +98,16 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     // - any query-filter combo -> noindex, follow
     robots: filtered
       ? { index: false, follow: true }
-      : { index: true, follow: true },
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
+        },
 
     openGraph: {
       title: `${title} | Findaly`,
@@ -358,7 +367,22 @@ export default async function BuyPage({ searchParams }: PageProps) {
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <BuyPageClient
+    <>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Boats for Sale — Find Your Next Boat on Findaly</h1>
+        <p>Browse thousands of boats for sale. Find sailboats, motor yachts, catamarans and more on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/brokers">Brokers</a>
+        </nav>
+      </div>
+      <BuyPageClient
       listings={transformedListings}
       totalCount={totalCount}
       currentPage={filters.page}
@@ -388,5 +412,6 @@ export default async function BuyPage({ searchParams }: PageProps) {
         countries: countryCounts,
       }}
     />
+    </>
   );
 }

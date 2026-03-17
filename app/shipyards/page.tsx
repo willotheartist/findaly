@@ -6,6 +6,31 @@ export const metadata: Metadata = {
   title: "Shipyards & Builders | Findaly",
   description:
     "A curated directory of shipyards and yacht builders. Discover leading manufacturers and explore their inventory on Findaly.",
+  alternates: { canonical: "/shipyards" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Shipyards & Builders | Findaly",
+    description: "A curated directory of shipyards and yacht builders on Findaly.",
+    url: "https://www.findaly.co/shipyards",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shipyards & Builders | Findaly",
+    description: "A curated directory of shipyards and yacht builders on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 const SHIPYARDS = [
@@ -22,6 +47,24 @@ const SHIPYARDS = [
 export default function ShipyardsPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Shipyards and Yacht Builders on Findaly</h1>
+        <p>A curated directory of shipyards and yacht builders. Discover leading manufacturers on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       <div className="max-w-3xl">
         <p className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">
           Explore

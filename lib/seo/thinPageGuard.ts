@@ -60,7 +60,17 @@ export function programmaticPageRobots({
   dimensions,
   hasYear = false,
 }: ProgrammaticRobotsArgs): Metadata["robots"] {
-  return programmaticShouldIndex({ listingCount, dimensions, hasYear })
-    ? { index: true, follow: true }
+  const shouldIndex = programmaticShouldIndex({ listingCount, dimensions, hasYear });
+  return shouldIndex
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      }
     : { index: false, follow: true };
 }

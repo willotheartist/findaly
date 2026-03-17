@@ -9,6 +9,30 @@ export const metadata: Metadata = {
   description:
     "Browse yachts for sale by brand. Explore popular yacht builders and jump into live inventory by brand on Findaly.",
   alternates: { canonical: "/brands" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Yacht Brands Directory | Findaly",
+    description: "Browse yachts for sale by brand. Explore popular yacht builders and jump into live inventory on Findaly.",
+    url: "https://www.findaly.co/brands",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Yacht Brands Directory | Findaly",
+    description: "Browse yachts for sale by brand. Explore popular yacht builders and jump into live inventory on Findaly.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 type BrandAggRow = { brand: string | null; _count: { brand: number } };
@@ -75,6 +99,32 @@ export default async function BrandsPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Yacht Brands Directory — Browse by Manufacturer</h1>
+        <p>Browse yachts for sale by brand. Explore popular yacht builders and jump into live inventory by brand on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/charter">Charter</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/brokers/join">List as a Broker</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/guides/buying-a-yacht">Buying a Yacht Guide</a>
+          <a href="/guides/catamaran-buying-guide">Catamaran Buying Guide</a>
+          <a href="/guides/motor-yacht-buying-guide">Motor Yacht Buying Guide</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/about">About</a>
+          <a href="/faq">FAQ</a>
+        </nav>
+      </div>
       {/* Hero */}
       <div className="max-w-3xl">
         <p className="text-xs font-semibold tracking-[0.16em] uppercase text-slate-500">

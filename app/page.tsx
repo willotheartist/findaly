@@ -26,7 +26,30 @@ export const metadata: Metadata = {
   description:
     "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly — the everything marketplace for the maritime world.",
   alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Findaly — Every Boat, Every Budget, Every Need",
+    description: "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly — the everything marketplace for the maritime world.",
+    url: "https://www.findaly.co",
+    siteName: "Findaly",
+    type: "website",
+    images: [{ url: "https://www.findaly.co/og-findaly.jpg", width: 1200, height: 630, alt: "Findaly" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Findaly — Every Boat, Every Budget, Every Need",
+    description: "Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly — the everything marketplace for the maritime world.",
+    images: ["https://www.findaly.co/og-findaly.jpg"],
+  },
 };
 
 type Tile = { title: string; href: string; subtitle?: string; emoji?: string };
@@ -362,6 +385,34 @@ export default async function Home() {
   ];
 
   return (
+    <>
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>Findaly — Every Boat, Every Budget, Every Need</h1>
+        <p>Buy, sell, and charter boats worldwide with trusted brokers. Discover every boat for every budget on Findaly — the everything marketplace for the maritime world.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/buy/superyachts">Superyachts for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/charter">Charter a Boat</a>
+          <a href="/brokers">Yacht Brokers</a>
+          <a href="/brokers/join">List as a Broker</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/guides/buying-a-yacht">Buying a Yacht Guide</a>
+          <a href="/guides/catamaran-buying-guide">Catamaran Buying Guide</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <a href="/faq">FAQ</a>
+          <a href="/blog">Blog</a>
+        </nav>
+      </div>
     <main className="w-full bg-white">
       <HomeHero />
   
@@ -533,5 +584,6 @@ export default async function Home() {
         </div>
       </section>
     </main>
+    </>
   );
 }

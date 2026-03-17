@@ -48,6 +48,16 @@ export async function generateMetadata({
     alternates: {
       canonical: `/destinations/${slug}`,
     },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     keywords: [
       `${data.title} yacht guide`,
       `${data.title} yacht destination`,
@@ -140,6 +150,24 @@ export default async function DestinationSlugPage({
 
   return (
     <main className="w-full bg-[#FAFAFA] text-slate-900">
+      <div aria-hidden="true" style={{position:"absolute",width:1,height:1,overflow:"hidden",clip:"rect(0,0,0,0)",whiteSpace:"nowrap"}}>
+        <h1>{data.title} — Yacht Charter and Sailing Destination</h1>
+        <p>Discover {data.title} as a sailing and yacht charter destination. Find marinas, anchorages and charter options on Findaly.</p>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/buy">Boats for Sale</a>
+          <a href="/buy/sailboats">Sailboats for Sale</a>
+          <a href="/buy/motor-yachts">Motor Yachts for Sale</a>
+          <a href="/buy/catamarans">Catamarans for Sale</a>
+          <a href="/sell">Sell Your Boat</a>
+          <a href="/brokers">Brokers</a>
+          <a href="/guides">Buying Guides</a>
+          <a href="/finance">Yacht Finance</a>
+          <a href="/services">Marine Services</a>
+          <a href="/destinations">Destinations</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
       <Script
         id={`destination-faq-${data.slug}`}
         type="application/ld+json"
